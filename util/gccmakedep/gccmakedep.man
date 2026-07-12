@@ -1,6 +1,6 @@
 .TH gccmakedep 1 __vendorversion__
 .SH NAME
-gccmakedep \- create dependencies in makefiles using 'gcc -M'
+gccmakedep \- create dependencies in makefiles using 'gcc \-M'
 .SH SYNOPSIS
 .B gccmakedep
 [
@@ -8,18 +8,19 @@ gccmakedep \- create dependencies in makefiles using 'gcc -M'
 ] [
 .BI \-f makefile
 ] [
-.BI \-a
+.B \-a
 ] [
 \-\^\-
 .I options
 \-\^\-
 ]
-.I sourcefile
+.br
+.RI "        " sourcefile
 \&.\|.\|.
 .SH DESCRIPTION
 The
 .B gccmakedep
-program calls 'gcc -M' to output
+program calls '\fBgcc \-M\fP' to output
 .I makefile
 rules describing the dependencies of each
 .IR sourcefile ,
@@ -32,7 +33,7 @@ By default,
 places its output in the file named
 .I makefile
 if it exists, otherwise
-.I Makefile.
+.IR Makefile .
 An alternate makefile may be specified with the
 .B \-f
 option.
@@ -60,8 +61,8 @@ For example,
             gccmakedep\0\-\^\-\0$(CFLAGS)\0\-\^\-\0$(SRCS)
 .fi
 .SH OPTIONS
-The program will ignore any option that it does not understand, so you may
-use the same arguments that you would for
+The program will ignore any option that it does not understand,
+so you may use the same arguments that you would for
 .BR gcc (1),
 including
 .B \-D
@@ -116,9 +117,9 @@ normally.
 .BR make (1),
 .BR makedepend (1).
 .SH AUTHOR
-The version of the 
+The version of
 .B gccmakedep
-included in this X.Org Foundation release was originally 
+included in this X.Org Foundation release was originally
 written by the XFree86 Project based on code supplied by Hongjiu Lu.
 .PP
 Colin Watson wrote this manual page, originally for the Debian Project,

@@ -1,3 +1,125 @@
+commit 0aa2324e8a8a538fe29288a05fb6891eebf70a24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 11 19:07:43 2026 -0700
+
+    gccmakedep 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9483394def3d401f9ceb2227d139c99a2dcd81ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 25 15:26:06 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/8>
+
+commit df07da448da28e53fb29139d5644e864fe5fbb22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/8>
+
+commit a9b822a3e1d02a2f6bbc025d150d73b89169a2d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 8 14:47:48 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/7>
+
+commit 2b725831f9c7db4eaca9e749db78b32e4eb9adf9
+Author: Zitrone <general@dev.quantenzitrone.eu>
+Date:   Sun May 25 20:58:10 2025 +0200
+
+    add COPYING file
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/6>
+
+commit 49d35da5ffacfd71a3c56795a3ef048338beca71
+Author: Zitrone <general@dev.quantenzitrone.eu>
+Date:   Sun May 25 20:56:46 2025 +0200
+
+    gccmakedep.in: add license into header
+    
+    related https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/issues/1
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/6>
+
+commit e9f153160a58ceee28b11aa6198a336f1f99bcce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 14 18:24:18 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/5>
+
+commit b5a32e2925397886ef28fbe567254a5cd0a2f99c
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Fri Nov 1 23:38:13 2024 +0000
+
+    gccmakedep.1: Some editorial changes for this man page
+    
+    Originally from https://bugs.debian.org/1086599
+    
+    Output from "mandoc -T lint gccmakedep.1": (possibly shortened list)
+    
+    mandoc: gccmakedep.1:119:19: STYLE: whitespace at end of input line
+    mandoc: gccmakedep.1:121:57: STYLE: whitespace at end of input line
+    
+    -.-.
+    
+    Use the correct macro for the font change of a single argument or
+    split the argument into two.
+    
+    11:.BI \-a
+    
+    -.-.
+    
+    Change a HYPHEN-MINUS (code 0x2D) to a minus(-dash) (\-),
+    if it
+    is in front of a name for an option,
+    is a symbol for standard input,
+    is a single character used to indicate an option,
+    or is in the NAME section (man-pages(7)).
+    N.B. - (0x2D), processed as a UTF-8 file, is changed to a hyphen
+    (0x2010, groff \[u2010] or \[hy]) in the output.
+    
+    3:gccmakedep \- create dependencies in makefiles using 'gcc -M'
+    22:program calls 'gcc -M' to output
+    
+    -.-.
+    
+    Split a punctuation from a single argument, if a two-font macro is meant
+    
+    35:.I Makefile.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/gccmakedep/-/merge_requests/5>
+
 commit 413decf2b5aa16c3a3a00daaff8b7f4b4cf4c08c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 2 13:57:52 2024 -0800
