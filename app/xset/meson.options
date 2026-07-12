@@ -1,0 +1,15 @@
+option(
+  'fontcache',
+  type: 'feature',
+  value : 'auto',
+  description: 'fontcache support (default is auto)',
+  deprecated: ['enabled'],
+)
+
+option(
+  'xf86misc',
+  type: 'feature',
+  value : 'auto',
+  description: 'xf86misc support (default is auto)',
+  deprecated: ['enabled'],
+)

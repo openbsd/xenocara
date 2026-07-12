@@ -22,131 +22,112 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XSET 1 __xorgversion__
+.TH XSET 1 2025-04-12 __xorgversion__
 .SH NAME
 xset - user preference utility for X
 .SH SYNOPSIS
-.B xset
-[-display \fIdisplay\fP]
-.br
-[-b] [b {on|off}] [b [\fIvolume\fP [\fIpitch\fP [\fIduration\fP]]]]
-.br
-[-bc] [bc]
-.br
-[-c] [c {on|off}] [c [\fIvolume\fP]]
-.br
-[+dpms] [-dpms]
-.br
-	[dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]]
-.br
-	[dpms force {standby|suspend|off|on}]
-.br
-[fp=\fIpathlist\fP]
-[-fp=\fIpathlist\fP]
-[+fp=\fIpathlist\fP]
-[fp-\fIpathlist\fP]
-[fp+\fIpathlist\fP]
-.br
-[fp default] [fp rehash]
-.br
-[-led [\fIinteger\fP|named \fIindicator\fP]]
-[led [\fIinteger\fP|named \fIindicator\fP]]
-.br
-[led {on|off}]
-.br
-[mouse [\fIaccel_mult\fP[/\fIaccel_div\fP] [\fIthreshold\fP]]] [mouse default]
-.br
-[p \fIpixel\fP \fIcolor\fP]
-.br
-[-r [keycode]]  [r [keycode]]
-[r {on|off}] [r rate \fIdelay\fP [\fIrate\fP]]
-.br
-[s [\fIlength\fP [\fIperiod\fP]]] [s {blank|noblank}]
-.br
-[s {expose|noexpose}] [s {on|off}] [s default] [s activate] [s reset]
-.br
-[q]
-.br
-[-version]
+.nf
+\fBxset\fP [\fB\-display\fP \fIdisplay\fP]
+     [\fB\-b\fP] [\fBb\fP {\fBon\fP|\fBoff\fP}] [\fBb\fP [\fIvolume\fP [\fIpitch\fP [\fIduration\fP]]]]
+     [\fB\-bc\fP] [\fBbc\fP]
+     [\fB\-c\fP] [\fBc\fP {\fBon\fP|\fBoff\fP}] [\fBc\fP [\fIvolume\fP]]
+     [\fB+dpms\fP] [\fB\-dpms\fP]
+	[\fBdpms\fP \fIstandby\fP [\fI suspend\fP [\fI off\fP]]]
+	[\fBdpms force\fP {\fBstandby\fP|\fBsuspend\fP|\fBoff\fP|\fBon\fP}]
+     [\fBfp=\fP\fIpathlist\fP] [\fB\-fp=\fP\fIpathlist\fP] [\fB+fp=\fP\fIpathlist\fP]
+     [\fBfp\-\fP\fIpathlist\fP] [\fBfp+\fP\fIpathlist\fP] [\fBfp default\fP] [\fBfp rehash\fP]
+     [\fB\-led\fP [\fIinteger\fP|\fBnamed\fP \fIindicator\fP]] [\fBled\fP [\fIinteger\fP|\fBnamed\fP \fIindicator\fP]]
+     [\fBled\fP {\fBon\fP|\fBoff\fP}]
+     [\fBmouse\fP [\fIaccel_mult\fP[/\fIaccel_div\fP] [\fIthreshold\fP]]] [\fBmouse default\fP]
+     [\fBp\fP \fIpixel\fP \fIcolor\fP]
+     [\fB\-r\fP [\fIkeycode\fP]]  [\fBr\fP [\fIkeycode\fP]] [\fBr\fP {\fBon\fP|\fBoff\fP}] [\fBr rate\fP \fIdelay\fP [\fIrate\fP]]
+     [\fBs\fP [\fIlength\fP [\fIperiod\fP]]] [\fBs\fP {\fBblank\fP|\fBnoblank\fP}] [\fBs\fP {\fBexpose\fP|\fBnoexpose\fP}]
+     [\fBs\fP {\fBon\fP|\fBoff\fP}] [\fBs default\fP] [\fBs activate\fP] [\fBs reset\fP]
+     [\fBq\fP]
+     [\fB\-version\fP]
+.fi
 .SH DESCRIPTION
-This program is used to set various user preference options of the display.
+This program is used to set or query various user preference options
+of the display.
 .SH OPTIONS
-.PP
 .TP 8
 .B \-display \fIdisplay\fP
-This option specifies the server to use; see \fIX(__miscmansuffix__)\fP.
-.PP
+This option specifies the server to use; see
+.BR X (__miscmansuffix__).
 .TP 8
 .B b
 The \fBb\fP option controls bell volume, pitch and duration.
-This option accepts up to three numerical parameters, a preceding
-dash(-), or a 'on/off' flag.  If no parameters are
-given, or the 'on' flag is used, the system defaults will be used.
-If the dash or 'off' are given, the bell will be turned
-off.
-If only one numerical parameter is given, the
-bell volume will be set to that value, as a percentage of its maximum.
-Likewise, the second numerical
-parameter specifies the bell pitch, in hertz, and
-the third numerical parameter
-specifies the duration in milliseconds.  Note that not
-all hardware can vary the bell characteristics.  The X server will set
-the characteristics of the bell as closely as it can to the user's
-specifications.
-.PP
+This option accepts up to three numerical parameters,
+a preceding dash(\-), or a \fBon\fP/\fBoff\fP flag.
+If no parameters are given, or the \fBon\fP flag is used,
+the system defaults will be used.
+If the dash or \fBoff\fP are given, the bell will be turned off.
+If only one numerical parameter is given,
+the bell volume will be set to that value, as a percentage of its maximum.
+Likewise, the second numerical parameter specifies the bell pitch, in hertz,
+and the third numerical parameter specifies the duration in milliseconds.
+Note that not all hardware can vary the bell characteristics.
+The X server will set the characteristics of the bell as closely as it can
+to the user's specifications.
 .TP 8
 .B bc
 The \fBbc\fP option controls \fIbug compatibility\fP mode in the server,
-if possible; a preceding dash(-) disables the mode, otherwise the mode
-is enabled.  Various pre-R4 clients pass illegal values in some
-protocol requests, and pre-R4 servers did not correctly generate
-errors in these cases.  Such clients, when run against an R4 server,
+if possible;
+a preceding dash(\-) disables the mode, otherwise the mode is enabled.
+Various pre-R4 clients pass invalid values in some protocol requests,
+and pre-R4 servers did not correctly generate errors in these cases.
+Such clients, when run against an R4 server,
 will terminate abnormally or otherwise fail to operate correctly.
-Bug compatibility mode explicitly reintroduces certain bugs into the
-X server, so that many such clients can still be run.  This mode should be
-used with care; new application development should be done with this mode
-disabled.  The server must support the MIT-SUNDRY-NONSTANDARD
+Bug compatibility mode explicitly reintroduces certain bugs into the X server,
+so that many such clients can still be run.
+This mode should be used with care;
+new application development should be done with this mode disabled.
+The server must support the MIT\-SUNDRY\-NONSTANDARD
 protocol extension in order for this option to work.
+The X.Org X server 1.2 and later do not support enabling this mode.
 .TP 8
 .B c
 The \fBc\fP option controls key click.
-This option can take an optional value, a preceding dash(-),
-or an 'on/off' flag.
-If no parameter or the 'on' flag is given, the system defaults
-will be used. If the dash or 'off' flag is used, keyclick will be
-disabled.
-If a value from 0 to 100 is given, it is used to
-indicate volume, as a percentage of the maximum.
+This option can take an optional value, a preceding dash(\-),
+or an \fBon\fP/\fBoff\fP flag.
+If no parameter or the \fBon\fP flag is given, the system defaults will be used.
+If the dash or \fBoff\fP flag is used, keyclick will be disabled.
+If a value from 0 to 100 is given,
+it is used to indicate volume, as a percentage of the maximum.
 The X server will set
 the volume to the nearest value that the hardware can support.
-.PP
 .TP 8
 .B \-dpms
-The \fB\-dpms\fP option disables Display Power Management Signaling (DPMS) features.
+The \fB\-dpms\fP option disables
+Display Power Management Signaling (DPMS) features.
 .TP 8
 .B +dpms
-The \fB+dpms\fP option enables Display Power Management Signaling (DPMS) features.
+The \fB+dpms\fP option enables
+Display Power Management Signaling (DPMS) features.
 .TP 8
 .B dpms \fIflags...\fP
 The \fBdpms\fP option allows the Display Power Management Signaling (DPMS)
 parameters to be set.
-The option can take up to three numerical values, or the `force'
-flag followed by a DPMS state.  The `force' flags forces the server
-to immediately switch to the DPMS state specified.  The DPMS state can
-be one of `standby', `suspend', `off', or `on'.  When numerical values are
-given, they set the inactivity period
-(in units of seconds)
+The option can take up to three numerical values,
+or the \fBforce\fP flag followed by a DPMS state.
+The \fBforce\fP flags forces the server
+to immediately switch to the DPMS state specified.
+The DPMS state can be one of
+\fBstandby\fP, \fBsuspend\fP, \fBoff\fP, or \fBon\fP.
+When numerical values are given,
+they set the inactivity period (in units of seconds)
 before the three modes are activated.
-The first value given is for the `standby' mode, the second is for the
-`suspend' mode, and the third is for the `off' mode.  Setting these
-values implicitly enables the DPMS features.  A value of zero disables
-a particular mode.
+The first value given is for the \fBstandby\fP mode,
+the second is for the \fBsuspend\fP mode,
+and the third is for the \fBoff\fP mode.
+Setting these values implicitly enables the DPMS features.
+A value of zero disables a particular mode.
 .TP 8
 .B fp= \fIpath,...\fP
 The \fBfp=\fP sets the font path to the entries given in the path argument.
 The entries are interpreted by the server, not by the client.
-Typically they are directory names or font server names, but the
-interpretation is server-dependent.
+Typically they are directory names or font server names,
+but the interpretation is server-dependent.
 .TP 8
 .B fp \fBdefault\fP
 The \fBdefault\fP argument causes the font path to be reset to the server's
@@ -154,142 +135,150 @@ default.
 .TP 8
 .B fp \fBrehash\fP
 The \fBrehash\fP argument resets the font path to its current value,
-causing the server to reread the font databases in
-the current font path.  This is generally only used when adding new fonts to
-a font directory (after running \fImkfontdir\fP to recreate the font database).
-.PP
+causing the server to reread the font databases in the current font path.
+This is generally only used when adding new fonts to a font directory
+(after running \fImkfontdir\fP to recreate the font database).
 .TP 8
 .B "\-fp \fRor\fP fp\-"
-The \fB\-fp\fP and \fBfp\-\fP options remove elements from the current
-font path.  They must be followed by a comma-separated list of entries.
-.PP
+The \fB\-fp\fP and \fBfp\-\fP options remove elements from
+the current font path.
+They must be followed by a comma-separated list of entries.
 .TP 8
-.B "\+fp \fRor\fP fp\+"
-This \fB\+fp\fP and \fBfp\+\fP options prepend and append elements to the
-current font path, respectively.  They must be followed by a comma-separated
-list of entries.
-.PP
+.B "+fp \fRor\fP fp+"
+The \fB+fp\fP and \fBfp+\fP options prepend and append elements to the
+current font path, respectively.
+They must be followed by a comma-separated list of entries.
 .TP 8
 .B led
 The \fBled\fP option controls the keyboard LEDs.
 This controls the turning on or off of one or all of the LEDs.
-It accepts an optional integer, a preceding dash(-) or an 'on/off' flag.
-If no parameter or the 'on' flag is given, all LEDs are turned on.
-If a preceding dash or the flag 'off' is given, all LEDs are turned off.
+It accepts an optional integer, a preceding dash(\-),
+or an \fBon\fP/\fBoff\fP flag.
+If no parameter or the \fBon\fP flag is given, all LEDs are turned on.
+If a preceding dash or the flag \fBoff\fP is given, all LEDs are turned off.
 If a value between 1 and 32 is given, that LED will be turned on or off
 depending on the existence of a preceding dash.
-``xset led 3'' would turn led #3 on.  ``xset -led 3'' would turn it off.
+``xset led 3'' would turn led #3 on.  ``xset \-led 3'' would turn it off.
 The particular LED values may refer to different LEDs on different
 hardware.
 If the X server supports the XKEYBOARD (XKB) extension, leds may be
-referenced by the XKB indicator name by specifying the `named' keyword
-and the indicator name.   For example, to turn on the Scroll Lock LED:
+referenced by the XKB indicator name by specifying the \fBnamed\fP keyword
+and the indicator name.
+For example, to turn on the Scroll Lock LED:
 .IP
 xset led named "Scroll Lock"
-.PP
 .TP 8
 .B mouse
-The \fBm\fP option controls the mouse parameters; it may be
-abbreviated to 'm'. Of course, it applies to most pointing devices, not just
-mice. The parameters for the pointing device are `acceleration' and
-`threshold'. The acceleration can be specified as an integer, or as a simple
-fraction. Threshold is just an integer. The setting is applied to all connected
-pointing devices. xinput(__appmansuffix__) should be used if you need device-specific settings.
+The \fBmouse\fP option controls the mouse parameters;
+it may be abbreviated to \fBm\fP.
+Of course, it applies to most pointing devices, not just mice.
+The parameters for the pointing device are
+\fIacceleration\fP and \fIthreshold\fP.
+The \fIacceleration\fP can be specified as an integer, or as a simple fraction.
+The \fIthreshold\fP is just an integer.
+The setting is applied to all connected pointing devices.
+.BR xinput (__appmansuffix__)
+should be used if you need device-specific settings.
 .PP
 By default the pointer (the on-screen representation of the pointing device)
-will go `acceleration' times as fast when the device travels more than
-`threshold' mickeys (i.e. would-be pixels) in 10 ms, including a small
-transition range. This way, the pointing device can be used for precise
-alignment when it is moved slowly, yet it can be set to travel across
-the screen in a flick of the wrist when desired.  One or both
-parameters for the
-.B m
-option can be omitted, but if only one is
-given, it will be interpreted as the acceleration.
-If no parameters or the flag 'default' is used, the system defaults will
-be set.
+will go \fIacceleration\fP times as fast when the device travels more than
+\fIthreshold\fP mickeys (i.e. would-be pixels) in 10 ms, including a small
+transition range.
+This way, the pointing device can be used for precise alignment
+when it is moved slowly,
+yet it can be set to travel across the screen
+in a flick of the wrist when desired.
+One or both parameters for the
+.B mouse
+option can be omitted, but if only one is given,
+it will be interpreted as the \fIacceleration\fP.
+If no parameters or the flag \fBdefault\fP is used,
+the system defaults will be used.
 .PP
-If the `threshold' parameter is provided and 0, the `acceleration'
-parameter will be used in the exponent of a more natural and continuous
-formula, giving precise control for slow motion but big reach for fast
-motion, and a progressive transition for motions in between.
-Recommended `acceleration' value in this case is 3/2 to 3, but not
-limited to that range.
+If the \fIthreshold\fP parameter is provided and 0,
+the \fIacceleration\fP parameter will be used in the exponent of
+a more natural and continuous formula,
+giving precise control for slow motion but big reach for fast motion,
+and a progressive transition for motions in between.
+Recommended \fIacceleration\fP value in this case is 3/2 to 3,
+but is not limited to that range.
 .PP
-In the X.org X Server 1.6 and above, the behaviour described so far is linked
-to the default profile. There are other profiles (i.e. functions determining
-pointer acceleration from device velocity) and additional settings, so the
-above description may not apply to non-default cases. In the X.org Server 1.7,
-these are available as input device properties (see xinput).
-
-.PP
+In the X.Org X Server 1.6 and above,
+the behaviour described so far is linked to the default profile.
+There are other profiles
+(i.e. functions determining pointer acceleration from device velocity)
+and additional settings,
+so the above description may not apply to non-default cases.
+In the X.Org Server 1.7,
+these are available as input device properties (see
+.BR xinput (1).
 .TP 8
 .B p
 The \fBp\fP option controls pixel color values.
 The parameters are the color map entry number in decimal,
-and a color specification.  The root background colors may be changed
+and a color specification.
+The root background colors may be changed
 on some servers by altering the entries for BlackPixel and WhitePixel.
-Although these are often 0 and 1, they need not be.  Also, a server may
-choose to allocate those colors privately, in which case an error will
-be generated.  The map entry must not be a read-only color,
-or an error will result.
-.PP
+Although these are often 0 and 1, they need not be.
+Also, a server may choose to allocate those colors privately,
+in which case an error will be generated.
+The map entry must not be a read-only color, or an error will result.
 .TP 8
 .B r
 The \fBr\fP option controls the autorepeat.
-Invoking with "\fB-r\fP", or "\fBr\ off\fP", will disable autorepeat, whereas
-"\fBr\fP", or "\fBr\ on\fP" will enable autorepeat.
-Following the "\fB-r\fP" or "\fBr\fP" option with an integer keycode between 0 and
-255 will disable or enable autorepeat on that key respectively, but only
-if it makes sense for the particular keycode.  Keycodes below 8 are
-not typically valid for this command.  Example: "\fBxset\ -r\ 10\fP" will
-disable autorepeat for the "1" key on the top row of an IBM PC keyboard.
-
+Invoking with "\fB\-r\fP", or "\fBr\ off\fP", will disable autorepeat,
+whereas "\fBr\fP", or "\fBr\ on\fP" will enable autorepeat.
+Following the "\fB\-r\fP" or "\fBr\fP" option with an integer keycode
+between 0 and 255 will disable or enable autorepeat on that key respectively,
+but only if it makes sense for the particular keycode.
+Keycodes below 8 are not typically valid for this command.
+Example: "\fBxset\ \-r\ 10\fP"
+will disable autorepeat for the "1" key on the top row of an IBM PC keyboard.
+.IP
 If the server supports the XFree86-Misc extension, or the XKB extension,
-then a parameter
-of 'rate' is accepted and should be followed by zero, one or two numeric
-values. The first specifies the delay before autorepeat starts and
-the second specifies the repeat rate.  In the case that the server
-supports the XKB extension, the delay is the number of milliseconds
-before autorepeat starts, and the rate is the number of repeats
-per second.  If the rate or delay is not given, it will be set
-to the default value.
-.PP
+then a parameter of \fBrate\fP is accepted
+and should be followed by zero, one, or two numeric values.
+The first specifies the \fIdelay\fP before autorepeat starts and
+the second specifies the repeat \fIrate\fP.
+In the case that the server supports the XKB extension,
+the \fIdelay\fP is the number of milliseconds before autorepeat starts,
+and the \fIrate\fP is the number of repeats per second.
+If the \fIrate\fP or \fIdelay\fP is not given,
+it will be set to the default value.
 .TP 8
 .B s
 The \fBs\fP option lets you set the screen saver parameters.
-This option accepts up to two numerical parameters, a 'blank/noblank'
-flag, an 'expose/noexpose' flag, an 'on/off' flag, an 'activate/reset' flag,
-or the 'default' flag.
-If no parameters or the 'default' flag is used, the system will be set
-to its default screen saver characteristics.
-The 'on/off' flags simply turn the screen saver functions on or off.
-The 'activate' flag forces activation of screen saver even if the screen
+This option accepts up to two numerical parameters,
+a \fBblank\fP/\fBnoblank\fP flag,
+an \fBexpose\fP/\fBnoexpose\fP flag,
+an \fBon\fP/\fBoff\fP flag,
+an \fBactivate\fP/\fBreset\fP flag,
+or the \fBdefault\fP flag.
+If no parameters or the \fBdefault\fP flag is used,
+the system will be set to its default screen saver characteristics.
+The \fBon/off\fP flags simply turn the screen saver functions on or off.
+The \fBactivate\fP flag forces activation of screen saver even if the screen
 saver had been turned off.
-The 'reset' flag forces deactivation of screen saver if it is active.
-The 'blank' flag sets the
-preference to blank the video (if the hardware can do so) rather than
-display a background pattern, while 'noblank' sets the
-preference to display a pattern rather than blank the video.
-The 'expose' flag sets the
-preference to allow window exposures (the server can freely discard
-window contents), while 'noexpose' sets the preference to disable
-screen saver unless the server can regenerate the screens without
-causing exposure events.
-The length and period
-parameters for the screen saver function determines how long the
-server must be inactive for screen saving to activate, and the period
-to change the background pattern to avoid burn in.
+The \fBreset\fP flag forces deactivation of screen saver if it is active.
+The \fBblank\fP flag sets the preference to blank the video
+(if the hardware can do so) rather than display a background pattern,
+while \fBnoblank\fP sets the preference to
+display a pattern rather than blank the video.
+The \fBexpose\fP flag sets the preference to allow window exposures
+(the server can freely discard window contents),
+while \fBnoexpose\fP sets the preference to disable the screen saver
+unless the server can regenerate the screens without causing exposure events.
+The \fIlength\fP and \fIperiod\fP parameters for the screen saver function
+determines how long the server must be inactive for screen saving to activate,
+and the period to change the background pattern to avoid burn in.
 The arguments are specified in seconds.
-If only one numerical parameter is given, it will be used for the length.
-.PP
+If only one numerical parameter is given, it will be used for the \fIlength\fP.
 .TP 8
 .B q
 The \fBq\fP option gives you information on the current settings.
-.PP
 .TP 8
-.B -version
-The \fB-version\fP option prints the program version and exits without
+.B \-version
+The \fB\-version\fP option prints the program version and exits without
 doing anything else.
 .PP
 These settings will be reset to default values when you log out.
@@ -297,7 +286,12 @@ These settings will be reset to default values when you log out.
 Note that not all X implementations are guaranteed to honor all of these
 options.
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(__appmansuffix__), xmodmap(__appmansuffix__), xrdb(__appmansuffix__), xsetroot(__appmansuffix__), xinput(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR Xserver (__appmansuffix__),
+.BR xinput (__appmansuffix__),
+.BR xmodmap (__appmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR xsetroot (__appmansuffix__)
 .SH AUTHOR
 Bob Scheifler, MIT Laboratory for Computer Science
 .br
@@ -305,4 +299,4 @@ David Krikorian, MIT Project Athena (X11 version)
 .br
 XFree86-Misc support added by David Dawes and Joe Moss
 .br
-Manpage updates added by Mike A. Harris <mharris@redhat.com>
+Manpage updates added by Mike A.\& Harris <mharris@redhat.com>

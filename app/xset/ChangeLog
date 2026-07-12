@@ -1,3 +1,83 @@
+commit 498f661ca0a725a4750e3e7c091c5752b1a52bd8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 9 17:11:54 2026 -0700
+
+    xset 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3818c2ecf9d4772520a4c05acc2cc243c6280384
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 10 13:02:07 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xset/-/merge_requests/9>
+
+commit 786a955faa0d8ca07077041ffd93d55e60fcd7f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xset/-/merge_requests/9>
+
+commit 3fadaad29df656b69a64c463dd68dc35d09274b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 12:35:19 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xset.1:143:81: STYLE: input text line longer than 80 bytes: The \fB\-fp\fP and \...
+    mandoc: xset.1:25:12: WARNING: cannot parse date, using it verbatim: TH xset 1.2.5
+    an.tmac:xset.1:236: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xset/-/merge_requests/8>
+
+commit 0e9b4418491023548d5555a9db5b763111bcd2c0
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Mon Jun 3 00:37:48 2024 +0000
+
+    xset.1: some editorial changes for this man page [Debian bug #1072502]
+    
+    Originally from https://bugs.debian.org/1072502
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xset/-/merge_requests/7>
+
+commit de066767b031312d76c3f7e4d71d8ab887fd52d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 12:07:47 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xset/-/merge_requests/7>
+
+commit 849b0d42f4cc0e54c56778626effe1e9f1ef238e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 17:16:16 2023 -0800
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit fca58c426ef4eef0c000bfa2758e82e1d1b170e2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Dec 3 16:06:57 2022 -0800
@@ -1017,13 +1097,13 @@ Date:   Wed Jul 20 19:32:04 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6467b9f9b57d56d502e97260261745742a7645c7
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 22:40:16 2005 +0000
 
     Add _BSD_SOURCE to lots of applications - patch from Stefan Dirsch
 
 commit aba3f11253842b810676ae26efb20f9658182097
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:21:15 2005 +0000
 
     Build system for xset
@@ -1054,7 +1134,7 @@ Date:   Thu Sep 2 05:50:38 2004 +0000
         libXaw.
 
 commit 735853aa5531434c951de4c2cd2b75b8ce7148ba
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Mon Aug 16 16:36:27 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

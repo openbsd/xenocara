@@ -168,11 +168,21 @@ main(int argc, char *argv[])
 	    if (++i >= argc)
 		usage("missing argument to -display");
 	    disp = argv[i];
-	} else if (strcmp(arg, "-version") == 0) {
-	    puts(PACKAGE_STRING);
-	    exit(EXIT_SUCCESS);
 	} else {
-	    hasargs = True;
+	    /* accept single or double dash for -help & -version */
+	    if (arg[0] == '-' && arg[1] == '-') {
+		arg++;
+	    }
+
+	    if (strcmp(arg, "-help") == 0) {
+		usage(NULL);
+	    }
+	    else if (strcmp(arg, "-version") == 0) {
+		puts(PACKAGE_STRING);
+		exit(EXIT_SUCCESS);
+	    }
+	    else
+		hasargs = True;
 	}
     }
     if (!hasargs) {
