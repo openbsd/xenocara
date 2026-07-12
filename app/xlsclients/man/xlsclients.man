@@ -22,17 +22,21 @@
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.TH XLSCLIENTS 1 __xorgversion__
+.TH XLSCLIENTS 1 2025-04-05 __xorgversion__
 .SH NAME
 xlsclients - list client applications running on a display
 .SH SYNOPSIS
-.B "xlsclients"
-[-display \fIdisplayname\fP] [-a] [-l] [-m maxcmdlen] [-version]
+.nf
+\fBxlsclients\fP [\fB\-display\fP \fIdisplayname\fP] [\fB-a\fP] [\fB-l\fP] \
+[\fB-m\fP \fImaxcmdlen\fP]
+.sp
+\fBxlsclients\fP \fB\-help\fP | \fB\-version\fP
+.fi
 .SH DESCRIPTION
-.PP
-.I Xlsclients
+.B Xlsclients
 is a utility for listing information about the client applications
-running on a display.  It may be used to generate scripts representing
+running on a display.
+It may be used to generate scripts representing
 a snapshot of the user's current session.
 .SH OPTIONS
 .TP 8
@@ -40,26 +44,30 @@ a snapshot of the user's current session.
 This option specifies the X server to contact.
 .TP 8
 .B \-a
-This option indicates that clients on all screens should be listed.  By
-default, only those clients on the default screen are listed.
+This option indicates that clients on all screens should be listed.
+By default, only those clients on the default screen are listed.
 .TP 8
 .B \-l
-List in long format, giving the window name, icon name,
-and class hints in addition to the machine name and command string shown in
-the default format.
+List in long format, giving the window name, icon name, and class hints,
+in addition to the machine name and command string shown in the default format.
 .TP 8
 .B \-m \fImaxcmdlen\fP
 This option specifies the maximum number of characters in a command to
-print out.  The default is 10000.
+print out.
+The default is 10000.
+.TP 8
+.B \-help
+Print the program usage and exit.
 .TP 8
 .B \-version
 Print the program version and exit.
 .SH ENVIRONMENT
-.PP
 .TP 8
 .B DISPLAY
 To get the default host, display number, and screen.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xwininfo(__appmansuffix__), xprop(__appmansuffix__)
+.BR X (__miscmansuffix__),
+.BR xwininfo (__appmansuffix__),
+.BR xprop (__appmansuffix__)
 .SH AUTHOR
 Jim Fulton, MIT X Consortium

@@ -1,3 +1,112 @@
+commit f46e05b29b8c033a0cc910f11b40c53d50db5a40
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 25 11:40:40 2026 -0700
+
+    xlsclients 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bdac6b5367028270b39855ee5b9cfe55557fcd8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 28 14:17:21 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/8>
+
+commit 13e7305ccc72a950cfe8517cb4fb1536526ae38b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/8>
+
+commit 9ed05d52f2b9ee283d319b88baf3913cec48af58
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 11:55:58 2025 -0700
+
+    Exit on out-of-memory errors
+    
+    Fixes 6 issues raised by gcc 15.1 -fanalyzer:
+    
+    xlsclients.c: In function ‘lookat’:
+    xlsclients.c:102:8: warning: leak of ‘rl’ [CWE-401] [-Wanalyzer-malloc-leak]
+    
+    xlsclients.c: In function ‘print_client_properties’:
+    xlsclients.c:102:8: warning: leak of ‘cs’ [CWE-401] [-Wanalyzer-malloc-leak]
+    
+    xlsclients.c: In function ‘init_atoms’:
+    xlsclients.c:150:11: warning: dereference of possibly-NULL ‘as’ [CWE-690]
+     [-Wanalyzer-possible-null-dereference]
+    
+    xlsclients.c:154:1: warning: leak of ‘as’ [CWE-401] [-Wanalyzer-malloc-leak]
+    
+    xlsclients.c: In function ‘root_list’:
+    xlsclients.c:394:30: warning: leak of ‘cs’ [CWE-401] [-Wanalyzer-malloc-leak]
+    
+    xlsclients.c:420:1: warning: leak of ‘cs’ [CWE-401] [-Wanalyzer-malloc-leak]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/7>
+
+commit 6e5e6834cd6d724b70f554896e70053e78896731
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 11:38:15 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/7>
+
+commit 95da607cb7ab1db82d972e2fceb1314ff7ebd563
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 09:44:15 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xlsclients.1:25:18: WARNING: cannot parse date, using it verbatim: TH xlsclients 1.1.5
+    mandoc: xlsclients.1:36:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xlsclients.1:66:2: WARNING: skipping paragraph macro: PP empty
+    an.tmac:xlsclients.1:32: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/6>
+
+commit d879e375717d55d27829c1ced9995b5afcb7954e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 14:20:07 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/5>
+
+commit 9e1988ec413fb63d391aaefee1df6e78fd3d4176
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 14:17:22 2025 -0700
+
+    add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xlsclients/-/merge_requests/5>
+
 commit 1050104d4aef1d09d61e31f313fe484b161fad23
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 13 09:45:35 2022 -0800
@@ -737,7 +846,7 @@ Date:   Wed Jul 20 19:32:02 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit bc737d5ade74d17b7b7af4d83b3a03cd570061c3
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:10 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,

@@ -75,7 +75,7 @@ __attribute__((__cold__))
 #if __has_attribute(noreturn)
 __attribute__((noreturn))
 #endif
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
 	fprintf (stderr, "%s: %s\n\n", ProgramName, errmsg);
@@ -83,7 +83,21 @@ usage(const char *errmsg)
     fprintf (stderr,
 	     "usage:  %s  [-display dpy] [-m len] [-[a][l]] [-version]\n",
 	     ProgramName);
-    exit (1);
+    exit (exitstatus);
+}
+
+static void
+#if __has_attribute(__cold__)
+__attribute__((__cold__))
+#endif
+#if __has_attribute(noreturn)
+__attribute__((noreturn))
+#endif
+oom(const char *func, size_t amount)
+{
+    fprintf (stderr, "%s: unable to allocate %zu bytes of memory in %s\n",
+	     ProgramName, amount, func);
+    exit (EXIT_FAILURE);
 }
 
 typedef void (*queue_func)(void *closure);
@@ -100,7 +114,7 @@ static void enqueue(queue_func func, void *closure)
 {
     queue_blob *blob = malloc(sizeof(*blob));
     if (!blob)
-	return; /* TODO: print OOM error */
+	oom(__func__, sizeof(*blob));
 
     blob->func = func;
     blob->closure = closure;
@@ -147,6 +161,8 @@ static void init_atoms(xcb_connection_t *c)
     atom_state *as;
 
     as = malloc(sizeof(*as));
+    if (!as)
+	oom(__func__, sizeof(*as));
     as->c = c;
     as->atom = &WM_STATE;
     as->cookie = xcb_intern_atom(c, 0, strlen("WM_STATE"), "WM_STATE");
@@ -175,16 +191,28 @@ main(int argc, char *argv[])
 
 	    switch (arg[1]) {
 	      case 'd':			/* -display dpyname */
-		if (++i >= argc) usage ("-display requires an argument");
+                if (++i >= argc)
+		    usage ("-display requires an argument", EXIT_FAILURE);
 		displayname = argv[i];
 		continue;
+	      case 'h':			/* -help */
+		usage (NULL, EXIT_SUCCESS);
 	      case 'm':			/* -max maxcmdlen */
-		if (++i >= argc) usage ("-max requires an argument");
+		if (++i >= argc)
+		    usage ("-max requires an argument", EXIT_FAILURE);
 		maxcmdlen = atoi (argv[i]);
 		continue;
 	      case 'v':			/* -version */
-		printf("%s\n", PACKAGE_STRING);
-		exit(0);
+		puts (PACKAGE_STRING);
+		exit (EXIT_SUCCESS);
+	      case '-':			/* -- options */
+		if (strcmp(arg, "--help") == 0) {
+		    usage (NULL, EXIT_SUCCESS);
+		} else if (strcmp(arg, "--version") == 0) {
+		    puts (PACKAGE_STRING);
+		    exit (EXIT_SUCCESS);
+		}
+		goto unknown;
 	    }
 
 	    for (cp = &arg[1]; *cp; cp++) {
@@ -198,13 +226,14 @@ main(int argc, char *argv[])
 		  default:
 		    fprintf (stderr, "%s: unrecognized argument -%s\n\n",
 			     ProgramName, cp);
-		    usage (NULL);
+		    usage (NULL, EXIT_FAILURE);
 		}
 	    }
 	} else {
+	  unknown:
 	    fprintf (stderr, "%s: unrecognized argument %s\n\n",
 		     ProgramName, arg);
-	    usage (NULL);
+	    usage (NULL, EXIT_FAILURE);
 	}
     }
 
@@ -217,7 +246,7 @@ main(int argc, char *argv[])
 	    name = "";
 	fprintf (stderr, "%s:  unable to open display \"%s\"\r\n",
 		 ProgramName, name);
-	exit (1);
+	exit (EXIT_FAILURE);
     }
 
     init_atoms(dpy);
@@ -244,7 +273,7 @@ main(int argc, char *argv[])
     run_queue();
 
     xcb_disconnect(dpy);
-    exit (0);
+    exit (EXIT_SUCCESS);
 }
 
 typedef struct {
@@ -302,7 +331,8 @@ static void child_info(void *closure)
     num_rep = 0;
     qt_reply = malloc(sizeof(*qt_reply) * cs->list_length);
     if (!qt_reply)
-	goto done; /* TODO: print OOM message, drain reply queue */
+	/* TODO: drain reply queue */
+	oom(__func__, (sizeof(*qt_reply) * cs->list_length));
 
     for (i = 0; i < cs->list_length; i++) {
 	qt_reply[num_rep] = xcb_query_tree_reply(c, cs->tree_cookie[i], NULL);
@@ -322,7 +352,9 @@ static void child_info(void *closure)
 
     cs = malloc(sizeof(*cs) + child_count * (sizeof(*cs->prop_cookie) + sizeof(*cs->tree_cookie) + sizeof(*cs->win)));
     if (!cs)
-	goto reply_done; /* TODO: print OOM message */
+	oom(__func__, sizeof(*cs) + child_count *
+            (sizeof(*cs->prop_cookie) + sizeof(*cs->tree_cookie) +
+             sizeof(*cs->win)));
 
     cs->c = c;
     cs->verbose = verbose;
@@ -380,7 +412,8 @@ static void root_list(void *closure)
 	/* Get information about each child */
 	child_wm_state *cs = malloc(sizeof(*cs) + sizeof(*cs->prop_cookie) + sizeof(*cs->tree_cookie) + sizeof(*cs->win));
 	if (!cs)
-	    goto done; /* TODO: print OOM message */
+	    oom(__func__, sizeof(*cs) + sizeof(*cs->prop_cookie) +
+                sizeof(*cs->tree_cookie) + sizeof(*cs->win));
 	cs->c = rl->c;
 	cs->verbose = rl->verbose;
 	cs->maxcmdlen = rl->maxcmdlen;
@@ -412,7 +445,7 @@ lookat(xcb_connection_t *dpy, xcb_window_t root, int verbose, int maxcmdlen)
     root_list_state *rl = malloc(sizeof(*rl));
 
     if (!rl)
-	return; /* TODO: OOM message */
+	oom(__func__, sizeof(*rl));
 
     /*
      * get the list of windows
@@ -548,7 +581,7 @@ print_client_properties(xcb_connection_t *dpy, xcb_window_t w, int verbose, int 
 {
     client_state *cs = malloc(sizeof(*cs));
     if (!cs)
-	return; /* TODO: print OOM message */
+	oom(__func__, sizeof(*cs));
 
     cs->c = dpy;
     cs->w = w;
@@ -599,7 +632,7 @@ print_text_field(xcb_connection_t *dpy, const char *s, xcb_get_property_reply_t 
 
 /* returns the number of characters printed */
 static int
-print_quoted_word(char *s, 
+print_quoted_word(char *s,
 		  int maxlen)		/* max number of chars we can print */
 {
     register char *cp;
@@ -612,7 +645,7 @@ print_quoted_word(char *s,
      */
     for (cp = s; *cp; cp++) {
 
-	if (! ((isascii(*cp) && isalnum(*cp)) || 
+	if (! ((isascii(*cp) && isalnum(*cp)) ||
 	       (*cp == '-' || *cp == '_' || *cp == '.' || *cp == '+' ||
 		*cp == '/' || *cp == '=' || *cp == ':' || *cp == ','))) {
 	    need_quote = True;
@@ -637,8 +670,8 @@ print_quoted_word(char *s,
 	    }
 	    putchar (other_quote);
 	    charsprinted++; maxlen--;
-	    { 
-		char tmp = other_quote; 
+	    {
+		char tmp = other_quote;
 		other_quote = quote_char; quote_char = tmp;
 	    }
 	    in_quote = True;
