@@ -52,10 +52,11 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-EXTRA_DIST = README.md
+EXTRA_DIST  = README.md meson.build meson.options
+EXTRA_DIST += po/LINGUAS po/POTFILES po/meson.build
 
 if USE_GETTEXT
-AM_CPPFLAGS = -DLOCALEDIR='"$(LOCALEDIR)"'
+AM_CPPFLAGS += -DLOCALEDIR='"$(LOCALEDIR)"'
 
 noinst_DATA = xfontsel.po
 
