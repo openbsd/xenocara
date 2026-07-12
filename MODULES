@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.565 2026/07/08 06:31:12 matthieu Exp $
+# $OpenBSD: MODULES,v 1.566 2026/07/12 17:13:53 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -27,18 +27,18 @@ app/xbacklight		1.2.4
 app/xbiff		1.0.6
 app/xcalc		1.1.3
 app/xclipboard		1.1.5
-app/xclock		1.2.0		needs-update
+app/xclock		1.2.0
 app/xcmsdb		1.0.7
 app/xcompmgr		1.1.10
 app/xconsole		1.1.1
 app/xdpyinfo		1.4.0
 app/xdriinfo		1.0.8
-app/xedit		1.2.4
-app/xev			1.2.7		needs-update
+app/xedit		1.2.5
+app/xev			1.2.7
 app/xeyes		1.3.1
 app/xf86dga		1.0.3
 app/xfd			1.1.5
-app/xfontsel		1.1.2		needs-update
+app/xfontsel		1.1.2
 app/xgamma		1.0.8
 app/xgc			1.0.7
 app/xhost		1.0.10
@@ -47,13 +47,13 @@ app/xinput		1.6.4
 app/xkbcomp		1.5.0
 app/xkbevd		1.1.6
 app/xkbprint		1.0.7
-app/xkbutils		1.0.6
+app/xkbutils		1.0.7
 app/xkill		1.0.6
 app/xload		1.2.0
 app/xlogo		1.0.7
-app/xlsatoms		1.1.4
-app/xlsclients		1.1.6		needs-update
-app/xlsfonts		1.0.8
+app/xlsatoms		1.1.5
+app/xlsclients		1.1.6
+app/xlsfonts		1.0.9
 app/xmag		1.0.8
 app/xmessage		1.0.7
 app/xmodmap		1.0.11
@@ -61,16 +61,16 @@ app/xmore		1.0.4
 app/xpr			1.2.0
 app/xprop		1.2.8
 app/xrandr		1.5.4
-app/xrdb		1.2.2
-app/xrefresh		1.1.0
-app/xset		1.2.5
-app/xsetroot		1.1.3
+app/xrdb		1.2.3
+app/xrefresh		1.1.1
+app/xset		1.2.6
+app/xsetroot		1.1.4
 app/xsm			1.0.6
 app/xvidtune		1.0.4
-app/xvinfo		1.1.5
-app/xwd			1.0.9
+app/xvinfo		1.1.6
+app/xwd			1.0.10
 app/xwininfo		1.1.6
-app/xwud		1.0.7
+app/xwud		1.0.8
 
 data/bitmaps		1.1.4
 
@@ -158,9 +158,9 @@ lib/libXdamage			1.1.7
 lib/libXdmcp			1.1.5
 lib/libXext			1.3.7
 lib/libXfixes			6.0.2
-lib/libXfont2			2.0.8		needs-update
+lib/libXfont2			2.0.8
 lib/libXft			2.3.9
-lib/libXi			1.8.3		needs-update
+lib/libXi			1.8.3
 lib/libXinerama			1.1.6
 lib/libXmu			1.3.1
 lib/libXpm			3.5.19
@@ -193,8 +193,8 @@ proto/xcb-proto			1.17.0
 proto/xorgproto			2025.1
 
 util/cf				1.0.4
-util/gccmakedep			1.0.4
+util/gccmakedep			1.0.5
 util/macros			1.20.2
 util/makedepend			1.0.9
 
-xserver				21.1.24		needs-update
+xserver				21.1.24

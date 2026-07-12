@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.469 2026/05/25 07:09:02 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.470 2026/07/12 17:13:53 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.14.3
@@ -44,7 +44,7 @@ Archive Site:	https://github.com/intel/libva
 
 Package:	fontconfig
 Version:	2.17.1
-Current Vers:	2.17.1
+Current Vers:	2.18.2
 Maintainer:	Akira TAGOH
 Archive Site:	https://gitlab.freedesktop.org/fontconfig/fontconfig/-/releases
 
