@@ -1,0 +1,11 @@
+option(
+  'appdefaultdir',
+  type: 'string',
+  description: 'directory for app-defaults files (default is autodetected)',
+)
+
+option(
+  'lispdir',
+  type: 'string',
+  description: 'Directory to install lisp files (default: $libdir/X11/xedit/lisp)',
+)

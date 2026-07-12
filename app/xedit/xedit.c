@@ -1,5 +1,5 @@
 /* $XConsortium: xedit.c,v 1.28 94/03/26 17:06:28 rws Exp $ */
- 
+
 /*
  *			  COPYRIGHT 1987
  *		   DIGITAL EQUIPMENT CORPORATION
@@ -20,7 +20,7 @@
  * documentation for any purpose and without fee is hereby granted, provided
  * that the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Digital Equipment Corporation not be 
+ * documentation, and that the name of Digital Equipment Corporation not be
  * used in advertising or publicity pertaining to distribution of the software
  * without specific, written prior permission.
  */
@@ -36,7 +36,7 @@
 #include <sys/stat.h>
 #include <X11/CoreP.h>
 
-#include <stdlib.h> 
+#include <stdlib.h>
 
 #define randomize()	srand((unsigned)time((time_t*)NULL))
 
@@ -341,7 +341,7 @@ makeButtonsAndBoxes(Widget parent)
 
     outer = XtCreateManagedWidget("paned", panedWidgetClass, parent,
 				  NULL, ZERO);
- 
+
     b_row = XtCreateManagedWidget("buttons", panedWidgetClass, outer, NULL, ZERO);
     {
 	MakeCommandButton(b_row, "quit", DoQuit);

@@ -241,7 +241,7 @@
 >xxxxxxxxxabbbbbbbccaaaaabbbc
 9,18: abbbbbbbc
 /a.+b.*c/
->xxxabc 
+>xxxabc
 :NOMATCH
 >xxaxbbc
 2,7: axbbc
@@ -328,7 +328,7 @@
 /a(.*)b\1/
 >xxxab
 3,5: ab
-4,4: 
+4,4:
 >xxxxazzzbzzz
 4,12: azzzbzzz
 5,8: zzz

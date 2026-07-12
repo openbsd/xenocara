@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -238,7 +238,7 @@ const LispCharInfo LispChars[256] = {
     {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL},
     {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL},
     {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}, {NULL}
-    
+
 };
 
 Atom_id Sand, Sor, Snot;
@@ -1619,7 +1619,7 @@ LispReadFunction(read_info *info)
     if (info->discard)
 	return (function);
 
-    if (INVALIDP(function)) 
+    if (INVALIDP(function))
 	READ_ERROR_INVARG();
     else if (CONSP(function)) {
 	if (CAR(function) != Olambda)

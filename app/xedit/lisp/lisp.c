@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -2597,7 +2597,7 @@ Lisp__New(LispObj *car, LispObj *cdr)
     obj = objseg.freeobj;
     objseg.freeobj = CDR(obj);
     --objseg.nfree;
-    
+
     return (obj);
 }
 
@@ -2612,7 +2612,7 @@ LispNew(LispObj *car, LispObj *cdr)
 	objseg.freeobj = CDR(obj);
 	--objseg.nfree;
     }
-    
+
     return (obj);
 }
 
@@ -3252,7 +3252,7 @@ LispImportSymbol(LispObj *symbol)
 	/* Continued from error, redefine variable */
 	LispDecrementAtomReference(atom);
 	atom->property = symbol->data.atom->property;
-	
+
 	atom->a_object = atom->a_function = atom->a_builtin =
 	    atom->a_property = atom->a_defsetf = atom->a_defstruct = 0;
 

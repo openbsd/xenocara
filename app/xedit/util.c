@@ -20,7 +20,7 @@
  * documentation for any purpose and without fee is hereby granted, provided
  * that the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Digital Equipment Corporation not be 
+ * documentation, and that the name of Digital Equipment Corporation not be
  * used in advertising or publicity pertaining to distribution of the software
  * without specific, written prior permission.
  */
@@ -68,7 +68,7 @@ extern XawTextWrapMode wrapmodes[3];
 #  error "no working va_copy was found"
 # endif
 #endif
-    
+
 /*
  * Implementation
  */
@@ -145,7 +145,7 @@ MakeCommandButton(Widget box, char *name, XtCallbackProc function)
   return w;
 }
 
-Widget 
+Widget
 MakeStringBox(Widget parent, String name, String string)
 {
   Arg args[5];
@@ -155,11 +155,11 @@ MakeStringBox(Widget parent, String name, String string)
   XtSetArg(args[numargs], XtNeditType, XawtextEdit); numargs++;
   XtSetArg(args[numargs], XtNstring, string); numargs++;
 
-  StringW = XtCreateManagedWidget(name, asciiTextWidgetClass, 
+  StringW = XtCreateManagedWidget(name, asciiTextWidgetClass,
 				  parent, args, numargs);
-  return(StringW);  
+  return(StringW);
 }
- 
+
 /*	Function Name: GetString
  *	Description: retrieves the string from a asciiText widget.
  *	Arguments: w - the ascii text widget.
@@ -171,7 +171,7 @@ GetString(Widget w)
 {
   String str;
   Arg arglist[1];
-  
+
   XtSetArg(arglist[0], XtNstring, &str);
   XtGetValues( w, arglist, ONE);
   return(str);
@@ -207,23 +207,23 @@ CheckFilePermissions(const char *file, Boolean *exists)
     if (access(file, F_OK) == 0) {
 	*exists = TRUE;
 
-	if (access(file, R_OK) != 0) 
+	if (access(file, R_OK) != 0)
 	    return(NO_READ);
-	
-	if (access(file, R_OK | W_OK) == 0) 
+
+	if (access(file, R_OK | W_OK) == 0)
 	    return(WRITE_OK);
 	return(READ_OK);
     }
 
     *exists = FALSE;
-    
+
     strncpy(temp, file, sizeof(temp) - 1);
     temp[sizeof(temp) - 1] = '\0';
-    if ( (ptr = rindex(temp, '/')) == NULL) 
+    if ( (ptr = rindex(temp, '/')) == NULL)
 	strcpy(temp, ".");
-    else 
+    else
 	*ptr = '\0';
-    
+
     if (access(temp, R_OK | W_OK | X_OK) == 0)
 	return(WRITE_OK);
     return(NO_READ);

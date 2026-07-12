@@ -1,7 +1,7 @@
 /*
  *	rcs_id[] = "$XConsortium: xedit.h,v 1.19 89/10/07 14:59:46 kit Exp $";
  */
- 
+
 /*
  *			  COPYRIGHT 1987
  *		   DIGITAL EQUIPMENT CORPORATION
@@ -22,7 +22,7 @@
  * documentation for any purpose and without fee is hereby granted, provided
  * that the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of Digital Equipment Corporation not be 
+ * documentation, and that the name of Digital Equipment Corporation not be
  * used in advertising or publicity pertaining to distribution of the software
  * without specific, written prior permission.
  */
@@ -182,9 +182,8 @@ void TagsAction(Widget, XEvent*, String*, Cardinal*);
 void SearchTagsFile(xedit_flist_item *item);
 
 /*	externs for system replacement functions */
-#ifdef NEED_STRCASECMP
-int strcasecmp(const char *s1, const char *s2);
-int strncasecmp(const char *s1, const char *s2, size_t n);
+#if defined(_MSC_VER)
+#define strcasecmp _stricmp
 #endif
 #ifdef NEED_REALPATH
 #include <sys/param.h>

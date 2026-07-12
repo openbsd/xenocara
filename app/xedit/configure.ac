@@ -1,6 +1,6 @@
 
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xedit], [1.2.4],
+AC_INIT([xedit], [1.2.5],
         [https://gitlab.freedesktop.org/xorg/app/xedit/-/issues], [xedit])
 AM_INIT_AUTOMAKE([foreign dist-xz subdir-objects])
 
@@ -54,8 +54,6 @@ AC_CHECK_FUNCS([getpagesize])
 
 AC_CHECK_FUNC(realpath, [], [have_realpath=yes])
 AM_CONDITIONAL(NEED_REALPATH, test x$have_realpath = xyes)
-AC_CHECK_FUNC(strcasecmp, [], [have_strcasecmp=yes])
-AM_CONDITIONAL(NEED_STRCASECMP, test x$have_strcasecmp = xyes)
 AC_CHECK_FUNC(unsetenv, [], [have_unsetenv=yes])
 AM_CONDITIONAL(NEED_UNSETENV, test x$have_unsetenv = xyes)
 

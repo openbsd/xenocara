@@ -1168,7 +1168,7 @@ Xedit_Insert(LispBuiltin *builtin)
     text = ARGUMENT(0);
 
     CHECK_STRING(text);
-    
+
     block.firstPos = 0;
     block.format = FMT8BIT;
     block.length = STRLEN(text);

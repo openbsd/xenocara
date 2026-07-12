@@ -1,6 +1,6 @@
-# 
+#
 #  Copyright 2005  Red Hat, Inc.
-# 
+#
 #  Permission to use, copy, modify, distribute, and sell this software and its
 #  documentation for any purpose is hereby granted without fee, provided that
 #  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -103,7 +103,7 @@ libre_a_SOURCES = \
 
 #
 #     xedit
-#   
+#
 xedit_DEPENDENCIES = liblisp.a libmp.a libre.a
 xedit_CFLAGS = $(CWARNFLAGS) $(PKGDEPS_CFLAGS) -I$(top_srcdir)/lisp/re -D_BSD_SOURCE -DXEDIT
 xedit_LDADD = -L. -lre -llisp -lmp $(PKGDEPS_LIBS) -lm
@@ -125,10 +125,6 @@ if NEED_REALPATH
 xedit_SOURCES += realpath.c
 endif
 
-if NEED_STRCASECMP
-xedit_SOURCES += strcasecmp.c
-endif
-
 # lisp/lsp
 lisp_lsp_DEPENDENCIES = liblisp.a libre.a libmp.a
 lisp_lsp_CFLAGS = $(CWARNFLAGS) -I$(top_srcdir)/lisp/re -I$(top_srcdir)/lisp/mp -DLISP -DLISPDIR=\"@LISPDIR@\" -D_BSD_SOURCE
@@ -139,10 +135,6 @@ lisp_lsp_SOURCES = \
 
 if NEED_REALPATH
 lisp_lsp_SOURCES += realpath.c
-endif
-
-if NEED_STRCASECMP
-lisp_lsp_SOURCES += strcasecmp.c
 endif
 
 # re/tests
@@ -222,3 +214,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST += meson.build meson.options lisp/re/meson.build

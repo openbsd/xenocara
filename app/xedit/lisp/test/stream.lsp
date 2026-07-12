@@ -676,7 +676,7 @@ more text" #'get-output-stream-string os)
 
 ;; write-char				- function
 (equal-eval "a b"
-    '(with-output-to-string (s) 
+    '(with-output-to-string (s)
 	(write-char #\a s)
 	(write-char #\Space s)
 	(write-char #\b s)))

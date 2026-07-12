@@ -118,26 +118,9 @@ lisp/modules/progmodes/xrdb.lsp
 
 
 ------------------------------------------------------------------------
-Files required when compiling with xprint support:
-
-(Based on Copyright notice)
-Roland Mainz <roland.mainz@nrubsig.org>
-xedit:
-print.c
-print.h
-printdialog.c
-printdialog.h
-printdialogprivates.h
-
-
-------------------------------------------------------------------------
 Files required for systems that don't have the required calls in the
 standard libraries:
 
 (Based on Copyright notice)
 Constantin S. Svintsoff
 realpath.c
-
-(No author information, using CVS tag)
-David Dawes <dawes@XFree86.Org>
-strcasecmp.c

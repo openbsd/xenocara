@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -1464,7 +1464,7 @@ LispConvertResources(LispObj *list, Widget widget,
 {
     char c1;
     short c2;
-    int c4;   
+    int c4;
 #ifdef LONG64
     long c8;
 #endif
@@ -1652,7 +1652,7 @@ bcmp_action_resource(_Xconst void *string, _Xconst void *resource)
 {
     return (strcmp((String)string,
 		   XrmQuarkToString((*(ResourceInfo**)resource)->qname)));
-}   
+}
 
 static ResourceInfo *
 GetResourceInfo(char *name, ResourceList *rlist, ResourceList *plist)
@@ -1693,7 +1693,7 @@ bcmp_action_resource_list(_Xconst void *wc, _Xconst void *list)
 
 static ResourceList *
 FindResourceList(WidgetClass wc)
-{  
+{
     ResourceList **list;
 
     if (!resource_list)

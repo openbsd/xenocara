@@ -902,7 +902,7 @@
 (eql-test 0 #'list-length '())
 (eql-test 0 #'list-length nil)
 (defun circular-list (&rest elements)
-  (let ((cycle (copy-list elements))) 
+  (let ((cycle (copy-list elements)))
     (nconc cycle cycle)))
 (eq-test nil #'list-length (circular-list 'a 'b))
 (eq-test nil #'list-length (circular-list 'a))

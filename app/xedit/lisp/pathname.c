@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -1070,9 +1070,14 @@ Lisp_UserHomedirPathname(LispBuiltin *builtin)
     length = 0;
     if (home) {
 	length = strlen(home);
-	strncpy(data, home, length);
-	if (length && home[length - 1] != PATH_SEP)
-	    data[length++] = PATH_SEP;
+	if ((length > 0) && (length < (sizeof(data) - 1))) {
+	    strncpy(data, home, length);
+	    if (home[length - 1] != PATH_SEP)
+		data[length++] = PATH_SEP;
+	}
+	else {
+	    length = 0;
+	}
     }
     data[length] = '\0';
 

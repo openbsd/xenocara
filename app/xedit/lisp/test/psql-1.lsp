@@ -1,7 +1,7 @@
 ;; Postgresql C library interface, example program 1, using the xedit
 ;; lisp interface
 
-;; Test the C version of libpq, the PostgreSQL frontend library. 
+;; Test the C version of libpq, the PostgreSQL frontend library.
 (require "psql")
 
 (defun exit-nicely (conn)

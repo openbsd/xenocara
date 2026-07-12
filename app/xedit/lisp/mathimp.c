@@ -3212,7 +3212,7 @@ ndivide_xi_xr(n_number *num, LispObj *div, int fun, int flo)
     mpi_init(quo);
     if (NRTYPE(num) == N_FIXNUM)
 	mpi_seti(quo, NRFI(num));
-    else    
+    else
 	mpi_set(quo, NRBI(num));
 
     rem = XALLOC(mpr);
@@ -3240,7 +3240,7 @@ ndivide_xi_xr(n_number *num, LispObj *div, int fun, int flo)
 	    NIFRD(num) = mpi_geti(mpr_den(rem));
 	}
 	mpr_clear(rem);
-	XFREE(rem);	
+	XFREE(rem);
     }
     else {
 	if (mpi_fiti(mpr_den(rem)) && mpi_geti(mpr_den(rem)) == 1) {
@@ -4217,7 +4217,7 @@ rop_fi_br_as_xr(n_real *real, mpr *ratio, int nop)
     mpi_clear(&iop);
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static void
@@ -4362,7 +4362,7 @@ rdiv_bi_bi(n_real *real, mpi *bignum)
     RCLEAR_BI(real);
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE int
@@ -4511,7 +4511,7 @@ rop_bi_br_md_xr(n_real *real, mpr *bigratio, int nop)
     RCLEAR_BI(real);
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -4688,7 +4688,7 @@ rop_fr_bi_as_xr(n_real *real, mpi *bignum, int nop)
 
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static void
@@ -4706,7 +4706,7 @@ rop_fr_bi_md_xr(n_real *real, mpi *bignum, int nop)
 
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -4917,7 +4917,7 @@ rop_fr_br_asmd_xr(n_real *real, mpr *bigratio, int nop)
 
     RBR(real) = bigr;
     RTYPE(real) = N_BIGRATIO;
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -4984,7 +4984,7 @@ rop_br_fi_asmd_xr(n_real *real, long fixnum, int nop)
 	    mpr_divi(bigratio, bigratio, fixnum);
 	    break;
     }
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -5043,7 +5043,7 @@ rop_br_bi_as_xr(n_real *real, mpi *bignum, int nop)
     else
 	mpi_sub(RBRN(real), RBRN(real), &iop);
     mpi_clear(&iop);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -5114,7 +5114,7 @@ rop_br_fr_asmd_xr(n_real *real, long num, long den, int nop)
 	    break;
     }
     mpr_clear(&rop);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
@@ -5163,28 +5163,28 @@ static INLINE void
 radd_br_br(n_real *real, mpr *bigratio)
 {
     mpr_add(RBR(real), RBR(real), bigratio);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
 rsub_br_br(n_real *real, mpr *bigratio)
 {
     mpr_sub(RBR(real), RBR(real), bigratio);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
 rmul_br_br(n_real *real, mpr *bigratio)
 {
     mpr_mul(RBR(real), RBR(real), bigratio);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE void
 rdiv_br_br(n_real *real, mpr *bigratio)
 {
     mpr_div(RBR(real), RBR(real), bigratio);
-    rbr_canonicalize(real); 
+    rbr_canonicalize(real);
 }
 
 static INLINE int

@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 {
     re_cod cod;
     re_mat mat[10];
-    int line, ecode, i, len, group, failed;
+    int line, ecode, i, len, group, failed, errors;
     long eo, so;
     char buf[8192];
     char str[8192];
@@ -53,7 +53,7 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    ecode = line = group = failed = 0;
+    errors = ecode = line = group = failed = 0;
     cod.cod = NULL;
     while (fgets(buf, sizeof(buf), fp)) {
 	++line;
@@ -64,6 +64,7 @@ main(int argc, char *argv[])
 
 	    if (ptr == buf) {
 		fprintf(stderr, "syntax error at line %d\n", line);
+		errors++;
 		break;
 	    }
 	    else {
@@ -83,6 +84,7 @@ main(int argc, char *argv[])
 	else if (buf[0] == '>') {
 	    if (cod.cod == NULL) {
 		fprintf(stderr, "no previous pattern at line %d\n", line);
+		errors++;
 		break;
 	    }
 	    len = strlen(buf) - 1;
@@ -124,6 +126,7 @@ main(int argc, char *argv[])
 	    if (ecode && ecode != RE_NOMATCH) {
 		reerror(failed, &cod, buf, sizeof(buf));
 		fprintf(stderr, "%s, at line %d\n", buf, line);
+		errors++;
 		break;
 	    }
 	}
@@ -154,10 +157,12 @@ main(int argc, char *argv[])
 		reerror(failed, &cod, buf, sizeof(buf));
 		fprintf(stderr, "Error value %d doesn't match: %s, at line %d\n",
 			failed, buf, line);
+		errors++;
 		break;
 	    }
 	    else if (!ecode) {
 		fprintf(stderr, "found match when shoudn't, at line %d\n", line);
+		errors++;
 		break;
 	    }
 	}
@@ -165,19 +170,23 @@ main(int argc, char *argv[])
 	    if (failed) {
 		reerror(failed, &cod, buf, sizeof(buf));
 		fprintf(stderr, "%s, at line %d\n", buf, line);
+		errors++;
 		break;
 	    }
 	    if (sscanf(buf, "%ld,%ld:", &so, &eo) != 2) {
 		fprintf(stderr, "expecting match offsets at line %d\n", line);
+		errors++;
 		break;
 	    }
 	    else if (ecode) {
 		fprintf(stderr, "didn't match, at line %d\n", line);
+		errors++;
 		break;
 	    }
 	    else if (group >= 10) {
 		fprintf(stderr, "syntax error at line %d (too many groups)\n",
 			line);
+		errors++;
 		break;
 	    }
 	    else if (so != mat[group].rm_so || eo != mat[group].rm_eo) {
@@ -187,6 +196,7 @@ main(int argc, char *argv[])
 		    fwrite(str + mat[group].rm_so,
 		 	   mat[group].rm_eo - mat[group].rm_so, 1, stderr);
 		fputc('\n', stderr);
+                errors++;
 		break;
 	    }
 	    ++group;
@@ -195,5 +205,5 @@ main(int argc, char *argv[])
 
     fclose(fp);
 
-    return (ecode);
+    return (errors);
 }

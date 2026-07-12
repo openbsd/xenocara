@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -33,10 +33,6 @@
 #include <string.h>
 #include "lisp/lisp.h"
 
-#ifdef NEED_STRCASECMP
-int strcasecmp(const char *s1, const char *s2);
-int strncasecmp(const char *s1, const char *s2, size_t n);
-#endif
 #ifdef NEED_REALPATH
 #include <sys/param.h>
 char *realpath(const char *pathname, char resolvedname[MAXPATHLEN]);

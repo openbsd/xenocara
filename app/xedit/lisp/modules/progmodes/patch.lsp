@@ -39,7 +39,7 @@
   (syntoken "^(\\d+d\\d+|\\d+a\\d+,\\d+)$" :property *prop-keyword*)
   (syntoken "^<.*" :property *prop-constant*)
   (syntoken "^>.*" :property *prop-preprocessor*)
-  
+
   ;; context diff
   (syntoken "^\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*\\*"
     :property *prop-string*)

@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *  
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
@@ -1082,7 +1082,7 @@ IspellSend(void)
 
     if (spaces > 0 && spaces <= 32 && strcmp(ispell.sendbuf, ispell.sentbuf) == 0) {
 	Arg args[2];
-	int old_len;	
+	int old_len;
 	char **list, **old_list;
 	char label[sizeof(ispell.sendbuf) + sizeof(ispell.sentbuf) + 32];
 
@@ -1617,7 +1617,7 @@ IgnoreIspell(Widget w, XtPointer client_data, XtPointer call_data)
 	    IspellIgnoredWord(text, ADD, 0);
 	    ispell.undo_head->undo_str = XtNewString(text);
 	}
-	else 
+	else
 	    ispell.undo_head->undo_str = NULL;
     }
 

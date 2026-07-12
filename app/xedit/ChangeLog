@@ -1,3 +1,129 @@
+commit 938688e370222c40e03c52e0413382b18a9b7b35
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 28 16:06:00 2026 -0700
+
+    xedit 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e30620b1ef2ebec3b4a2d27331a4c229ccea0c8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 26 16:55:43 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/15>
+
+commit e684ef67f09f1390dda5724642bfc778f22c730b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 26 12:56:30 2026 -0700
+
+    lisp/re/tests: return count of failed tests
+    
+    Previously was returning last errorcode, even if it was from a test
+    expecting to return an errorcode.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/15>
+
+commit fbaf3355ff1398a985d67a1e91b3994bb9989225
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/15>
+
+commit 1b92c97af3b4700a4b2018b20dc0cf1e839e27a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 30 16:24:47 2025 -0700
+
+    lisp: avoid buffer overflow if $HOME is larger than PATH_MAX bytes
+    
+    Reported by Oracle Parfait 16.2 static analyzer:
+    
+    Error: Buffer overrun
+       Buffer Overflow in STD C string function [buffer-overflow-call-stdc-str]:
+          Buffer overflow in call to strncpy. Buffer data may be too small to hold resulting string
+          Array size is 1025 bytes, index is unbounded
+            at line 1073 of lisp/pathname.c in function 'Lisp_UserHomedirPathname'.
+            'home' has length controlled by user input after call to 'getenv' at line 1060
+    
+    Error: Buffer overrun
+       Buffer overflow [buffer-overflow]:
+          In array dereference of data[length] with index length
+          Array size is 1025 bytes, index is unbounded
+            at line 1075 of lisp/pathname.c in function 'Lisp_UserHomedirPathname'.
+            'home' has length controlled by user input after call to 'getenv' at line 1060
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/14>
+
+commit 3a07a943932c54ccf5d688c3f55f4a01e62a2d40
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 5 17:05:36 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/13>
+
+commit 98b8f02e7a5c2977bd7c84c032bc691e18415952
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 13:24:56 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/12>
+
+commit bdef3073d3094ede3e5f376767e07868dd9f69dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 9 09:37:04 2024 -0800
+
+    Use _stricmp() instead of strcasecmp() on Windows
+    
+    Fixes: 8fa3682 ("Assume all target platforms have strcasecmp() now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/11>
+
+commit 773b91600f501055676a47741d0f126ee22bb4c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 15:49:05 2024 -0700
+
+    AUTHORS: remove Xprint code (which was itself removed back in 2010)
+    
+    Fixes: 47b6e66 ("xprint: remove xprint related C code")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/10>
+
+commit 8fa3682c14fc40a06f3af9a462301f39739a26bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 15:46:52 2024 -0700
+
+    Assume all target platforms have strcasecmp() now
+    
+    It's a standard part of Unix98/SUSv2 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xedit/-/merge_requests/10>
+
 commit 75ad621cfcf3c2591b7b9602bc0934d445153c6a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 24 09:36:54 2024 -0700

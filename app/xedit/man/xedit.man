@@ -1,5 +1,5 @@
 '\" t
-.\" $XConsortium: xedit.man,v 1.23 94/04/17 20:43:39 matt Exp $
+.\"
 .\" Copyright (c) 1994  X Consortium
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining
@@ -26,8 +26,6 @@
 .\" other dealings in this Software without prior written authorization
 .\" from the X Consortium.
 .\"
-.\" $XFree86: xc/programs/xedit/xedit.man,v 1.18 2002/10/12 16:06:48 herrb Exp $
-.\"
 .TH XEDIT 1 __vendorversion__
 .SH NAME
 xedit \- simple text editor for X
@@ -39,13 +37,13 @@ xedit \- simple text editor for X
 .I filename
 \&.\|.\|. ]
 .SH DESCRIPTION
-.I Xedit
+.B Xedit
 provides a window consisting of the following four areas:
 .IP "Commands Section" 25
-A set of commands that allow you to exit \fIxedit\fP, save the file, or
+A set of commands that allow you to exit \fBxedit\fP, save the file, or
 load a new file into the edit window.
 .IP "Message Window" 25
-Displays \fIxedit\fP messages. In addition, this window can be also used as
+Displays \fBxedit\fP messages. In addition, this window can be also used as
 a scratch pad.
 .IP "Filename Display"
 Displays the name of the file currently being edited, and whether this file
@@ -112,7 +110,7 @@ Ctrl-u [\fInumber\fP]	Multiply by 4 or \fInumber\fP
 Meta-Delete	Delete Previous Word
 Ctrl-v	Next Page
 Meta-Shift Delete	Kill Previous Word
-Ctrl-w	Kill Selection	
+Ctrl-w	Kill Selection
 Meta-Backspace	Delete Previous Word
 Ctrl-y	Unkill
 Meta-Shift Backspace	Kill Previous Word
@@ -162,9 +160,9 @@ number
 The literal line \fInumber\fP.
 .TP 8
 - or ^
-The previous line. Equivalent to \fI-1\fP.
+The previous line. Equivalent to \fI\-1\fP.
 .TP 8
--number or ^number
+\-number or ^number
 The current line minus \fInumber\fP.
 .TP 8
 +
@@ -267,7 +265,7 @@ the \fILoad\fP button.
 Loads the file named in the text widget immediately to the right
 of the this button and displays it in the Edit window.
 .SH RESOURCES
-For \fIxedit\fP the available resources are:
+For \fBxedit\fP the available resources are:
 .TP 8
 .B tagsName (\fPClass\fB TagsName)
 Specifies the name of the tags file to search when loading a new file.
@@ -352,9 +350,11 @@ Specifies a set of characters that can be part of a legal word. The
 \fIdictionaries\fP resource.
 .TP 8
 .B ispell.ispellCommand (\fPClass \fBispell.CommandLine)
-The path to the ispell program, and possibly, additional arguments. You don't
-need to specify the ``-w'' option, neither the ``-a'' option.
-Refer to the \fIispell\fP(__appmansuffix__) manpage for more information on ispell options.
+The path to the \fBispell\fP program, and possibly, additional arguments.
+You don't need to specify the \fB\-w\fP option nor the \fB\-a=\fP option.
+Refer to the
+.BR ispell (__appmansuffix__)
+manpage for more information on \fBispell\fP options.
 .TP 8
 .B ispell.formatting (\fPClass \fPispell.TextFormat)
 Specifies which text formatting to use while spell checking the file. The
@@ -365,9 +365,11 @@ Lines starting with one of the characters in this string will not be spell
 checked. This resource is only used in \fItext\fP mode.
 .TP 8
 .B ispell.terseMode (\fPClass \fBispell.Terse)
-When enabled, runs ispell in terse mode, not asking user interaction for words
-generated through compound formation (when using the ispell ``-C'' option), or
-words generated through affix removal. The default value is False.
+When enabled, runs \fBispell\fP in terse mode,
+not asking user interaction for words generated through compound formation
+(when using the \fBispel \-C\fP option),
+or words generated through affix removal.
+The default value is False.
 .TP 8
 .B ispell.lookCommand (\fPClass \fBispell.CommandLine)
 The path to the program to search for alternate words, and possibly,
@@ -420,10 +422,10 @@ the \fILook\fP command. If no results are found, the value of the
 The string displayed in the ispell status bar while xedit is communicating with
 ispell. The default value is \fI...\fP.
 .SH WIDGETS
-In order to specify resources, it is useful to know the hierarchy of
-the widgets which compose \fIxedit\fR.  In the notation below,
-indentation indicates hierarchical structure.  The widget class name
-is given first, followed by the widget instance name.
+In order to specify resources,
+it is useful to know the hierarchy of the widgets which compose \fBxedit\fR.
+In the notation below, indentation indicates hierarchical structure.
+The widget class name is given first, followed by the widget instance name.
 .sp
 .nf
 .ft CW
@@ -444,10 +446,10 @@ Xedit  xedit
 .SH ENVIRONMENT
 .PP
 .TP 20
-.I DISPLAY
+.B DISPLAY
 to get the default host and display number.
 .TP 20
-.I XENVIRONMENT
+.B XENVIRONMENT
 to get the name of a resource file that overrides the global resources
 stored in the RESOURCE_MANAGER property.
 .SH FILES
@@ -455,11 +457,13 @@ stored in the RESOURCE_MANAGER property.
 .I __apploaddir__/Xedit
 specifies required resources
 .SH "SEE ALSO"
-.IR X (__miscmansuffix__),
-.IR xrdb (__appmansuffix__),
+.BR xrdb (__appmansuffix__),
+.BR X (__miscmansuffix__),
 .I "Athena Widget Set"
 .SH RESTRICTIONS
-Xedit is not a replacement to Emacs.
+.B Xedit
+is not a replacement to
+.BR Emacs .
 .SH AUTHORS
 Chris D. Peterson, MIT X Consortium
 .br
