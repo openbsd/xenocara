@@ -50,26 +50,26 @@ static int split;
 static char *progname;
 
 static Bool Read(char *ptr, int size, int nitems, FILE *stream);
-static void putImage(Display *dpy, Window image_win, GC gc, 
+static void putImage(Display *dpy, Window image_win, GC gc,
 		     XImage *out_image, int x, int y, int w, int h);
-static void putScaledImage(Display *display, Drawable d, GC gc, 
-			   XImage *src_image, int exp_x, int exp_y, 
-			   unsigned int exp_width, unsigned int exp_height, 
+static void putScaledImage(Display *display, Drawable d, GC gc,
+			   XImage *src_image, int exp_x, int exp_y,
+			   unsigned int exp_width, unsigned int exp_height,
 			   unsigned int dest_width, unsigned dest_height);
 static void Latin1Upper(char *s);
 static void Extract_Plane(XImage *in_image, XImage *out_image, int plane);
 static int EffectiveSize(XVisualInfo *vinfo);
 static int VisualRank(int class);
 static int IsGray(Display *dpy, XStandardColormap *stdmap);
-static void Do_StdGray(Display *dpy, XStandardColormap *stdmap, int ncolors, 
+static void Do_StdGray(Display *dpy, XStandardColormap *stdmap, int ncolors,
 		       XColor *colors, XImage *in_image, XImage *out_image);
-static void Do_StdCol(Display *dpy, XStandardColormap *stdmap, int ncolors, 
+static void Do_StdCol(Display *dpy, XStandardColormap *stdmap, int ncolors,
 		      XColor *colors, XImage *in_image, XImage *out_image);
 static Colormap CopyColormapAndFree(Display *dpy, Colormap colormap);
-static void Do_Pseudo(Display *dpy, Colormap *colormap, int ncolors, 
+static void Do_Pseudo(Display *dpy, Colormap *colormap, int ncolors,
 		      XColor *colors, XImage *in_image, XImage *out_image);
-static void Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap, 
-		      int ncolors, XColor *colors, 
+static void Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap,
+		      int ncolors, XColor *colors,
 		      XImage *in_image, XImage *out_image, XVisualInfo *vinfo);
 static unsigned int Image_Size(XImage *image);
 static void Error(const char *string) _X_NORETURN;
@@ -78,7 +78,7 @@ static void _swaplong(char *bp, unsigned int n);
 static void DumpHeader(const XWDFileHeader *header, const char *win_name);
 
 static void _X_NORETURN _X_COLD
-usage(const char *errmsg)
+usage(const char *errmsg, int exitstatus)
 {
     if (errmsg != NULL)
         fprintf (stderr, "%s: %s\n\n", progname, errmsg);
@@ -90,7 +90,7 @@ usage(const char *errmsg)
  "            [-help] [-rv] [-plane <number>] [-fg <color>] [-bg <color>]\n"
  "            [-scale] [-dumpheader] [-version]\n"
         );
-    exit(1);
+    exit(exitstatus);
 }
 
 static Bool
@@ -107,7 +107,7 @@ Read(char *ptr, int size, int nitems, FILE *stream)
     return True;
 }
 
-int 
+int
 main(int argc, char *argv[])
 {
     Display *dpy;
@@ -161,12 +161,14 @@ main(int argc, char *argv[])
 
     for (i = 1; i < argc; i++) {
 	if (strcmp(argv[i], "-bg") == 0) {
-	    if (++i >= argc) usage("-bg requires an argument");
+	    if (++i >= argc)
+		usage("-bg requires an argument", EXIT_FAILURE);
 	    bgname = argv[i];
 	    continue;
 	}
 	if (strcmp(argv[i], "-display") == 0) {
-	    if (++i >= argc) usage("-display requires an argument");
+	    if (++i >= argc)
+		usage("-display requires an argument", EXIT_FAILURE);
 	    display_name = argv[i];
 	    continue;
 	}
@@ -175,21 +177,24 @@ main(int argc, char *argv[])
 	    continue;
 	}
 	if (strcmp(argv[i], "-fg") == 0) {
-	    if (++i >= argc) usage("-fg requires an argument");
+	    if (++i >= argc)
+		usage("-fg requires an argument", EXIT_FAILURE);
 	    fgname = argv[i];
 	    continue;
 	}
 	if (strcmp(argv[i], "-geometry") == 0) {
-	    if (++i >= argc) usage("-geometry requires an argument");
+	    if (++i >= argc)
+		usage("-geometry requires an argument", EXIT_FAILURE);
 	    geom = argv[i];
 	    continue;
 	}
 	if ((strcmp(argv[i], "-help") == 0) ||
             (strcmp(argv[i], "--help") == 0)) {
-	    usage(NULL);
+	    usage(NULL, EXIT_SUCCESS);
 	}
 	if (strcmp(argv[i], "-in") == 0) {
-	    if (++i >= argc) usage("-in requires an argument");
+	    if (++i >= argc)
+		usage("-in requires an argument", EXIT_FAILURE);
 	    file_name = argv[i];
 	    continue;
 	}
@@ -199,7 +204,8 @@ main(int argc, char *argv[])
 	}
 	if (strcmp(argv[i], "-new") == 0) {
 	    newmap = True;
-	    if (std) usage("-new cannot be specified with -std");
+	    if (std)
+		usage("-new cannot be specified with -std", EXIT_FAILURE);
 	    continue;
 	}
 	if (strcmp(argv[i], "-noclick") == 0) {
@@ -207,13 +213,15 @@ main(int argc, char *argv[])
 	    continue;
 	}
 	if (strcmp(argv[i], "-plane") == 0) {
-	    if (++i >= argc) usage("-plane requires an argument");
+	    if (++i >= argc)
+		usage("-plane requires an argument", EXIT_FAILURE);
 	    plane = atoi(argv[i]);
 	    continue;
 	}
 	if (strcmp(argv[i], "-raw") == 0) {
 	    rawbits = True;
-	    if (std) usage("-new cannot be specified with -std");
+	    if (std)
+		usage("-new cannot be specified with -std", EXIT_FAILURE);
 	    continue;
 	}
 	if (strcmp(argv[i], "-rv") == 0) {
@@ -229,27 +237,30 @@ main(int argc, char *argv[])
 	    continue;
 	}
 	if (strcmp(argv[i], "-std") == 0) {
-	    if (++i >= argc) usage("-std requires an argument");
+	    if (++i >= argc)
+		usage("-std requires an argument", EXIT_FAILURE);
 	    std = argv[i];
 	    if (newmap || rawbits)
-                usage("-std cannot be specified with -raw or -new");
+                usage("-std cannot be specified with -raw or -new",
+		      EXIT_FAILURE);
 	    continue;
 	}
 	if (strcmp(argv[i], "-vis") == 0) {
-	    if (++i >= argc) usage("-vis requires an argument");
+	    if (++i >= argc)
+		usage("-vis requires an argument", EXIT_FAILURE);
 	    vis = argv[i];
 	    continue;
 	}
 	if ((strcmp(argv[i], "-version") == 0) ||
             (strcmp(argv[i], "--version") == 0)) {
 	    puts(PACKAGE_STRING);
-	    exit(0);
+	    exit(EXIT_SUCCESS);
 	}
 	fprintf (stderr, "%s: unrecognized argument '%s'\n\n",
 		 progname, argv[i]);
-	usage(NULL);
+	usage(NULL, EXIT_FAILURE);
     }
-    
+
     if (file_name) {
 	in_file = fopen(file_name, "rb");
 	if (in_file == NULL)
@@ -259,12 +270,12 @@ main(int argc, char *argv[])
     else
 	_setmode(fileno(in_file), _O_BINARY);
 #endif
-    
+
     dpy = XOpenDisplay(display_name);
     if (dpy == NULL) {
 	fprintf(stderr, "%s:  unable to open display \"%s\"\n",
 		progname, XDisplayName(display_name));
-	exit(1);
+	exit(EXIT_FAILURE);
     }
     screen = DefaultScreen(dpy);
 
@@ -302,9 +313,9 @@ main(int argc, char *argv[])
 
     if (dump_header) {
 	DumpHeader(&header, win_name);
-	exit(0);
+	exit(EXIT_SUCCESS);
     }
-   
+
     /* initialize the input image */
 
     in_image = &in_image_struct;
@@ -624,7 +635,7 @@ main(int argc, char *argv[])
 	    hints.height : out_image->height;
     }
     if ((gbits & XValue) && (gbits & XNegative))
-	hints.x += DisplayWidth(dpy, screen) - hints.width; 
+	hints.x += DisplayWidth(dpy, screen) - hints.width;
     if ((gbits & YValue) && (gbits & YNegative))
 	hints.y += DisplayHeight(dpy, screen) - hints.height;
 
@@ -641,7 +652,7 @@ main(int argc, char *argv[])
     wm_protocols = XInternAtom(dpy, "WM_PROTOCOLS", False);
     wm_delete_window = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
     (void) XSetWMProtocols (dpy, image_win, &wm_delete_window, 1);
-     
+
     textprop.value = (unsigned char *) win_name;
     textprop.encoding = XA_STRING;
     textprop.format = 8;
@@ -662,10 +673,10 @@ main(int argc, char *argv[])
 	XNextEvent(dpy, &event);
 	switch(event.type) {
 	case ClientMessage:
-	  if (event.xclient.message_type == wm_protocols && 
+	  if (event.xclient.message_type == wm_protocols &&
 	      event.xclient.data.l[0] == wm_delete_window)  {
 	    XCloseDisplay(dpy);
-	    exit(0);		/* ICCCM delete window */
+	    exit(EXIT_SUCCESS);		/* ICCCM delete window */
 	  }
 	    break;
 	case ButtonPress:
@@ -673,14 +684,14 @@ main(int argc, char *argv[])
 	case ButtonRelease:
 	    if (onclick) {
 		XCloseDisplay(dpy);
-		exit(0);
+		exit(EXIT_SUCCESS);
 	    }
 	    break;
 	case KeyPress:
 	    i = XLookupString(&event.xkey, &c, 1, NULL, NULL);
 	    if ((i == 1) && ((c == 'q') || (c == 'Q') || (c == '\03'))) {
 		XCloseDisplay(dpy);
-		exit(0);
+		exit(EXIT_SUCCESS);
 	    }
 	    break;
 	case ConfigureNotify:
@@ -706,11 +717,11 @@ main(int argc, char *argv[])
 	    break;
 	}
     }
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 static void
-putImage(Display *dpy, Window image_win, GC gc, XImage *out_image, 
+putImage(Display *dpy, Window image_win, GC gc, XImage *out_image,
 	 int x, int y, int w, int h)
 {
 #define SPLIT_SIZE  100
@@ -745,29 +756,29 @@ typedef struct {
 } Table;
 
 static void
-putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image, 
+putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
 	       int exp_x, int exp_y,
-	       unsigned int exp_width, unsigned int exp_height, 
+	       unsigned int exp_width, unsigned int exp_height,
 	       unsigned int dest_width, unsigned dest_height)
 {
     XImage *dest_image;
     Position x, y, min_y, max_y, exp_max_y, src_x, src_max_x, src_y;
     Dimension w, h, strip_height;
-    Table table;    
+    Table table;
     Pixel pixel;
     double ratio_x, ratio_y;
     Bool fast8;
 
     if (dest_width == src_image->width && dest_height == src_image->height) {
 	/* same for x and y, just send it out */
-	XPutImage(display, d, gc, src_image, exp_x, exp_y, 
-		  exp_x, exp_y, exp_width, exp_height); 
+	XPutImage(display, d, gc, src_image, exp_x, exp_y,
+		  exp_x, exp_y, exp_width, exp_height);
 	return;
     }
 
     ratio_x = (double)dest_width / (double)src_image->width;
     ratio_y = (double)dest_height / (double)src_image->height;
- 
+
     src_x = exp_x / ratio_x;
     if (src_x >= src_image->width)
 	src_x = src_image->width - 1;
@@ -789,7 +800,7 @@ putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
     dest_image = XCreateImage(display,
 			      DefaultVisualOfScreen(
 					     DefaultScreenOfDisplay(display)),
-			      src_image->depth, src_image->format, 
+			      src_image->depth, src_image->format,
 			      0, NULL,
 			      dest_width, h,
 			      src_image->bitmap_pad, 0);
@@ -811,7 +822,7 @@ putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
     table.height = (Dimension *) malloc(sizeof(Dimension)*src_image->height);
     if (table.height == NULL)
         Error("Can't malloc scaled image height table");
-    
+
     table.x[0] = 0;
     for (x = 1; x <= src_image->width; x++) {
 	table.x[x] = roundint(ratio_x * x);
@@ -862,7 +873,7 @@ putScaledImage(Display *display, Drawable d, GC gc, XImage *src_image,
 	if (y >= src_image->height)
 	    break;
     }
-    
+
     free(table.x);
     free(table.y);
     free(table.width);
@@ -939,8 +950,8 @@ IsGray(Display *dpy, XStandardColormap *stdmap)
     return (color.green || color.blue);
 }
 
-static void 
-Do_StdGray(Display *dpy, XStandardColormap *stdmap, 
+static void
+Do_StdGray(Display *dpy, XStandardColormap *stdmap,
 	   int ncolors, XColor *colors, XImage *in_image, XImage *out_image)
 {
     register int i, x, y;
@@ -965,7 +976,7 @@ Do_StdGray(Display *dpy, XStandardColormap *stdmap,
 #define MapVal(val,lim,mult) ((((val * lim) + 32768) / 65535) * mult)
 
 static void
-Do_StdCol(Display *dpy, XStandardColormap *stdmap, 
+Do_StdCol(Display *dpy, XStandardColormap *stdmap,
 	  int ncolors, XColor *colors, XImage *in_image, XImage *out_image)
 {
     register int i, x, y;
@@ -999,7 +1010,7 @@ CopyColormapAndFree(Display *dpy, Colormap colormap)
 }
 
 static void
-Do_Pseudo(Display *dpy, Colormap *colormap, 
+Do_Pseudo(Display *dpy, Colormap *colormap,
 	  int ncolors, XColor *colors, XImage *in_image, XImage *out_image)
 {
     register int i, x, y;
@@ -1023,7 +1034,7 @@ Do_Pseudo(Display *dpy, Colormap *colormap,
 }
 
 static void
-Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap, 
+Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap,
 	  int ncolors, XColor *colors, XImage *in_image, XImage *out_image,
           XVisualInfo *vinfo)
 {
@@ -1167,7 +1178,7 @@ Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap,
     }
 }
 
-static unsigned int 
+static unsigned int
 Image_Size(XImage *image)
 {
     if (image->format != ZPixmap)
@@ -1184,7 +1195,7 @@ Error(const char *string)
 		perror("xwud");
 		fprintf(stderr, "\n");
 	}
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 static void

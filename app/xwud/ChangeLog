@@ -1,3 +1,103 @@
+commit 6bd7f41c9b7172a38d780f6618c4ba84fe5c5d48
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 11 18:04:14 2026 -0700
+
+    xwud 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 161c141365ade78345af45b70d6284506a322814
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 18 18:16:40 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/8>
+
+commit 04c3b27de9292234597f8f1e5737a93639efa0f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 18 17:44:39 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/8>
+
+commit babd992e046dbdb0fec840edc66337b7e828085c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/8>
+
+commit 3470cfdff72fabb912bf9065c74637dd0845c609
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 13:29:08 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xwud.1:25:12: WARNING: cannot parse date, using it verbatim: TH xwud 1.0.7
+    mandoc: xwud.1:36:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xwud.1:44:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:49:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:54:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:58:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:63:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:69:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:73:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:79:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:88:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:94:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:99:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:108:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:115:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:119:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:129:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:135:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:150:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwud.1:155:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/7>
+
+commit 543a91255977be6da74eda0979cf11e3a4e5300a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 15:57:08 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/6>
+
+commit 5d8a6cb0db0ba4ae7880528f289675dbd12675ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 15:47:44 2025 -0700
+
+    -help should exit(0) not (1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwud/-/merge_requests/6>
+
 commit f27a02acd302fef3104394a9a966c1194158b62f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 12 11:39:37 2024 -0700
