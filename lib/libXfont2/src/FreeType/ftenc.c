@@ -80,18 +80,13 @@ FTPickMapping(char *xlfd, int length, char *filename, FT_Face face,
 
     symbol = FTEncFontSpecific(encoding_name);
 
-#if XFONT_BDFFORMAT
     ftrc = FT_Get_BDF_Charset_ID(face, &enc, &reg);
-#else
-    ftrc = -1;
-#endif
     if(ftrc == 0) {
         /* Disable reencoding for non-Unicode fonts.  This will
            currently only work for BDFs. */
         if(strlen(enc) + strlen(reg) > 18)
             goto native;
-        snprintf(buf, sizeof(buf), "%s-%s", enc, reg);
-        ErrorF("%s %s\n", buf, encoding_name);
+        snprintf(buf, sizeof(buf), "%s-%s", reg, enc);
         if(strcasecmp(buf, "iso10646-1") != 0) {
             if(strcasecmp(buf, encoding_name) == 0)
                 goto native;
@@ -182,7 +177,6 @@ find_cmap(int type, int pid, int eid, FT_Face face, FT_CharMap *cmap_return)
                 return 1;
             }
         }
-        break;
         /* Try Apple Unicode */
         for(i=0; i<n; i++) {
             cmap = face->charmaps[i];

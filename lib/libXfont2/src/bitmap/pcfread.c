@@ -249,7 +249,7 @@ pcfGetProperties(FontInfoPtr pFontInfo, FontFilePtr file,
     int         i;
     CARD32      size;
     int         string_size;
-    char       *strings;
+    char       *strings = NULL;
 
     /* font properties */
 
@@ -334,6 +334,7 @@ pcfGetProperties(FontInfoPtr pFontInfo, FontFilePtr file,
     pFontInfo->nprops = nprops;
     return TRUE;
 Bail:
+    free(strings);
     free(isStringProp);
     free(props);
     return FALSE;

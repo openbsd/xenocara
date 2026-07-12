@@ -32,7 +32,9 @@ from The Open Group.
 #define bdfIsPrefix(buf,str)	(!strncmp((char *)buf,str,strlen(str)))
 #define	bdfStrEqual(s1,s2)	(!strcmp(s1,s2))
 
-#define	BDF_GENPROPS	6
+/* Max generated properties in bdfReadProperties: POINT_SIZE, FONT,
+ * WEIGHT, RESOLUTION, RESOLUTION_X, RESOLUTION_Y, X_HEIGHT, QUAD_WIDTH */
+#define	BDF_GENPROPS	8
 #define NullProperty	((FontPropPtr)0)
 
 /*

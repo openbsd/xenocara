@@ -769,14 +769,14 @@ bdfReadProperties(FontFilePtr file, FontPtr pFont, bdfFileState *pState)
 	props[nextProp].name = bdfForceMakeAtom("RESOLUTION_X", NULL);
 	props[nextProp].value = (INT32) pState->resolution_x;
 	stringProps[nextProp] = FALSE;
-	pState->resolutionProp = &props[nextProp];
+	pState->resolutionXProp = &props[nextProp];
 	nextProp++;
     }
     if (!pState->resolutionYProp) {
 	props[nextProp].name = bdfForceMakeAtom("RESOLUTION_Y", NULL);
 	props[nextProp].value = (INT32) pState->resolution_y;
 	stringProps[nextProp] = FALSE;
-	pState->resolutionProp = &props[nextProp];
+	pState->resolutionYProp = &props[nextProp];
 	nextProp++;
     }
     if (!pState->xHeightProp) {

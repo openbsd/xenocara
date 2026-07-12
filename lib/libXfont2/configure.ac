@@ -21,7 +21,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.70])
-AC_INIT([libXfont2], [2.0.7],
+AC_INIT([libXfont2], [2.0.8],
 	[https://gitlab.freedesktop.org/xorg/lib/libxfont/-/issues], [libXfont2])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -47,6 +47,10 @@ XORG_ENABLE_DEVEL_DOCS
 XORG_WITH_XMLTO(0.0.22)
 XORG_WITH_FOP
 XORG_CHECK_SGML_DOCTOOLS(1.7)
+
+# Check for Python 3 (needed to generate test font data)
+AM_PATH_PYTHON([3.0],, [:])
+AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != :])
 
 # Checks for header files.
 AC_CHECK_HEADERS([endian.h poll.h sys/poll.h])

@@ -1,3 +1,318 @@
+commit 88b9df882c0ea91d7bb468aa4792ef1b6f13aa9d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 8 10:52:21 2026 +1000
+
+    libXfont2 2.0.8
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0cbdbe780c9a7c7b064ba38d49c77cea73e24e0b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 2 15:25:54 2026 +1000
+
+    test: add PCF security regression tests
+    
+    Add regression tests for five PCF font parsing and scaling
+    vulnerabilities.
+    
+    Python scripts generate crafted PCF fonts at build time. Each test
+    binary loads its font through the font path element API and verifies
+    the library handles it without crashing. Under ASAN, these tests would
+    detect the heap buffer overflows that the fixes prevent.
+    
+    Test fonts (built sources):
+      gen_evil_pcf_repad.py        - Mismatched bitmapSizes vs per-glyph metrics
+      gen_evil_pcf_norepad.py      - Out-of-bounds read in no-repad bitmap path
+      gen_evil_pcf_props.py        - 40 duplicate MIN_SPACE properties
+      gen_evil_pcf_encoding.py     - Out-of-bounds encoding offset
+      gen_evil_pcf_bitmapscale.py  - Many glyphs that expand during scaling
+    
+    Tests require Python 3; skipped automatically if unavailable.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/34>
+
+commit 6f2cc6e7547c777212387cfe0499d03066bb3aac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 2 15:25:44 2026 +1000
+
+    test: fix stubs in font-test-utils for use outside the X server
+    
+    Several callback stubs in font-test-utils.c call err() (fatal) when
+    invoked, preventing test code from exercising font paths that use atoms,
+    font server initialization, or time queries.
+    
+    Set the atom callbacks to NULL so that libxfontstubs falls back to the
+    internal atom implementation. Return Successful from init_fs_handlers
+    and 0 from get_time_in_millis so that font path initialization
+    completes without crashing.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/34>
+
+commit dff957a5158da038a282a59a31fe736702732939
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 1 16:49:55 2026 +1000
+
+    bitscale: add bounds check to computeProps for property buffer
+    
+    ComputeScaledProperties allocates a fixed-size property buffer of 70
+    slots. computeProps iterates the source font's properties and writes 1
+    slot for unscaled properties or 2 slots for scaledX/scaledY properties,
+    with no bounds check. A malicious font with many duplicate properties
+    matching fontPropTable entries can overflow the allocated buffer.
+    
+    Fix this by passing the remaining buffer capacity to computeProps and
+    checking it before each write. Properties that would exceed the buffer
+    are silently skipped.
+    
+    The function is also restructured to handle the buffer writes for
+    scaledX/scaledY inside the switch cases directly, rather than in a
+    separate block after the switch. This makes the control flow clearer and
+    ensures the bounds check covers all writes.
+    
+    This vulnerability was discovered by:
+    Anonymous working with TrendAI Zero Day Initiative
+    
+    CVE-2026-56003/ZDI-CAN-30560
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/34>
+
+commit b4389e0b1d84a690b819bb27b1439968811a3674
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 1 16:48:40 2026 +1000
+
+    pcfread: validate bitmap sizes and offsets against per-glyph metrics
+    
+    pcfReadFont() uses bitmapSizes[] read directly from the PCF file to
+    allocate the repadded bitmap buffer. However, per-glyph metrics (also
+    from the file) control how much data RepadBitmap() writes. A malicious
+    PCF font can declare a small bitmapSizes[] value while having per-glyph
+    metrics that require more space, causing a heap buffer overflow.
+    
+    A similar issue happens with the encoding offsets: pcfReadFont reads
+    encoding offsets from the PCF file and uses them to index into the
+    metrics array without bounds checking.  A crafted font can set an
+    encoding offset larger than nmetrics, causing an out-of-bounds pointer
+    that is later dereferenced when glyphs are accessed through the encoding
+    table.
+    
+    And the no-repad bitmap path (when PCF_GLYPH_PAD matches the requested
+    glyph pad) only validated that each glyph's offset was within the bitmap
+    buffer, but did not check that the full glyph extent (offset +
+    BYTES_PER_ROW * height) fits within the buffer.  A crafted font with a
+    glyph offset near the end of a small bitmap buffer but large glyph
+    metrics causes a heap buffer over-read when the glyph is later rendered.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    CVE-2026-56002/ZDI-CAN-30559
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/34>
+
+commit be0b08e2d354138d3222b4490e2a77c6ee42f778
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 1 16:46:10 2026 +1000
+
+    bitscale: fix integer overflow in BitmapScaleBitmaps bytestoalloc
+    
+    bytestoalloc is declared as unsigned int (32-bit). When the sum of
+    per-glyph byte counts exceeds 2^32, the value wraps around and calloc()
+    allocates a buffer that is too small. The subsequent ScaleBitmap loop
+    then writes past the end of the allocated buffer.
+    
+    Change bytestoalloc from unsigned int to size_t to match the actual
+    allocation size type, and add an explicit overflow check in the
+    accumulation loop to bail out if the total would exceed SIZE_MAX.
+    
+    This vulnerability was discovered by:
+    Anonymous working with TrendAI Zero Day Initiative
+    
+    CVE-2026-56001/ZDI-CAN-30558
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/34>
+
+commit dd5ff35403e9dcf8acdd4c8879eed65268d3ef94
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jun 3 16:49:03 2026 +1000
+
+    fontfile: Remove ridiculously old compat API
+    
+    Remove the binary compatibility shims for the old fontenc function
+    names (font_encoding_from_xlfd, font_encoding_find, etc). These have
+    been superseded by the FontEnc* names for years.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/33>
+
+commit 2097fc4ac61c28831b5d440888fc07d77f043c44
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jun 3 16:43:15 2026 +1000
+
+    freetype: Remove misguided ifdef around BDF charset query
+    
+    XFONT_BDFFORMAT controls whether libXfont builds its own BDF reader.
+    FT_Get_BDF_Charset_ID() is a FreeType library function whose
+    availability is orthogonal to our own BDF support. The call should
+    always be made when FreeType is available.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/33>
+
+commit e3f40cb104e0ff6c0ee7e40548105ab1e5708115
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 8 15:07:41 2026 +1000
+
+    freetype: Remove premature break in find_cmap() Unicode fallback
+    
+    Remove a premature break that made the Apple Unicode and ISO Unicode
+    cmap fallback loops unreachable when Microsoft Unicode was not available.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/33>
+
+commit 6141975cb0bcd627ff9edd62bf13b151f4c8d360
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Jun 8 15:07:28 2026 +1000
+
+    freetype: Fix encoding string assembly
+    
+    The code was building charset identifier strings as "encoding-registry"
+    (e.g. "1-iso10646") instead of the correct "registry-encoding" (e.g.
+    "iso10646-1"), causing charset comparisons to always fail.
+    
+    Also remove a stale debug ErrorF left in from development.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/33>
+
+commit 9cc9c4a741bd95cd0820bd279cd67886e7962aa1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 2 16:36:31 2026 +1000
+
+    render: use calloc for FontRec to prevent use of uninitialized memory
+    
+    BuiltinOpenBitmap allocates a FontRec with malloc and only initializes
+    three fields before passing it to pcfReadFont.  If pcfReadFont fails
+    partway through, error cleanup paths may access uninitialized fields
+    in the FontRec.
+    
+    This shouldn't ever happen for the builtin fonts but it's a trivial
+    change so let's do this. It also matches CreateFontRec() in private.c
+    which uses malloc+bzero.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/32>
+
+commit 39959747bbb19d673e2762d3be75b98466ce33f7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 2 16:35:46 2026 +1000
+
+    fsio: fix unchecked realloc
+    
+    Check the realloc return value and keep the existing buffer if the
+    reallocation fails.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/32>
+
+commit 09d1c92778cf4fc5a6efe1e8539ea9a60b279a66
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 8 14:30:32 2026 +1000
+
+    bdfread: fix BDF_GENPROPS undercount causing heap buffer overflow
+    
+    BDF_GENPROPS was defined as 6, but up to 8 generated properties can be
+    appended in bdfReadProperties when the BDF file omits all optional
+    properties: POINT_SIZE, FONT, WEIGHT, RESOLUTION (when resolution_x ==
+    resolution_y), RESOLUTION_X, RESOLUTION_Y, X_HEIGHT, QUAD_WIDTH.
+    
+    Change BDF_GENPROPS to 8 to match the actual maximum number of
+    generated properties.
+    
+    Note: the overflow is not currently exploitable because the BDF parser
+    requires nProps >= 1 and both FONT_ASCENT and FONT_DESCENT (nProps >= 2),
+    and both are consumed by bdfSpecialProperty without occupying props[]
+    slots, so allocation is always nProps + BDF_GENPROPS >= 8 which fits
+    all 8 generated properties.  The constant is fixed for correctness
+    and defense in depth.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/32>
+
+commit 6594d1296a0fffac4b2886643a100050507301ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 8 13:54:35 2026 +1000
+
+    bdfread: fix copy-paste error in RESOLUTION_X/Y property generation
+    
+    Both the RESOLUTION_X and RESOLUTION_Y generation blocks incorrectly
+    set pState->resolutionProp instead of their respective
+    pState->resolutionXProp and pState->resolutionYProp fields.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/32>
+
+commit 63bdfc6f60fcd2f3c0c173e26e2b6568248b3f9f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 8 13:52:18 2026 +1000
+
+    pcfread: fix strings memory leak in pcfGetProperties error path
+    
+    The Bail label in pcfGetProperties() freed props and isStringProp but
+    not the strings buffer, leaking it on any error after allocation.
+    
+    Initialize strings to NULL and free it in the Bail path.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/32>
+
+commit b1d2868b3e2704936d45cdb97e6a82323593608f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 2 10:39:29 2026 -0700
+
+    gitlab CI: move back to Debian stable image
+    
+    Debian 'testing' was needed to get autoconf >= 2.70 in 2023, but
+    it's made its way into the stable release now, so we can move back.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/31>
+
+commit 67520db20c6cc37927ae3a212f357e2dd26143f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/30>
+
 commit 2c2e44c94ef17ecd5003a173237b57b315e28d93
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Aug 1 15:53:10 2024 -0700
@@ -2927,7 +3242,7 @@ Date:   Sat Aug 25 23:32:54 2007 +0200
     Kill unused macro definition.
 
 commit 3c3b47bf6f080ddb700886de3e5bfa42c2f0774e
-Merge: 9f86614 32d2d33
+Merge: 9f86614394af 32d2d335eacd
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Sat Aug 11 23:09:50 2007 +0200
 
@@ -3099,7 +3414,7 @@ Date:   Wed Apr 4 17:05:13 2007 -0700
     Version bump: 1.2.8
 
 commit 224fb6403a328e70b370540cc5cefd74421fafac
-Merge: e7a59cf 0fbb37c
+Merge: e7a59cfb5d44 0fbb37ccc630
 Author: Matthieu Herrb <matthieu@roadrock.(none)>
 Date:   Tue Apr 3 16:05:48 2007 +0200
 
@@ -3227,7 +3542,7 @@ Date:   Thu Oct 5 18:12:50 2006 -0700
     --disable-builtins should not force off all bitmap support
 
 commit 264df52d24f585915e0d9823d5f087cf23e3fc75
-Merge: 0fb55cb d896c3e
+Merge: 0fb55cb86e2e d896c3eaeafd
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Sep 22 11:36:43 2006 -0700
 

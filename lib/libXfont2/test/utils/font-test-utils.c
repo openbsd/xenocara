@@ -120,14 +120,16 @@ test_get_new_font_client_id(void)
 static uint32_t
 test_get_time_in_millis(void)
 {
-    err(BadImplementation, "%s called but not yet implemented", __func__);
+    return 0;
 }
 
 static int
 test_init_fs_handlers(FontPathElementPtr fpe,
 		      FontBlockHandlerProcPtr block_handler)
 {
-    err(BadImplementation, "%s called but not yet implemented", __func__);
+    /* Font server connections are not available in test programs.
+     * Return success to allow initialization to complete. */
+    return Successful;
 }
 
 /* Callback from libXfont when each fpe handler is registered */
@@ -172,23 +174,10 @@ test_store_font_client_font(FontPtr pfont, Font id)
     err(BadImplementation, "%s called but not yet implemented", __func__);
 }
 
-static Atom
-test_make_atom(const char *string, unsigned len, int makeit)
-{
-    err(BadImplementation, "%s called but not yet implemented", __func__);
-}
-
-static int
-test_valid_atom(Atom atom)
-{
-    err(BadImplementation, "%s called but not yet implemented", __func__);
-}
-
-static const char *
-test_name_for_atom(Atom atom)
-{
-    err(BadImplementation, "%s called but not yet implemented", __func__);
-}
+/* Atom stubs: return NULL to let libxfontstubs fall back to the
+ * internal atom implementation (__libxfont_internal__MakeAtom etc.)
+ * which is linked into libXfont2.  This avoids fatal err() calls
+ * when test code exercises paths that use atoms (e.g. bitmap scaling). */
 
 static unsigned long
 test_get_server_generation(void)
@@ -231,9 +220,9 @@ static const xfont2_client_funcs_rec xfont2_client_funcs = {
     .get_server_client = test_get_server_client,
     .set_font_authorizations = test_set_font_authorizations,
     .store_font_client_font = test_store_font_client_font,
-    .make_atom = test_make_atom,
-    .valid_atom = test_valid_atom,
-    .name_for_atom = test_name_for_atom,
+    .make_atom = NULL,
+    .valid_atom = NULL,
+    .name_for_atom = NULL,
     .get_server_generation = test_get_server_generation,
     .add_fs_fd = test_add_fs_fd,
     .remove_fs_fd = test_remove_fs_fd,

@@ -277,8 +277,13 @@ _fs_flush (FSFpePtr conn)
     if (conn->outBuf.remove == conn->outBuf.insert)
     {
 	_fs_unmark_block (conn, FS_BROKEN_WRITE|FS_PENDING_WRITE);
-	if (conn->outBuf.size > FS_BUF_INC)
-	    conn->outBuf.buf = realloc (conn->outBuf.buf, FS_BUF_INC);
+	if (conn->outBuf.size > FS_BUF_INC) {
+	    char *tmp = realloc (conn->outBuf.buf, FS_BUF_INC);
+	    if (tmp) {
+		conn->outBuf.buf = tmp;
+		conn->outBuf.size = FS_BUF_INC;
+	    }
+	}
 	conn->outBuf.remove = conn->outBuf.insert = 0;
     }
     return FSIO_READY;
@@ -321,8 +326,11 @@ _fs_downsize (FSBufPtr buf, long size)
 	buf->insert = buf->remove = 0;
 	if (buf->size > size)
 	{
-	    buf->buf = realloc (buf->buf, size);
-	    buf->size = size;
+	    char *tmp = realloc (buf->buf, size);
+	    if (tmp) {
+		buf->buf = tmp;
+		buf->size = size;
+	    }
 	}
     }
 }
