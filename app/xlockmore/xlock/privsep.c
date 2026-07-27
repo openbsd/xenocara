@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.5 2024/11/21 13:45:40 claudio Exp $ */
+/* $OpenBSD: privsep.c,v 1.6 2026/07/27 13:48:21 claudio Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -144,8 +144,8 @@ receive_cmd(struct imsgbuf *ibuf, char **name, char **pass, char **style)
 			/* parent exited */
 			exit(0);
 		}
-		if ((n = imsg_get(ibuf, &imsg)) == -1) {
-			warnx("imsg_get");
+		if ((n = imsgbuf_get(ibuf, &imsg)) == -1) {
+			warnx("imsgbuf_get");
 			return -1;
 		}
 	} while (n == 0);
@@ -193,7 +193,7 @@ receive_result(struct imsgbuf *ibuf, int *presult)
 			return -1;
 		if (nread == 0)
 			return -1;
-		if ((n = imsg_get(ibuf, &imsg)) == -1)
+		if ((n = imsgbuf_get(ibuf, &imsg)) == -1)
 			return -1;
 	} while (n == 0);
 	if (imsg_get_type(&imsg) != XLOCK_CHECKPW_RESULT ||
