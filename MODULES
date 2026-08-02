@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.566 2026/07/12 17:13:53 matthieu Exp $
+# $OpenBSD: MODULES,v 1.567 2026/08/02 06:48:44 tb Exp $
 #
 # X.Org maintained modules
 #
@@ -110,7 +110,7 @@ driver/xf86-video-wsfb		0.4.1
 
 font/encodings			1.1.0
 font/adobe-100dpi		1.0.4
-font/adobe-75dpi		1.0.4		
+font/adobe-75dpi		1.0.4
 font/adobe-utopia-100dpi	1.0.5
 font/adobe-utopia-75dpi		1.0.5
 font/adobe-utopia-type1		1.0.5
