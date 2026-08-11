@@ -1081,6 +1081,7 @@ fs_read_extent_info(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
 	return AllocError;
     }
     fsfont->encoding = pCI;
+    fsfont->num_encoding = numExtents;
     if (haveInk)
 	fsfont->inkMetrics = pCI + numExtents;
     else
@@ -1899,10 +1900,7 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
     fsOffset32		    local_off;
     char		    *off_adr;
     pointer		    pbitmaps;
-    char		    *bits, *allbits;
-#ifdef DEBUG
-    char		    *origallbits;
-#endif
+    char		    *bits, *allbits, *origallbits;
     int			    i,
 			    err;
     int			    nranges = 0;
@@ -1980,6 +1978,17 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
     {
 	minchar = 0;
 	maxchar = rep->num_chars;
+
+	/* Reject replies where num_chars exceeds the encoding array
+	   size allocated in fs_read_extent_info() to prevent
+	   out-of-bounds access on encoding[]. */
+	if (rep->num_chars > (CARD32)fsdata->num_encoding)
+	{
+	    ErrorF("fserve: num_chars (%u) > num_encoding (%d)\n",
+		   (unsigned) rep->num_chars, fsdata->num_encoding);
+	    err = AllocError;
+	    goto bail;
+	}
     }
 
     off_adr = (char *)ppbits;
@@ -1992,8 +2001,8 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
 	goto bail;
     }
 
-#ifdef DEBUG
     origallbits = allbits;
+#ifdef DEBUG
     fprintf (stderr, "Reading %d glyphs in %d bytes for %s\n",
 	     (int) rep->num_chars, (int) rep->nbytes, fsd->name);
 #endif
@@ -2001,6 +2010,16 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
     for (i = 0; i < rep->num_chars; i++)
     {
 	memcpy(&local_off, off_adr, SIZEOF(fsOffset32));	/* align it */
+	/* Bounds-check minchar against the encoding array size to
+	   prevent out-of-bounds access from a malicious font server
+	   reply with more num_chars than num_extents. */
+	if (minchar >= (unsigned long)fsdata->num_encoding)
+	{
+	    ErrorF("fserve: glyph index %lu >= num_encoding (%d)\n",
+		   minchar, fsdata->num_encoding);
+	    err = AllocError;
+	    goto bail;
+	}
 	if (blockrec->type == FS_OPEN_FONT ||
 	    fsdata->encoding[minchar].bits == &_fs_glyph_requested)
 	{
@@ -2014,6 +2033,18 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
 		    (local_off.position < rep->nbytes) &&
 		    (local_off.length <= (rep->nbytes - local_off.position)))
 		{
+		    /* Check that the destination buffer has enough room
+		       for this glyph to prevent a heap overflow from
+		       overlapping source offsets. */
+		    if (local_off.length >
+			rep->nbytes - (allbits - origallbits))
+		    {
+			ErrorF("fserve: glyph data overflow: "
+			       "cumulative write exceeds nbytes (%u)\n",
+			       (unsigned) rep->nbytes);
+			err = AllocError;
+			goto bail;
+		    }
 		    bits = allbits;
 		    allbits += local_off.length;
 		    memcpy(bits, (char *)pbitmaps + local_off.position,
@@ -2041,10 +2072,6 @@ fs_read_glyphs(FontPathElementPtr fpe, FSBlockDataPtr blockrec)
 	}
 	off_adr += SIZEOF(fsOffset32);
     }
-#ifdef DEBUG
-    fprintf (stderr, "Used %d bytes instead of %d\n",
-	     (int) (allbits - origallbits), (int) rep->nbytes);
-#endif
 
     if (blockrec->type == FS_OPEN_FONT)
     {

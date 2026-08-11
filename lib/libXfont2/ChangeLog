@@ -1,3 +1,90 @@
+commit 975cc6526e892c6fad8fa49d0fef58565fbaa003
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 5 10:57:21 2026 +1000
+
+    libXfont2 2.0.9
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c2d222bb22c623d8a40f3275077fc7e6617f2c8a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 13 15:50:09 2026 +1000
+
+    fserve: bounds-check cumulative glyph data writes in fs_read_glyphs
+    
+    fs_read_glyphs() copies each glyph's bitmap into a single allbits
+    buffer allocated to rep->nbytes bytes. The per-glyph guard validates
+    only that the source slice (position, length) lies within the pbitmaps
+    source buffer. It does not check whether the running destination cursor
+    has exceeded the allocation.
+    
+    A malicious font server can send overlapping source offsets (e.g. 1000
+    glyphs each referencing {position:0, length:64} with nbytes=64). Each
+    individual source range passes validation, but the cumulative writes
+    total 64000 bytes into a 64-byte destination buffer.
+    
+    Interestingly there was an unconditional debug printf in place that
+    sort-of warned about this but didn't prevent this. Let's remove that and
+    instead use the actual check to bail out before we run OOB.
+    
+    A regression test is included that sends 100 glyphs each referencing
+    the same 64-byte source slice into a 64-byte destination buffer, and
+    verifies the library rejects the overflow.
+    
+    CVE-2026-44950
+    
+    Found-by: Zhixi "Jace" Sun, independent security researcher
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/36>
+
+commit 668fea81f40bcb48ec67fb55d0b851049d265290
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 13 15:48:06 2026 +1000
+
+    fserve: validate num_chars against encoding array size in fs_read_glyphs
+    
+    FS_QueryXExtents16 causes us to allocate the encoding[] array, later
+    during the FS_QueryXBitmaps16 reply handling we fill in that array.
+    There is no verification that the allocation is large enough, a
+    malicious font server could send us a small numExtents and a
+    large num_chars to force underallocation and OOB read/rwrite.
+    
+    A regression test is included that constructs a crafted
+    FS_QueryXBitmaps16 reply with num_chars > num_encoding and verifies
+    the library rejects it.
+    
+    CVE-2026-59679
+    
+    Found-by: Zhixi "Jace" Sun, independent security researcher
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/36>
+
+commit 2d4b37f525df41399cf2cd409fb97aa30c48546a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 23 12:06:45 2026 +1000
+
+    Disable fontserver support by default
+    
+    Debian has disabled this for over a decade by default and it removes
+    another source of untrusted data that few, if any, users rely on
+    anymore.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/35>
+
+commit c2fc759bbb6d2829ac10a145f0f9bc01a47d6eed
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 23 12:28:19 2026 +1000
+
+    README: fix documentation for --enable-snfformat
+    
+    Disabled by default in 2014 in
+      commit 37595cfd4fea ("Change default to disabling SNF support")
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/35>
+
 commit 88b9df882c0ea91d7bb468aa4792ef1b6f13aa9d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jul 8 10:52:21 2026 +1000

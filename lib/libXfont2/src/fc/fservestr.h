@@ -43,6 +43,7 @@ typedef struct _fs_glyph {
 typedef struct _fs_font {
     CharInfoPtr pDefault;
     CharInfoPtr encoding;
+    int		num_encoding;
     CharInfoPtr inkMetrics;
     FSGlyphPtr	glyphs;
 }           FSFontRec, *FSFontPtr;

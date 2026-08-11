@@ -166,24 +166,26 @@ host_triplet = @host@
 @XFONT_FC_TRUE@	src/fc/fstrans.c
 
 noinst_PROGRAMS = lsfontdir$(EXEEXT)
-@HAVE_PYTHON_TRUE@TESTS = test-pcf-repad$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-props$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-bitmapscale$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-encoding$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-norepad$(EXEEXT)
-@HAVE_PYTHON_TRUE@check_PROGRAMS = test-pcf-repad$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-props$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-bitmapscale$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-encoding$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-norepad$(EXEEXT)
+TESTS = $(am__EXEEXT_1) $(am__EXEEXT_2)
+check_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
+@XFONT_FC_TRUE@am__append_13 = test-fserve-read-glyphs
+@XFONT_FC_TRUE@am__append_14 = test-fserve-read-glyphs
+
+# PCF parser security regression tests
+@HAVE_PYTHON_TRUE@am__append_15 = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
+@HAVE_PYTHON_TRUE@	test-pcf-encoding test-pcf-norepad
+
+@HAVE_PYTHON_TRUE@am__append_16 = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
+@HAVE_PYTHON_TRUE@		 test-pcf-encoding test-pcf-norepad
+
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/config.h.in $(srcdir)/xfont2.pc.in \
 	$(top_srcdir)/src/util/strlcat.c \
-	$(top_srcdir)/src/util/reallocarray.c \
 	$(top_srcdir)/src/util/realpath.c \
-	$(top_srcdir)/src/util/strlcpy.c depcomp \
+	$(top_srcdir)/src/util/strlcpy.c \
+	$(top_srcdir)/src/util/reallocarray.c depcomp \
 	$(libXfontinclude_HEADERS) $(noinst_HEADERS) test-driver \
 	AUTHORS COPYING ChangeLog INSTALL compile config.guess \
 	config.sub install-sh missing ltmain.sh
@@ -312,20 +314,41 @@ am__v_lt_1 =
 libXfont2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libXfont2_la_LDFLAGS) $(LDFLAGS) -o $@
+@XFONT_FC_TRUE@am__EXEEXT_1 = test-fserve-read-glyphs$(EXEEXT)
+@HAVE_PYTHON_TRUE@am__EXEEXT_2 = test-pcf-repad$(EXEEXT) \
+@HAVE_PYTHON_TRUE@	test-pcf-props$(EXEEXT) \
+@HAVE_PYTHON_TRUE@	test-pcf-bitmapscale$(EXEEXT) \
+@HAVE_PYTHON_TRUE@	test-pcf-encoding$(EXEEXT) \
+@HAVE_PYTHON_TRUE@	test-pcf-norepad$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am__objects_11 = test/utils/font-test-utils.$(OBJEXT)
 am_lsfontdir_OBJECTS = test/utils/lsfontdir.$(OBJEXT) \
 	$(am__objects_11)
 lsfontdir_OBJECTS = $(am_lsfontdir_OBJECTS)
 lsfontdir_DEPENDENCIES = libXfont2.la $(LTLIBOBJS)
+am__test_fserve_read_glyphs_SOURCES_DIST =  \
+	test/test-fserve-read-glyphs.c test/utils/font-test-utils.c \
+	test/utils/font-test-utils.h
+am__objects_12 =  \
+	test/utils/test_fserve_read_glyphs-font-test-utils.$(OBJEXT)
+@XFONT_FC_TRUE@am_test_fserve_read_glyphs_OBJECTS = test/test_fserve_read_glyphs-test-fserve-read-glyphs.$(OBJEXT) \
+@XFONT_FC_TRUE@	$(am__objects_12)
+test_fserve_read_glyphs_OBJECTS =  \
+	$(am_test_fserve_read_glyphs_OBJECTS)
+@XFONT_FC_TRUE@test_fserve_read_glyphs_DEPENDENCIES = libXfont2.la \
+@XFONT_FC_TRUE@	$(LTLIBOBJS)
+test_fserve_read_glyphs_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) \
+	$(test_fserve_read_glyphs_LDFLAGS) $(LDFLAGS) -o $@
 am__test_pcf_bitmapscale_SOURCES_DIST = test/test-pcf-bitmapscale.c \
 	test/pcf-test-common.c test/pcf-test-common.h \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
-@HAVE_PYTHON_TRUE@am__objects_12 = test/pcf-test-common.$(OBJEXT) \
+@HAVE_PYTHON_TRUE@am__objects_13 = test/pcf-test-common.$(OBJEXT) \
 @HAVE_PYTHON_TRUE@	$(am__objects_11)
 @HAVE_PYTHON_TRUE@am_test_pcf_bitmapscale_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-bitmapscale.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_12)
+@HAVE_PYTHON_TRUE@	$(am__objects_13)
 test_pcf_bitmapscale_OBJECTS = $(am_test_pcf_bitmapscale_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_bitmapscale_DEPENDENCIES =  \
 @HAVE_PYTHON_TRUE@	$(PCF_TEST_LDADD)
@@ -334,7 +357,7 @@ am__test_pcf_encoding_SOURCES_DIST = test/test-pcf-encoding.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_encoding_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-encoding.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_12)
+@HAVE_PYTHON_TRUE@	$(am__objects_13)
 test_pcf_encoding_OBJECTS = $(am_test_pcf_encoding_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_encoding_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_norepad_SOURCES_DIST = test/test-pcf-norepad.c \
@@ -342,7 +365,7 @@ am__test_pcf_norepad_SOURCES_DIST = test/test-pcf-norepad.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_norepad_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-norepad.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_12)
+@HAVE_PYTHON_TRUE@	$(am__objects_13)
 test_pcf_norepad_OBJECTS = $(am_test_pcf_norepad_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_norepad_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_props_SOURCES_DIST = test/test-pcf-props.c \
@@ -350,7 +373,7 @@ am__test_pcf_props_SOURCES_DIST = test/test-pcf-props.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_props_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-props.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_12)
+@HAVE_PYTHON_TRUE@	$(am__objects_13)
 test_pcf_props_OBJECTS = $(am_test_pcf_props_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_props_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_repad_SOURCES_DIST = test/test-pcf-repad.c \
@@ -358,7 +381,7 @@ am__test_pcf_repad_SOURCES_DIST = test/test-pcf-repad.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_repad_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-repad.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_12)
+@HAVE_PYTHON_TRUE@	$(am__objects_13)
 test_pcf_repad_OBJECTS = $(am_test_pcf_repad_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_repad_DEPENDENCIES = $(PCF_TEST_LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -396,10 +419,12 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libXfont2_la_SOURCES) $(lsfontdir_SOURCES) \
+	$(test_fserve_read_glyphs_SOURCES) \
 	$(test_pcf_bitmapscale_SOURCES) $(test_pcf_encoding_SOURCES) \
 	$(test_pcf_norepad_SOURCES) $(test_pcf_props_SOURCES) \
 	$(test_pcf_repad_SOURCES)
 DIST_SOURCES = $(am__libXfont2_la_SOURCES_DIST) $(lsfontdir_SOURCES) \
+	$(am__test_fserve_read_glyphs_SOURCES_DIST) \
 	$(am__test_pcf_bitmapscale_SOURCES_DIST) \
 	$(am__test_pcf_encoding_SOURCES_DIST) \
 	$(am__test_pcf_norepad_SOURCES_DIST) \
@@ -883,6 +908,13 @@ EXTRA_DIST = src/builtins/buildfont README.md test/utils/README \
 TEST_UTIL_SRCS = test/utils/font-test-utils.c test/utils/font-test-utils.h
 lsfontdir_SOURCES = test/utils/lsfontdir.c $(TEST_UTIL_SRCS)
 lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
+
+# The test #includes fserve.c directly to access static functions so
+# we statically link against libXfont2.a.
+@XFONT_FC_TRUE@test_fserve_read_glyphs_SOURCES = test/test-fserve-read-glyphs.c $(TEST_UTIL_SRCS)
+@XFONT_FC_TRUE@test_fserve_read_glyphs_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/include -I$(top_srcdir)/src/fc
+@XFONT_FC_TRUE@test_fserve_read_glyphs_LDFLAGS = -static
+@XFONT_FC_TRUE@test_fserve_read_glyphs_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@PCF_TEST_SRCS = test/pcf-test-common.c test/pcf-test-common.h $(TEST_UTIL_SRCS)
 @HAVE_PYTHON_TRUE@PCF_TEST_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@test_pcf_repad_SOURCES = test/test-pcf-repad.c $(PCF_TEST_SRCS)
@@ -1192,6 +1224,15 @@ test/$(am__dirstamp):
 test/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) test/$(DEPDIR)
 	@: > test/$(DEPDIR)/$(am__dirstamp)
+test/test_fserve_read_glyphs-test-fserve-read-glyphs.$(OBJEXT):  \
+	test/$(am__dirstamp) test/$(DEPDIR)/$(am__dirstamp)
+test/utils/test_fserve_read_glyphs-font-test-utils.$(OBJEXT):  \
+	test/utils/$(am__dirstamp) \
+	test/utils/$(DEPDIR)/$(am__dirstamp)
+
+test-fserve-read-glyphs$(EXEEXT): $(test_fserve_read_glyphs_OBJECTS) $(test_fserve_read_glyphs_DEPENDENCIES) $(EXTRA_test_fserve_read_glyphs_DEPENDENCIES) 
+	@rm -f test-fserve-read-glyphs$(EXEEXT)
+	$(AM_V_CCLD)$(test_fserve_read_glyphs_LINK) $(test_fserve_read_glyphs_OBJECTS) $(test_fserve_read_glyphs_LDADD) $(LIBS)
 test/test-pcf-bitmapscale.$(OBJEXT): test/$(am__dirstamp) \
 	test/$(DEPDIR)/$(am__dirstamp)
 test/pcf-test-common.$(OBJEXT): test/$(am__dirstamp) \
@@ -1306,8 +1347,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-norepad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-props.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-repad.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/utils/$(DEPDIR)/font-test-utils.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/utils/$(DEPDIR)/lsfontdir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -1332,6 +1375,34 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+test/test_fserve_read_glyphs-test-fserve-read-glyphs.o: test/test-fserve-read-glyphs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -MT test/test_fserve_read_glyphs-test-fserve-read-glyphs.o -MD -MP -MF test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Tpo -c -o test/test_fserve_read_glyphs-test-fserve-read-glyphs.o `test -f 'test/test-fserve-read-glyphs.c' || echo '$(srcdir)/'`test/test-fserve-read-glyphs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Tpo test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/test-fserve-read-glyphs.c' object='test/test_fserve_read_glyphs-test-fserve-read-glyphs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -c -o test/test_fserve_read_glyphs-test-fserve-read-glyphs.o `test -f 'test/test-fserve-read-glyphs.c' || echo '$(srcdir)/'`test/test-fserve-read-glyphs.c
+
+test/test_fserve_read_glyphs-test-fserve-read-glyphs.obj: test/test-fserve-read-glyphs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -MT test/test_fserve_read_glyphs-test-fserve-read-glyphs.obj -MD -MP -MF test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Tpo -c -o test/test_fserve_read_glyphs-test-fserve-read-glyphs.obj `if test -f 'test/test-fserve-read-glyphs.c'; then $(CYGPATH_W) 'test/test-fserve-read-glyphs.c'; else $(CYGPATH_W) '$(srcdir)/test/test-fserve-read-glyphs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Tpo test/$(DEPDIR)/test_fserve_read_glyphs-test-fserve-read-glyphs.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/test-fserve-read-glyphs.c' object='test/test_fserve_read_glyphs-test-fserve-read-glyphs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -c -o test/test_fserve_read_glyphs-test-fserve-read-glyphs.obj `if test -f 'test/test-fserve-read-glyphs.c'; then $(CYGPATH_W) 'test/test-fserve-read-glyphs.c'; else $(CYGPATH_W) '$(srcdir)/test/test-fserve-read-glyphs.c'; fi`
+
+test/utils/test_fserve_read_glyphs-font-test-utils.o: test/utils/font-test-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -MT test/utils/test_fserve_read_glyphs-font-test-utils.o -MD -MP -MF test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Tpo -c -o test/utils/test_fserve_read_glyphs-font-test-utils.o `test -f 'test/utils/font-test-utils.c' || echo '$(srcdir)/'`test/utils/font-test-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Tpo test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/utils/font-test-utils.c' object='test/utils/test_fserve_read_glyphs-font-test-utils.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -c -o test/utils/test_fserve_read_glyphs-font-test-utils.o `test -f 'test/utils/font-test-utils.c' || echo '$(srcdir)/'`test/utils/font-test-utils.c
+
+test/utils/test_fserve_read_glyphs-font-test-utils.obj: test/utils/font-test-utils.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -MT test/utils/test_fserve_read_glyphs-font-test-utils.obj -MD -MP -MF test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Tpo -c -o test/utils/test_fserve_read_glyphs-font-test-utils.obj `if test -f 'test/utils/font-test-utils.c'; then $(CYGPATH_W) 'test/utils/font-test-utils.c'; else $(CYGPATH_W) '$(srcdir)/test/utils/font-test-utils.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Tpo test/utils/$(DEPDIR)/test_fserve_read_glyphs-font-test-utils.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='test/utils/font-test-utils.c' object='test/utils/test_fserve_read_glyphs-font-test-utils.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_fserve_read_glyphs_CFLAGS) $(CFLAGS) -c -o test/utils/test_fserve_read_glyphs-font-test-utils.obj `if test -f 'test/utils/font-test-utils.c'; then $(CYGPATH_W) 'test/utils/font-test-utils.c'; else $(CYGPATH_W) '$(srcdir)/test/utils/font-test-utils.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1638,6 +1709,13 @@ recheck: all $(check_PROGRAMS) $(check_DATA)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+test-fserve-read-glyphs.log: test-fserve-read-glyphs$(EXEEXT)
+	@p='test-fserve-read-glyphs$(EXEEXT)'; \
+	b='test-fserve-read-glyphs'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test-pcf-repad.log: test-pcf-repad$(EXEEXT)
 	@p='test-pcf-repad$(EXEEXT)'; \
 	b='test-pcf-repad'; \

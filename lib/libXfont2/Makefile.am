@@ -167,10 +167,26 @@ lsfontdir_SOURCES = test/utils/lsfontdir.c $(TEST_UTIL_SRCS)
 lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
 
 # Security regression tests
+TESTS =
+check_PROGRAMS =
+
+if XFONT_FC
+TESTS += test-fserve-read-glyphs
+check_PROGRAMS += test-fserve-read-glyphs
+
+# The test #includes fserve.c directly to access static functions so
+# we statically link against libXfont2.a.
+test_fserve_read_glyphs_SOURCES = test/test-fserve-read-glyphs.c $(TEST_UTIL_SRCS)
+test_fserve_read_glyphs_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/include -I$(top_srcdir)/src/fc
+test_fserve_read_glyphs_LDFLAGS = -static
+test_fserve_read_glyphs_LDADD = libXfont2.la $(LTLIBOBJS)
+endif XFONT_FC
+
+# PCF parser security regression tests
 if HAVE_PYTHON
-TESTS = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
+TESTS += test-pcf-repad test-pcf-props test-pcf-bitmapscale \
 	test-pcf-encoding test-pcf-norepad
-check_PROGRAMS = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
+check_PROGRAMS += test-pcf-repad test-pcf-props test-pcf-bitmapscale \
 		 test-pcf-encoding test-pcf-norepad
 
 PCF_TEST_SRCS = test/pcf-test-common.c test/pcf-test-common.h $(TEST_UTIL_SRCS)
