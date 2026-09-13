@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.10 2021/10/25 09:30:33 matthieu Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.11 2026/09/13 09:19:28 matthieu Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -327,7 +327,9 @@ main(int argc, char **argv)
 	char *args[10];
 	int area = 2, delay = 2, timeout = 0;
 	int position = north|west;
+#ifndef DEBUG
 	int fd;
+#endif
 	u_long last_serial = 0;
 
 	parse_opts(argc, argv, &x.dpy, &area, &delay, &timeout,
@@ -345,6 +347,7 @@ main(int argc, char **argv)
 	signal(SIGTERM, handler);
 	signal(SIGUSR1, handler);
 
+#ifndef DEBUG
 	fd = open(_PATH_DEVNULL, O_RDWR);
 	if (fd < 0)
 		err(1, _PATH_DEVNULL);
@@ -353,6 +356,7 @@ main(int argc, char **argv)
 	dup2(fd, STDERR_FILENO);
 	if (fd > 2)
 		close(fd);
+#endif
 
 	if (pledge("stdio proc exec", NULL) == -1)
 		err(1, "pledge");
