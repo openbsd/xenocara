@@ -538,6 +538,30 @@ glamor_pixmap_hcnt(glamor_pixmap_private *priv)
     for (box_index = 0; box_index < glamor_pixmap_hcnt(priv) *         \
              glamor_pixmap_wcnt(priv); box_index++)                    \
 
+static inline int
+glamor_drawable_effective_depth(DrawablePtr drawable)
+{
+    WindowPtr window;
+    
+    if (drawable->type != DRAWABLE_WINDOW ||
+        drawable->depth != 32)
+        return drawable->depth;
+    
+    window = (WindowPtr)drawable;
+    window = window->parent;
+    while (window && window->parent) {
+        /* A depth 32 window with any depth 24 ancestors (other than the root
+         * window) effectively behaves like depth 24
+         */
+        if (window->drawable.depth == 24)
+            return 24;
+        
+        window = window->parent;
+    }
+    
+    return 32;
+}
+
 /* GC private structure. Currently holds only any computed dash pixmap */
 
 typedef struct {
