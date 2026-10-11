@@ -466,7 +466,9 @@
 ./usr/X11R6/share/X11/app-defaults/XCalc-color
 ./usr/X11R6/share/X11/app-defaults/XClipboard
 ./usr/X11R6/share/X11/app-defaults/XClock
+./usr/X11R6/share/X11/app-defaults/XClock-ampm
 ./usr/X11R6/share/X11/app-defaults/XClock-color
+./usr/X11R6/share/X11/app-defaults/XClock-grandfather
 ./usr/X11R6/share/X11/app-defaults/XConsole
 ./usr/X11R6/share/X11/app-defaults/XFontSel
 ./usr/X11R6/share/X11/app-defaults/XLoad
