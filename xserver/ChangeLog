@@ -1,3 +1,1066 @@
+commit edc1b378f804ef5bf286318057e0b935f91f22b7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 7 11:19:46 2026 +1000
+
+    xserver 21.1.25
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2346>
+
+commit 4c9c345d2a10baf956fdefa83bb88681f7c840cf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 3 14:57:31 2026 +1000
+
+    Xi: clean up gesture sprite traces in WindowGone
+    
+    Gesture sprite traces which have the same 'fixed sprite trace
+    for the duration of the gesture' logic as touch sprite traces.
+    Both copy WindowPtrs into the trace without refcounting them.
+    
+    If a device supports gestures but does not have a TouchClass,
+    the cleanup skipped over the gesture sprite cleanup, leaving
+    dangling pointers in place if a sprite trace is destroyed
+    during an active gesture (i.e. window is removed).
+    
+    DeliverOneGestureEvent() then dereferences the stale pointer via
+    DeepestSpriteWin(&gi->sprite)->drawable.id, causing a use-after-free.
+    
+    This vulnerability was discovered by:
+      4nibhal working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-32753
+    
+    CVE-2026-93536
+    
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit efcfd8acc754c5ac4b2555ff375dd5101d735b0a)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 9c3880d0745acefc98ed37e79498dfbe558a0f40
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:17:12 2026 +1000
+
+    Xi: add bounds check for barrier events in input_constrain_cursor
+    
+    input_constrain_cursor() writes barrier hit and leave events into the
+    InputEventList buffer without checking how many slots remain.
+    The buffer is allocated by the DDX at GetMaximumEventsNum() (100) entries
+    and may contain one raw event already. A client can create more than 100
+    pointer barriers, pre-arm them as released via XIBarrierReleasePointer,
+    and then trigger a single pointer motion that crosses all barriers
+    simultaneously. The leave event loop iterates every hit barrier and
+    writes one event per barrier, overflowing the 100-slot buffer.
+    
+    In an ideal world we'd change the InternalEvent* pointer to a struct
+    that contains allocated size, number of events and the pointer itself
+    but we're crossing public APIs here and that requires an ABI bump.
+    
+    So we make do with cutting off the number of barrier events at 64 which
+    should be low enough to not trigger the issue. However, for the 100+
+    barrier case this means we only send BarierHit events, not BarrierRelease.
+    Potentially leaving a client stuck.
+    
+    We mitigate that problem by simply refusing to create more than 32
+    barriers per screen (which on its own would also fix the issue, but hey,
+    'doppelt gemoppelt' as they say).
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31938
+    
+    CVE-2026-93519
+    
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 1f42cc1f00d9c6d46978ae82dba8a52f4d902369)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 9442a53c137bb9eb61336c6fd39627912d50cc8d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 6 15:48:30 2026 +1000
+
+    dix: remove passive grabs referencing a device on removal
+    
+    Passive grabs (GrabRec) store raw DeviceIntPtr values for both the
+    grabbed device and the modifier device without any lifetime management.
+    When a device is removed via XIRemoveMaster, CloseDevice() frees the
+    device struct, but leaves dangling pointers in grab->modifierDevice
+    for any grab that used this device.
+    
+    Subsequent pointer events trigger CheckPassiveGrab() which dereferences
+    the dangling modifierDevice pointer for XI grabs (the CORE and XI2 paths
+    reassign it, but the XI path does not).
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31832
+    
+    CVE-2026-93516
+    
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit be572634158850fff4e9829cee88db08d30c9743)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit a469f98bcfab50dab607ff5ac24037632b0079a3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:04:47 2026 +1000
+
+    present: unlink notifies from window list in present_clear_window_notifies
+    
+    When a window is destroyed, present_clear_window_notifies()
+    does not remove the notify list node from the window. The notify
+    may then be freed as part of the window_priv, leaving dangling
+    pointers in place.
+    
+    When the vblank owning the notify is later torn down,
+    present_free_window_notify() calls xorg_list_del() which
+    writes through these dangling pointers (use-after-free write).
+    
+    This happens when Present cross-window notifies are used: a
+    PresentPixmap on window A can reference window B as a notify target.
+    An untriggered wait_fence keeps the vblank alive so that B can be
+    destroyed first, creating the dangling-pointer window.
+    
+    Fix this by calling the free function we have (and moving the window
+    reset into that function too). present_clear_window_notifies is only
+    called from one place anyway.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31830
+    
+    CVE-2026-93515
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 1b6955c3108e6b43433aefe860070708e6f43d1b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 3961cdca467975a7d377f1f7bcd55d52eb3f417a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:16:49 2026 +1000
+
+    glx: validate dataBytes against cmdlen in RenderLarge first request
+    
+    __glXDisp_RenderLarge() allocates the large command buffer based on
+    cmdlen (from hdr->length, the total command size embedded in the
+    payload), but copies dataBytes (from req->dataBytes, the payload size
+    of the current sub-request) into it. The existing length check only
+    validates that the X11 request length is consistent with dataBytes,
+    not that dataBytes fits within the cmdlen-sized buffer.
+    
+    A malicious client can set hdr->length to a small value (e.g. 12 bytes)
+    while sending a large dataBytes (up to ~256KB or more with
+    BIG-REQUESTS), causing the memcpy to overflow the cmdlen-sized buffer.
+    
+    Add a check that dataBytes <= cmdlen before the buffer allocation and
+    copy on the first request.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31833
+    
+    CVE-2026-93517
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 2abe4632d793314d3d5f28c19583fb76019f5ce4)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit aa56160fa213d8767e7da0c076b5c8242703313b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:04:20 2026 +1000
+
+    Xi: validate modifier values in ProcXIPassiveUngrabDevice
+    
+    ProcXIPassiveUngrabDevice() passes client-supplied modifier values
+    directly to DeletePassiveGrabFromList() without validating them.
+    
+    DeletePassiveGrabFromList() may reach DeleteDetailFromMask() which uses
+    BITCLEAR(mask, modifier). The mask is allocated as 8 Mask words (256
+    bits). A modifier value > 255 causes BITCLEAR to index mask[modifier>>5]
+    past the allocation, resulting in a controlled single-bit-clear at an
+    attacker-chosen heap offset.
+    
+    Add the same modifier validation that CheckGrabValues() uses: reject
+    modifiers that are not XIAnyModifier and have bits set outside
+    AllModifiersMask.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-32366
+    
+    CVE-2026-93523
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 37a1847a60c6799aecf163a5cfa40077a9002675)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 00ce692c7f6ea1900888a2a24aecf6cba5544ae1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:04:35 2026 +1000
+
+    randr: fix size and offset in RRChangeProviderProperty PrependMode
+    
+    RRChangeProviderProperty() has two bugs in the PropModePrepend case:
+    
+    1. new_value.size is set to 'len' (the new data length) instead of
+       'total_len' (len + prop_value->size), losing track of the existing
+       data. This also affects PropModeAppend.
+    
+    2. The old_data offset is computed using prop_value->size instead of
+       len. For PrependMode, the layout should be [new(len)][old(size)],
+       so old_data should start at len * size_in_bytes.
+    
+    These bugs are analogous to the ones fixed in RRChangeOutputProperty(),
+    see commit 541ab2ecd41d ("Xi/randr: fix handling of PropModeAppend/Prepend").
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31944
+    
+    CVE-2026-93521
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 5dc9efd5a199717b53f70b9c6cd336a522370e46)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 927ee1282d21550807619521bee909ef62ed0571
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Sep 3 14:55:27 2026 +1000
+
+    xkb: fix CheckKeySyms overwriting request-range symsPerKey entries
+    
+    CheckKeySyms() has two loops: the first processes keys in the SetMap
+    request range, the second fills in any missing keys from the existing
+    map.
+    
+    The indexing between the two was inconsistent: the first loop
+    uses a zero-based index + req->firstKeySym, the second loop used it just
+    as zero-based index.
+    
+    Example:
+       req->firstKeySym = 50
+       req->nKeySyms = 10
+    
+      i goes from 0 to 10,
+      loop 1 checks [50, 60), changes the width but finishes with i at 10.
+      loop 2 then runs over [10, 255(, copying the old keymap width
+    
+    The second loop overwrites the new widths with the width of the
+    existing keymap. The subsequent SetKeySyms worked on the new width
+    and may write fewer actions than the map width.
+    
+    A subsequent XkbGetMap request would then read XkbKeyNumActions()
+    entries (derived from the new wider key_sym_map.width) from the shorter
+    action allocation, causing an out-of-bounds heap read. The overread
+    bytes would be copied into the GetMap reply and sent back to the client,
+    producing a bounded heap information disclosure.
+    
+    This vulnerability was discovered by:
+      WONJOON HWANG (@joon1337) working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-32408
+    
+    CVE-2026-93524
+    
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit cea71d0273e4d5092aa9c6a8a770734c8935c02e)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 558ba8f784b0f5d4d96948051b2f04c983af20cc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 16:57:38 2026 +1000
+
+    xkb: widen size_syms, num_syms, size_acts, num_acts to unsigned int
+    
+    Fields in XkbClientMapRec and XkbServerMapRec that denote size/num
+    and are unsigned short can result in truncations. For example
+    when XkbResizeKeyType() computes the new size_syms value as
+    (nTotal * 15) / 10, the result may be implicitly truncated to 16
+    bits on assignment. This causes an undersized calloc allocation, and the
+    subsequent copy loop writes based on the actual (untruncated) key count,
+    resulting in a heap buffer overflow. A similar truncation may happen
+    in XkbResizeKeySyms() and XkbResizeKeyActions().
+    
+    Widen the fields from unsigned short to unsigned int. These are internal
+    server structures, not wire protocol types.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31834
+    
+    CVE-2026-93518
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 89101a6c6618f543d7502f2077c7ef1a507af256)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit 5ec0535af2bcc93381666dc110abebba8975f8ae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 17:04:03 2026 +1000
+
+    xkb: allocate names->keys to MAP_LENGTH in XkbAllocNames
+    
+    Commit a3171732d ("xkb: Always use MAP_LENGTH keymap size") converted
+    most XKB allocation functions to use MAP_LENGTH (256) instead of
+    max_key_code + 1. It also removed the per-array reallocarray() calls in
+    XkbChangeKeycodeRange(), replacing them with a memset up to MAP_LENGTH.
+    However, XkbAllocNames() was missed and still allocates names->keys to
+    max_key_code + 1.
+    
+    When a keycodes component with max_key_code < 255 is loaded (e.g.
+    sun(type6) with max_key_code=132) and then a SetMap request extends
+    maxKeyCode to 255, XkbChangeKeycodeRange() memsets names->keys from
+    max_key_code to MAP_LENGTH-1, writing past the undersized allocation.
+    
+    Fix by allocating names->keys to MAP_LENGTH, consistent with all other
+    keymap arrays after a3171732d.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31941
+    
+    CVE-2026-93520
+    
+    Fixes: a3171732da50 ("xkb: Always use MAP_LENGTH keymap size")
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit b941a473e06f26a407a9adb15759be79f7418e86)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit c724006ee76fb002add50fcb4d97e8c96c279f09
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 26 16:53:56 2026 +1000
+
+    xkb: NULL text pointer after free in _CheckSetDoodad error path
+    
+    _CheckSetDoodad() allocates doodad->text.text via _GetCountedString()
+    and then attempts to allocate doodad->text.font. If the font string
+    allocation fails (e.g. because the font string length extends past
+    the request boundary), the error handler frees doodad->text.text but
+    does not NULL the pointer. The doodad was already added to the geometry
+    by XkbAddGeomDoodad() before the string allocations, so when
+    XkbFreeGeometry() runs cleanup, _XkbClearDoodad() frees the same
+    dangling pointer again, resulting in a double-free.
+    
+    NULL the pointer after freeing it to prevent the double-free.
+    
+    This vulnerability was discovered by:
+      Anonymous working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-31221
+    
+    CVE-2026-88812
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Assisted-by: Claude:claude-opus-4-6
+    (cherry picked from commit 0d1b1b0bad86c9ea2a3b7ca5a70e681dc69f1ecc)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2343>
+
+commit cd6e05243d640806266a75467788d71ca3b0f4f2
+Author: stefan11111 <stefan11111github@gmail.com>
+Date:   Tue Aug 25 23:50:53 2026 +0300
+
+    glamor: Set `need_free_region` immediately after pixman region allocation
+    
+    Otherwise, the region would leak when the pixmap is not in gpu memory
+    
+    Signed-off-by: stefan11111 <stefan11111github@gmail.com>
+    (cherry picked from commit 41b3d993baf5cbcff7045e63ad0d3d8aebf1dc67)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 1eb172748e3e115b7a94e603129a6a79dd65356f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 13 15:16:44 2026 -0700
+
+    xf86: mark wasset unused in xf86UnblockSIGIO() compatibility wrapper
+    
+    Avoids a gcc warning in every file that includes it,
+    whether in the server or drivers:
+    
+    /usr/include/xorg/xf86.h: In function ‘xf86UnblockSIGIO’:
+    /usr/include/xorg/xf86.h:86:55: warning: unused parameter ‘wasset’ [-Wunused-parameter]
+       86 | static inline _X_DEPRECATED void xf86UnblockSIGIO(int wasset) { input_unlock(); }
+          |                                                   ~~~~^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 306071c0b9683ef0dfadcfc2dbb78d369680542b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit be8da1869b1082a35a305cd6602016f2a5d936e1
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Aug 17 01:15:52 2026 -0700
+
+    xkb: Keep the group counts of a loaded keymap in range
+    
+    Clamp the count once per key and use it everywhere the key or the keymap is indexed with it, while still reading
+    every symbol the file claimed so that the stream stays in step and the symbol array is not left short.
+    
+    At the other end, a symbols section in which no key defines any group leaves the count at the zero it was
+    allocated with.  This is how XQuartz's keyboard is initialized: model "empty" supplies a symbols section that
+    defines no keys, and a section that defines nothing is still a section, so XkbInitControls() sees XkmSymbolsMask
+    and skips its own single-group default.  The device only survives because DarwinKeyboardReloadHandler()
+    immediately pushes a core keymap that raises the count again.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/422
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 0c764d98eef507df8e32ac1a84df6782999b5994)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit e43063a239c65da9a6208e02dd19c0a899b99600
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Aug 17 00:35:52 2026 -0700
+
+    xkb: Never recompute a keymap's group count down to zero
+    
+    Both places that derive ctrls->num_groups from the widest key in the map can arrive at zero.  But a keymap in
+    which no key defines any symbols is legal, so ensure we declare at least one group.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/422
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit aa0bc93d27813a33f3484c861a87c26441b5ea2a)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit c1f87673a43f299f4f5a06663ce7fa43133a4732
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Aug 17 01:15:52 2026 -0700
+
+    xkb: Default to one group whenever a keymap reports none
+    
+    XkbInitControls() had a fallback to ensure keymaps that defined no symbols at all still resulted in one group.
+    Extend this to cover the case where a keymap reports symbols but no groups.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/422
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 8e11715024a5167c9554be7b49c4d6ca0bd2c73b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 0cfe0657853161185843bb2e338f4da259cc8701
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Aug 16 23:57:26 2026 -0700
+
+    xkb: Guard XkbAdjustGroup() against a keymap with no groups
+    
+    When every key in a keymap has zero groups, ctrls->num_groups is 0 and each out-of-range action here misbehaves.
+    XkbWrapIntoRange divides by zero, which is the reported crash.  XkbClampIntoRange is worse: it computes -1,
+    returns it through this function's unsigned type, and the callers truncate it into XkbStateRec's unsigned char
+    group fields as 255, after which XkbComputeCompatState() reads map->groups[255] out of a four element array and
+    reports what it finds to clients in the compat state of every core event.  The negative-group case adds zero
+    forever, wedging the server thread, in one path while it holds input_lock.  XkbComputeDerivedState() treats group
+    0 as out of range once num_groups is 0, so all of this is reachable from an ordinary key event.
+    
+    XQuartz gets there because it asks for model "empty", whose keycodes file declares no key names, so a keymap
+    compiled at a client's request has no key definitions at all.
+    
+    Guard the arithmetic itself and not just the places that compute num_groups: groups_wrap selects between these
+    actions and is client settable, and this is exported for DDXes that supply their own controls.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/422
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit bdb14dce4b62c37abb3ea9e5edba2eca46b2dbab)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 0fb16f3da03c077f5821f0eeb745384f5472faa5
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Aug 16 21:21:11 2026 -0700
+
+    damage: Unlink a damage from the list it was actually inserted on
+    
+    DamageRegister() chooses which list a damage is linked onto via getDrawableDamageRef(), but DamageUnregister() and
+    damageSetWindowPixmap() re-derived that list at removal time.  For a window the answer depends on the window pixmap,
+    which changes while the damage is registered (Composite redirection, rootless drawing and Present flips all swap it), so
+    the removal could consult a different list than the one the damage was inserted onto.  It then silently found nothing --
+    DAMAGE_VALIDATE_ENABLE is off, so the diagnostic is compiled out -- and left an unregistered, often freed, damage linked
+    where damageRegionAppend() would later dereference its NULL pDrawable and crash.
+    
+    Record the list head when linking a damage and always unlink from that, which also drops a use-after-free read of the
+    old window pixmap in damageSetWindowPixmap(): rootless frees its scratch pixmap before restoring the pre-drawing window
+    pixmaps, so the pixmap consulted there had already been destroyed.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/406
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit da72833185481481052972f031262e94976131ef)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 5981d49e9a26d5401d80f3ef591033cc5faa7e05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 27 09:59:44 2026 -0700
+
+    meson: check cpu_family() instead of cpu()
+    
+    meson documents the values returned by cpu_family() as stable,
+    but not those returned by cpu():
+    https://mesonbuild.com/Reference-tables.html#cpu-families
+    https://mesonbuild.com/Reference-manual_builtin_host_machine.html
+    
+    We already use cpu_family() in most instances, but had missed a few.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 71c7824e806b1f216a2a90e12d3d3b7de9d1a7a9)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 1bef8d9fd89a456207049b9999e7e65696bcced7
+Author: pkubaj <pkubaj@anongoth.pl>
+Date:   Fri Aug 5 12:02:50 2022 +0000
+
+    meson: Fix build on FreeBSD/powerpc*
+    
+    Current error:
+    ld: error: undefined symbol: xf86EnableIO
+    >>> referenced by xf86Configure.c
+    >>>               libxorg_common.a.p/xf86Configure.c.o:(DoConfigure) in archive hw/xfree86/common/libxorg_common.a
+    >>> referenced by xf86Events.c
+    >>>               libxorg_common.a.p/xf86Events.c.o:(xf86VTEnter) in archive hw/xfree86/common/libxorg_common.a
+    >>> referenced by xf86Init.c
+    >>>               libxorg_common.a.p/xf86Init.c.o:(InitOutput) in archive hw/xfree86/common/libxorg_common.a
+    >>> referenced 1 more times
+    
+    (cherry picked from commit 8c54d590cbcad5579548d53499ce0bf501bd56bb)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit d3d92167d195724dd4b3bfd56852ba74eb17790d
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Aug 20 00:11:23 2026 -0700
+
+    RegionValidate: Fix double free of badreg->data on the error path
+    
+    RegionValidate() copies *badreg into ri[0].reg, so ri[0].reg.data aliases badreg->data. A later
+    RECTALLOC_BAIL() can realloc() that block and move it, updating ri[0].reg.data but not badreg->data. On
+    the bail path, freeing ri[0].reg.data and then calling RegionBreak(badreg) frees badreg->data a second
+    time, which by then is a stale pointer into memory already freed or reallocated to something else.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 4ef1b4cd2690c6d8e4b029b02bf707cb04d0da24)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 5ca3b07fa21bf8af9ef95db9cc768804047243e8
+Author: Lukáš Lipinský <18076-Mr-Tao@users.noreply.gitlab.freedesktop.org>
+Date:   Wed Aug 26 01:08:28 2026 +0200
+
+    Xi: byte-swap XIQueryDevice ScrollClass flags
+    
+    SwapScrollInfo converted the other multi-byte ScrollClass fields but left flags in server byte order. Swap it as well and decode the field in the swapped-client protocol test so nonzero flags exercise the wire representation.
+    
+    Signed-off-by: Lukáš Lipinský <18076-Mr-Tao@users.noreply.gitlab.freedesktop.org>
+    (cherry picked from commit 8033c4d93ea140025fea5e7294bb4e92c0cd6af5)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 608f870d9c82fed25bab0c94a6563bbbb09f1002
+Author: Lukáš Lipinský <18076-Mr-Tao@users.noreply.gitlab.freedesktop.org>
+Date:   Wed Aug 26 01:07:50 2026 +0200
+
+    Xi: byte-swap DeviceChanged valuator and scroll data
+    
+    SDeviceChangedEvent left ValuatorClass.value and every ScrollClass-specific multi-byte field in server byte order. Swapped clients therefore received corrupt current values and scroll metadata.
+    
+    Swap those fields and extend the protocol event conversion coverage to nonzero relative valuator values and both scroll directions and flags.
+    
+    Signed-off-by: Lukáš Lipinský <18076-Mr-Tao@users.noreply.gitlab.freedesktop.org>
+    (cherry picked from commit cf91b97d6c7c3ec24a4b161484921f5d4ca5a6de)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 9b6673ece4a791fff30b263da649d6e230358c3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 30 17:48:34 2026 -0700
+
+    meson: only install dri3.h if building dri3 support
+    
+    Reported-by: Thomas Klausner <wiz@gatalith.at>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit dc8e08825aba7e387e81773647b2257f2189c6f8)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit abe6547728ad3b4ce5d6b60071d327540962e441
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 14:03:19 2026 -0700
+
+    Handle -Wimplicit-fallthrough warnings from gcc 16.1
+    
+    Gets rid of 36 -Wimplicit-fallthrough warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 989e42c1d46a241bd54475d2e062dceed314a97a)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 4a55d1ddb5cf7f2ae49acf608661e960e83e2814
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 11:28:39 2026 -0700
+
+    xf86: handle malloc failure in DoSubstitution()
+    
+    Reported by gcc 16.1:
+    
+    hw/xfree86/parser/scan.c:562:65: warning: use of possibly-NULL ‘result’
+     where non-null expected [CWE-690] [-Wanalyzer-possible-null-argument]
+      562 |                         strcpy(result + l, s);                  \
+          |                         ^~~~~~~~~~~~~~~~~~~~
+    hw/xfree86/parser/scan.c:595:21: note: in expansion of macro ‘APPEND_STR’
+      595 |                     APPEND_STR(cmdline);
+          |                     ^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit c26e2081cba3fdf79bd6fe6e37f042d26b2a930e)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 04a8af363f451a5a054f3df211f0a64bd9b4cf04
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 11:10:42 2026 -0700
+
+    exa: silence -Wold-style-declaration warning from gcc 16
+    
+    exa/exa_accel.c:239:1: warning: ‘inline’ is not at beginning of declaration
+     [-Wold-style-declaration]
+      239 | static Bool inline
+          | ^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 3d22aaf07f4d6397885a44f33bca69a0c5c47337)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 9f933f5e660f100a7a090c660dd90f76a4548ba1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 10:46:43 2026 -0700
+
+    test: silence -Wanalyzer-null-argument warnings in strndup tests
+    
+    Catch malloc failures before calling strcmp() with them.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit e7644f938afa7e9748345e65fb2d7be745c59635)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 9ac6dd95044871ca940c7692bcfc6dfcb840e80f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 10:40:45 2026 -0700
+
+    xf86: silence -Wanalyzer-possible-null-dereference warning in parser
+    
+    Reported by gcc 16.1:
+    hw/xfree86/parser/Files.c:131:41: warning: dereference of possibly-NULL
+     ‘*ptr.file_modulepath’ [CWE-690] [-Wanalyzer-possible-null-dereference]
+      131 |                 ptr->file_modulepath[0] = '\0';
+          |                 ~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~
+    [...]
+      130 |│                ptr->file_modulepath = malloc(1);
+          |│                ~~~                    ~~~~~~~~~
+          |│                |                      |
+          |└───────────────>(8) ...to here         (9) this call could return NULL
+      131 |                 ptr->file_modulepath[0] = '\0';
+          |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                                         |
+          |                                         (10) ⚠  ‘malloc(1)’ could be NULL: unchecked value from (9)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 61668cf321c0b222cbe01af3c7f38063b2589e8b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 8be31cfe696edfc9919a281ff91172c709f3bdd3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 10:32:45 2026 -0700
+
+    xf86: prevent passing NULL pointer as strcat() destination
+    
+    Reported by gcc 16.1:
+    hw/xfree86/parser/Files.c:119:17: warning: use of NULL where non-null
+     expected [CWE-476] [-Wanalyzer-null-argument]
+      119 |                 strcat(ptr->file_fontpath, ",");
+          |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ......
+      117 |             ptr->file_fontpath = realloc(ptr->file_fontpath, i);
+          |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                                | |
+          |                                | (9) when ‘realloc’ fails
+          |                                (10) using NULL here
+      118 |             if (j)
+          |                ~
+          |                |
+          |                (11) following ‘true’ branch (when ‘j != 0’)... ─>─┐
+          |                                                                   │
+          |                                                                   │
+          |┌──────────────────────────────────────────────────────────────────┘
+      119 |│                strcat(ptr->file_fontpath, ",");
+          |│                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |│                |
+          |└───────────────>(12) ...to here
+          |                 (13) ⚠  argument 1 (‘realloc(*ptr.file_fontpath, (long unsigned int)i)’) NULL where non-null expected
+    <built-in>: note: argument 1 of ‘__builtin_strlen’ must be non-null
+    ......
+          |                                                                   │
+          |┌──────────────────────────────────────────────────────────────────┘
+      121 |│            strcat(ptr->file_fontpath, str);
+          |│            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |│            |         |
+          |│            |         (10) using NULL here
+          |└───────────>(9) ...to here
+          |             (11) ⚠  argument 1 (‘*ptr.file_fontpath’) NULL where non-null expected
+    note: argument 1 of ‘strcat’ must be non-null
+    
+    hw/xfree86/parser/Files.c:144:17: warning: use of NULL where non-null expected [CWE-476] [-Wanalyzer-null-argument]
+      144 |                 strcat(ptr->file_modulepath, ",");
+          |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ......
+      142 |             ptr->file_modulepath = realloc(ptr->file_modulepath, k);
+          |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                                  | |
+          |                                  | (9) when ‘realloc’ fails
+          |                                  (10) using NULL here
+      143 |             if (l)
+          |                ~
+          |                |
+          |                (11) following ‘true’ branch (when ‘l != 0’)... ─>─┐
+          |                                                                   │
+          |                                                                   │
+          |┌──────────────────────────────────────────────────────────────────┘
+      144 |│                strcat(ptr->file_modulepath, ",");
+          |│                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |│                |
+          |└───────────────>(12) ...to here
+          |                 (13) ⚠  argument 1 (‘realloc(*ptr.file_modulepath, (long unsigned int)k)’) NULL where non-null expected
+    <built-in>: note: argument 1 of ‘__builtin_strlen’ must be non-null
+    ......
+          |                                                                   │
+          |┌──────────────────────────────────────────────────────────────────┘
+      146 |│            strcat(ptr->file_modulepath, str);
+          |│            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |│            |         |
+          |│            |         (10) using NULL here
+          |└───────────>(9) ...to here
+          |             (11) ⚠  argument 1 (‘*ptr.file_modulepath’) NULL where non-null expected
+    note: argument 1 of ‘strcat’ must be non-null
+    
+    Also clears two -Wanalyzer-malloc-leak warnings for leaking the old
+    pointer when realloc() failed, now that realloc() cannot fail.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 43710f61faf9924419f77896038e49107a676b2f)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 6710bc2fcccb97588139763edef7590144c16531
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 10:26:01 2026 -0700
+
+    xf86: prevent passing NULL pointer as strcpy destination
+    
+    Reported by gcc 16.1:
+    hw/xfree86/common/xf86Configure.c:463:9: warning: use of NULL where non-null
+     expected [CWE-476] [-Wanalyzer-null-argument]
+      463 |         strcpy(ptr->mon_modelname, (char *) (det_mon->section.name));
+          |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      ‘handle_detailed_input’: events 1-5
+      458 |     switch (det_mon->type) {
+          |     ^~~~~~
+          |     |
+          |     (1) following ‘case 252:’ branch... ─>─┐
+          |                                            │
+          |                                            │
+          |┌───────────────────────────────────────────┘
+      459 |│    case DS_NAME:
+          |│    ~~~~
+          |│    |
+          |└───>(2) ...to here
+      460 |         ptr->mon_modelname = realloc(ptr->mon_modelname,
+          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |                            | |
+          |                            | (3) when ‘realloc’ fails
+          |                            (4) using NULL here
+      461 |                                      strlen((char *) (det_mon->section.name)) +
+          |                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      462 |                                      1);
+          |                                      ~~
+      463 |         strcpy(ptr->mon_modelname, (char *) (det_mon->section.name));
+          |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+          |         |
+          |         (5) ⚠  argument 1 (‘realloc(*(struct <anonymous> *)data.mon_modelname,  strlen(&*det_mon.section.name) + 1)’) NULL where non-null expected
+    
+    note: argument 1 of ‘strcpy’ must be non-null
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 38ab3fd3debed4e49896b34ac7f3e03fe590ee79)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit a8aa186db69ecd56bd36fd1d906f69e5ed5924ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 9 09:55:00 2026 -0700
+
+    xkb: Fix -Wcalloc-transposed-args warning in _XkbCopyGeom()
+    
+    Reported by gcc 16.1:
+    xkb/xkbUtils.c:1440:39: warning: ‘calloc’ sizes specified with ‘sizeof’ in
+    the earlier argument and not in the later argument [-Wcalloc-transposed-args]
+     1440 |             dst->geom = calloc(sizeof(XkbGeometryRec), 1);
+          |                                       ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit de30aa836538304b2f730d69c845d83a96ac1a16)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 05ddf2f8379d98aca59769e0af6b0587eba83dc3
+Author: dongshengyuan <545258830@qq.com>
+Date:   Thu Jun 11 13:45:00 2026 +0800
+
+    enhance: popen-fdopen-error-handling
+    
+    If fdopen() fails, close the unused pipe fd, free the pid list node,
+    and restore the smart scheduler signal before returning NULL.
+    Previously the fd would leak and the node would be added to pidlist
+    with a NULL fp.
+    
+    Signed-off-by: dongshengyuan <545258830@qq.com>
+    (cherry picked from commit 7023ecca450be10ef1949389e6a15f416bef2c8b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 62758ed35f36c5677d15eb77607ce19a6078348c
+Author: NetSysFire <21296-NetSysFire@users.noreply.gitlab.freedesktop.org>
+Date:   Sat Jul 11 15:48:26 2026 +0000
+
+    xorg.conf.man: Fix escape sequence typo
+    
+    (cherry picked from commit 128a4827c910ded230e04aec632e7c618f4d84f6)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2336>
+
+commit 640a967175c8a20484021bccc17cfe93141306c6
+Author: Gary T. Giesen <ggiesen@giesen.me>
+Date:   Fri Jun 26 14:56:18 2026 -0400
+
+    config/udev: guard against NULL subsystem in fallback bus id
+    
+    config_udev_get_fallback_bus_id() passes the result of
+    udev_device_get_subsystem() straight into strcmp(). That accessor can return
+    NULL when the device has no subsystem, so strcmp(NULL, "pci") dereferences a
+    NULL pointer and the server crashes with a SIGSEGV.
+    
+    The path is reached for any DRM device with no udev ID_PATH property, where
+    config_udev_odev_setup_attribs() falls back to this function. DisplayLink/evdi
+    virtual cards have no ID_PATH; a udev remove of such a card during teardown can
+    present a parent whose subsystem is already gone (reported NULL), and the
+    unchecked strcmp faults.
+    
+    The same NULL-subsystem-into-strcmp class was fixed for the four sibling callers
+    in this file by commit 429ee86a; config_udev_get_fallback_bus_id() was added
+    later (commit 2f53d1cf) without the guard. The preceding parent==NULL case is
+    already guarded here; extend the same defensiveness to the subsystem lookup.
+    
+    Related to: https://gitlab.freedesktop.org/xorg/xserver/-/issues/1905
+    
+    Signed-off-by: Gary T. Giesen <ggiesen@giesen.me>
+    (cherry picked from commit 9babe7e7f687b0342c8ab726d01a658d590d7c54)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2302>
+
+commit 431125a21829b80a0c93102252922ffea0f92a7d
+Author: Gary T. Giesen <ggiesen@giesen.me>
+Date:   Thu Jun 25 14:21:53 2026 -0400
+
+    xfree86: set GPU screen FB/DGA defaults on runtime hotplug
+    
+    When a platform GPU device is added at runtime, xf86platformAddDevice
+    calls AddGPUScreen without first assigning the EnableDisableFBAccess and
+    SetDGAMode function-pointer defaults. The boot path in xf86Init.c sets
+    both of these for every GPU screen before it calls AddGPUScreen, so a
+    screen added by hotplug is left with SetDGAMode == NULL.
+    
+    modesetting's ScreenInit reaches xf86CrtcScreenInit, which wraps
+    DGACloseScreen onto the screen regardless of how the screen was created.
+    When the device is later removed, xf86platformRemoveDevice tears the GPU
+    screen down and DGACloseScreen calls pScrn->SetDGAMode(pScrn, 0, NULL).
+    On a hotplug-added screen that pointer is NULL, so the call faults and
+    takes down the server with a SIGSEGV.
+    
+    This is not DisplayLink-specific: any modesetting platform GPU screen
+    added at runtime and later removed hits it. DisplayLink/evdi just makes
+    it easy to reproduce, because the evdi platform device is added and
+    reconfigured at runtime.
+    
+    Mirror the boot path by assigning the same defaults in
+    xf86platformAddDevice immediately before the AddGPUScreen call.
+    
+    Closes: #1904
+    Signed-off-by: Gary T. Giesen <ggiesen@giesen.me>
+    (cherry picked from commit dbcd36b38faac64f23006825d6441d9ecec7310a)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2302>
+
+commit 8d604fa14969ca5bf941c6f9002e1d8798f7f5b2
+Author: Octavia Togami <octy@octyl.net>
+Date:   Thu Jun 18 11:56:58 2026 -0700
+
+    Fix use-after-free caused by duplicate glyphs in one glyphset
+    
+    We make two glyphsets, GS1 and GS2, both with the same format depth.
+    GS1 contains any glyph different from the others, let's call it U
+    (unique). GS2 contains two glyphs with the same content, or at least
+    sha1 hash. Let's call them A and B.
+    
+    We first register GS1 and GS2. GS1 has no problems, but before the
+    fix, registering GS2 breaks accounting in `globalGlyphs`. Since there
+    is no check for duplicate glyphs within a single set, we make two
+    `GlyphNew` entries for A and B. Now in the loop at the end, we go over
+    each entry and call `AddGlyph` and `FreeGlyph`:
+    1. AddGlyph(GS2, A, idA) inserts A into `globalGlyphs`
+    2. FreeGlyph(A) drops A's refcnt by one, but as it's being held in
+       `globalGlyphs` it's kept alive.
+    3. AddGlyph(GS2, B, idB) finds A in `globalGlyphs` and reuses it
+       instead of inserting B
+    4. FreeGlyph(B) drops B's refcnt by one (to zero), and B is freed.
+       Before the fix, the lookup in `globalGlyphs` finds A's entry, and
+       since it isn't a DeletedGlyph, it erroneously removes the
+       `gr->glyph` pointing to `A` and decrements `tableEntries`. This
+       results in `tableEntries` being off-by-one as `A` is still alive.
+    
+    Now, we free the glyphsets in a particular order. Freeing GS1 results
+    in calling FreeGlyph(U), which will decrement U's refcnt to zero, and
+    free U. This clears out the entry in `globalGlyphs` for U and
+    decrements `tableEntries`, which due to the earlier error is now zero.
+    When `FreeGlyphSet` sees this, it clears the `globalGlyphs` for that
+    format depth. Now freeing A or GS2 (which transitively frees A) will
+    try to check the `globalGlyphs` at that format depth, but because it
+    was cleared out this crashes.
+    
+    The fix here is to change FreeGlyph to only free a glyph from
+    `globalGlyphs` that is exactly the glyph being freed, so that
+    FreeGlyph(B) doesn't touch `globalGlyphs` at all. This keeps a proper
+    count in `tableEntries` and prevents `globalGlyphs[fdepth]` from being
+    freed before A is freed.
+    
+    Closes: #1881
+    See-also: https://gitlab.freedesktop.org/xorg/xserver/-/work_items/1914
+    (cherry picked from commit 67e7343b588af3852418ea6a0316a326f5c947d2)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2294>
+
+commit 368ff1d5829c97f0364afec46911e85569c0ad43
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sun Aug 16 12:35:07 2026 -0700
+
+    fb: Don't widen the planemask over padding bits when ROOTLESS_SAFEALPHA is set
+    
+    Wide LineDoubleDash lines drew black on screen under XQuartz while the server's own XGetImage readback showed the
+    correct pixels, because at depth 24 that readback ignores alpha. Opaque text and dashed arcs take the same path.
+    
+    fbValidateGC widens a planemask that covers the drawable's depth to cover its full bits per pixel, so the blit and
+    fill paths can take their all-ones shortcuts. On a rootless server that also writes the alpha channel of the window's
+    premultiplied surface, which CoreGraphics then composites as black. Rootless keeps that alpha opaque by clearing the
+    bits from the planemask, but only its own ValidateGC does so, and mi revalidates the GC in the middle of a drawing
+    operation to swap the foreground for the background pixel. By then the damage layer has unwrapped the rootless funcs
+    down to fb, so the reassertion never happens and the rest of the operation lands with a zero alpha channel.
+    
+    Fixes: https://github.com/XQuartz/XQuartz/issues/230
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 1e64827614ae304e169a34561ea7c211fb98fc60)
+
+commit 24688ccd0ba8eaf2544f1a3f9b1bfcc9960d4142
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Fri Jul 17 10:09:46 2026 -0700
+
+    xquartz/GL: Log failures on the indirect GLX make-current path
+    
+    The indirect GLX make-current path failed silently: an unsuccessful surface creation or context attach
+    surfaced only as a generic GLXBadContext to the client, with nothing in the server log to indicate which
+    Xplugin call rejected the request. Add error logging on each failure branch of the make-current, surface
+    creation, and surface configuration code so the offending call and its error code are visible.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit cf0bdc8d6181129f76fed8667f635eadf5070250)
+
+commit 85661fec212557ab99749c1a5f6dacfe1dd0440b
+Author: Martin von Gagern <gagern@google.com>
+Date:   Mon Apr 28 15:53:57 2025 +0200
+
+    modesetting: Check for NULL mode_output before printing warning message
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/xserver/-/issues/1816
+    Signed-off-by: Martin von Gagern <gagern@google.com>
+    (cherry picked from commit 0d39d7a8f31cf2519b7743ea4964eecc4d0aead9)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2260>
+
+commit 05c4d57757a825645b89a50260787549b3f78d88
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Jan 5 10:50:34 2024 +0100
+
+    ci: Prevent duplicate pipelines for MRs
+    
+    Do not create a pipeline for $CI_PIPELINE_SOURCE == 'push' if
+    $CI_OPEN_MERGE_REQUESTS is set, which means there are open MRs using
+    the branch as the source.
+    
+    (cherry picked from commit d757aabd50c27e4693721c0bd35c046ddfe7e22e)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2261>
+
+commit 4430eab7d1e92a01431de43aa9cc38921ef9d07a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 14 10:39:32 2023 -0700
+
+    gitlab CI: add workflow rules
+    
+    Needed due to the gitlab config changes described in:
+     https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/438
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 445834826d4590d4d6f1f9f50c78df170835f02a)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2261>
+
+commit 61cc2b45d36830646e88f4d4224a6f481fcede24
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Fri Jun 26 18:41:24 2026 -0700
+
+    xquartz: Activate the app via xp_window_activate() in -set_front_process:
+    
+    -[NSApplication activateIgnoringOtherApps:] is no longer supported under the macOS cooperative activation model,
+    so use the new xp_window_activate() API instead.
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    (cherry picked from commit 1133421bbd4a0b4064ac0e9565bde8c7034277f1)
+
 commit 65d790bd208ec380b196eb98f144abb0b32e334d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jul 8 11:21:12 2026 +1000

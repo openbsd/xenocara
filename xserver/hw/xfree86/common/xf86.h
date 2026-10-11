@@ -83,7 +83,7 @@ extern _X_EXPORT Bool xf86DRI2Enabled(void);
 
 /* Compatibility functions for pre-input-thread drivers */
 static inline _X_DEPRECATED int xf86BlockSIGIO(void) { input_lock(); return 0; }
-static inline _X_DEPRECATED void xf86UnblockSIGIO(int wasset) { input_unlock(); }
+static inline _X_DEPRECATED void xf86UnblockSIGIO(_X_UNUSED int wasset) { input_unlock(); }
 
 /* Function Prototypes */
 #ifndef _NO_XF86_PROTOTYPES

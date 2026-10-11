@@ -3,10 +3,10 @@ project('xserver', 'c',
             'buildtype=debugoptimized',
             'c_std=gnu99',
         ],
-        version: '21.1.24',
+        version: '21.1.25',
         meson_version: '>= 0.47.0',
 )
-release_date = '2026-07-08'
+release_date = '2026-10-07'
 
 add_project_arguments('-DHAVE_DIX_CONFIG_H', language: ['c', 'objc'])
 cc = meson.get_compiler('c')
@@ -249,10 +249,10 @@ endif
 int10 = get_option('int10')
 if int10 == 'auto'
     int10 = 'x86emu'
-    if host_machine.cpu() == 'powerpc' and host_machine.system() == 'freebsd'
+    if host_machine.cpu_family() == 'ppc' and host_machine.system() == 'freebsd'
         int10 = 'stub'
     endif
-    if host_machine.cpu() == 'arm'
+    if host_machine.cpu_family() == 'arm'
         int10 = 'stub'
     endif
 endif
@@ -503,9 +503,9 @@ endif
 build_acpi = false
 if (get_option('linux_acpi') == true and
    host_machine.system() == 'linux')
-    if (host_machine.cpu() == 'x86' or
-       host_machine.cpu() == 'x86_64' or
-       host_machine.cpu() == 'ia64')
+    if (host_machine.cpu_family() == 'x86' or
+       host_machine.cpu_family() == 'x86_64' or
+       host_machine.cpu_family() == 'ia64')
         build_acpi = true
     endif
 endif
