@@ -1,3 +1,63 @@
+commit 2c03ef16e05c9eef6fcaf1fbd4b77356a17883b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 16 17:41:07 2026 -0700
+
+    makedepend 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6b69b245d1000b71bee61195b4307411f37fac1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 6 16:41:11 2026 -0700
+
+    meson: include headers when checking for functions
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect missing functions in some cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/makedepend/-/merge_requests/16>
+
+commit 99537e20dcd2be7587dff6ecebd623933db267a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 25 16:39:12 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/makedepend/-/merge_requests/15>
+
+commit 7f7dca10bc13524b936fa888805374ee8c0df377
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/makedepend/-/merge_requests/15>
+
+commit 9b71c14eb7e95ca550ecb9cad00147515dccbf1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 26 15:18:11 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/util/makedepend/-/merge_requests/14>
+
 commit 4d8b529937da8d83691ad4b6d9fea7cb82801598
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 4 15:04:20 2024 -0800

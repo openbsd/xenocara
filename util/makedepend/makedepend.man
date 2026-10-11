@@ -23,51 +23,19 @@
 .\" Open Group.
 .\"
 .\"
-.TH MAKEDEPEND 1 __xorgversion__
-.UC 4
+.TH MAKEDEPEND 1 2002-12-14 __xorgversion__
 .SH NAME
 makedepend \- create dependencies in makefiles
 .SH SYNOPSIS
-.B makedepend
-[
-.BI \-D name\fB=\fPdef
-] [
-.BI \-D name
-] [
-.BI \-I includedir
-] [
-.BI \-Y includedir
-]
-.br
-    [
-.B \-a
-] [
-.BI \-f makefile
-] [
-.BI \-include \ file
-] [
-.BI \-o objsuffix
-]
-.br
-    [
-.BI \-p objprefix
-] [
-.BI \-s string
-] [
-.BI \-w width
-] [
-.B \-v
-] [
-.B \-m
-]
-.br
-    [
-\-\^\-
-.I otheroptions
-\-\^\-
-]
-.I sourcefile
-\&.\|.\|.
+.nf
+\fBmakedepend\fP [\fB\-D\fP\fIname\fP\fB=\fP\fIdef\fP] [\fB\-D\fP\fIname\fP] \
+[\fB\-I\fP\fIincludedir\fP] [\fB\-Y\fP\fIincludedir\fP]
+    [\fB\-a\fP] [\fB\-f\fP\fImakefile\fP] [\fB\-include\fP \fIfile\fP] \
+[\fB\-o\fP\fIobjsuffix\fP]
+    [\fB\-p\fP\fIobjprefix\fP] [\fB\-s\fP\fIstring\fP] [\fB\-w\fP\fIwidth\fP] \
+[\fB\-v\fP] [\fB\-m\fP]
+    [\fB\-\^\-\fP \fIotheroptions\fP \fB\-\^\-\fP] \fIsourcefile\fP \&.\|.\|.
+.fi
 .SH DESCRIPTION
 The
 .B makedepend
@@ -100,19 +68,19 @@ includes,
 directly or indirectly,
 is what
 .B makedepend
-calls a \fIdependency.\fP
+calls a \fIdependency\fP.
 These dependencies are then written to a
 .I makefile
 in such a way that
-.B make(1)
+.BR make (1)
 will know which object files must be recompiled when a dependency has changed.
 .PP
 By default,
 .B makedepend
 places its output in the file named
-.I makefile
+.B makefile
 if it exists, otherwise
-.I Makefile.
+.BR Makefile .
 An alternate makefile may be specified with the
 .B \-f
 option.
@@ -137,7 +105,9 @@ appearing on the command line,
 .B makedepend
 puts lines in the makefile of the form
 .sp
+.nf
      sourcefile.o:\0dfile .\|.\|.
+.fi
 .sp
 Where \fIsourcefile.o\fP is the name from the command
 line with its suffix replaced with ``.o'',
@@ -162,7 +132,7 @@ For example,
 The program
 will ignore any option that it does not understand so that you may use
 the same arguments that you would for
-.B cc(1).
+.BR cc (1).
 .TP 5
 .B \-D\fIname\fP=\fIdef\fP \fRor\fP \-D\fIname\fP
 Define.
@@ -172,10 +142,10 @@ in
 .B makedepend's
 symbol table.
 Without
-.I =def\|
+.BI = def\|
 the symbol becomes defined as ``1''.
 .TP 5
-.B \-I\fIincludedir\fP
+.BI \-I includedir
 Include directory.
 This option tells
 .B makedepend
@@ -187,10 +157,11 @@ a
 directive.
 By default,
 .B makedepend
-only searches the standard include directories (usually /usr/include
+only searches the standard include directories (usually
+.B /usr/include
 and possibly a compiler-dependent directory).
 .TP 5
-.B \-Y\fIincludedir\fP
+.BI \-Y includedir
 Replace all of the standard include directories with the single specified
 include directory; you can omit the
 .I includedir
@@ -199,7 +170,7 @@ to simply prevent searching the standard include directories.
 .B \-a
 Append the dependencies to the end of the file instead of replacing them.
 .TP 5
-.B \-f\fImakefile\fP
+.BI \-f makefile
 Filename.
 This allows you to specify an alternate makefile in which
 .B makedepend
@@ -213,32 +184,32 @@ before processing the regular input file. This has the same
 affect as if the specified file is an include statement that
 appears before the very first line of the regular input file.
 .TP 5
-.B \-o\fIobjsuffix\fP
+.BI \-o objsuffix
 Object file suffix.
 Some systems may have object files whose suffix is something other
 than ``.o''.
 This option allows you to specify another suffix, such as
 ``.b'' with
-.I \-o.b
+.B \-o.b
 or ``:obj''
 with
-.I \-o:obj
+.B \-o:obj
 and so forth.
 .TP 5
-.B \-p\fIobjprefix\fP
+.BI \-p objprefix
 Object file prefix.
-The prefix is prepended to the name of the object file. This is
-usually used to designate a different directory for the object file.
+The prefix is prepended to the name of the object file.
+This is usually used to designate a different directory for the object file.
 The default is the empty string.
 .TP 5
-.B \-s\fIstring\fP
+.BI \-s string
 Starting string delimiter.
 This option permits you to specify
 a different string for
 .B makedepend
 to look for in the makefile.
 .TP 5
-.B \-w\fIwidth\fP
+.BI \-w width
 Line width.
 Normally,
 .B makedepend
@@ -256,22 +227,21 @@ to emit the list of files included by each input file.
 Warn about multiple inclusion.
 This option causes
 .B makedepend
-to produce a warning if any input file includes another file more than
-once.  In previous versions of
+to produce a warning if any input file includes another file more than once.
+In previous versions of
 .B makedepend
-this was the default behavior; the default has been changed to better
-match the behavior of the C compiler, which does not consider multiple
-inclusion to be an error.  This option is provided for backward
-compatibility, and to aid in debugging problems related to multiple
-inclusion.
+this was the default behavior;
+the default has been changed to better match the behavior of the C compiler,
+which does not consider multiple inclusion to be an error.
+This option is provided for backward compatibility,
+and to aid in debugging problems related to multiple inclusion.
 .TP 5
 .B "\-\^\- \fIoptions\fP \-\^\-"
 If
 .B makedepend
 encounters a double hyphen (\-\^\-) in the argument list,
-then any unrecognized argument following it
-will be silently ignored; a second double hyphen terminates this
-special treatment.
+then any unrecognized argument following it will be silently ignored;
+a second double hyphen terminates this special treatment.
 In this way,
 .B makedepend
 can be made to safely ignore esoteric compiler arguments that might
@@ -299,12 +269,11 @@ same files.
 .PP
 Given these assumptions,
 .B makedepend
-expects to be called once for each makefile, with
-all source files that are maintained by the
+expects to be called once for each makefile,
+with all source files that are maintained by the
 makefile appearing on the command line.
-It parses each source and include
-file exactly once, maintaining an internal symbol table
-for each.
+It parses each source and include file exactly once,
+maintaining an internal symbol table for each.
 Thus, the first file on the command line will take an amount of time
 proportional to the amount of time that a normal C preprocessor takes.
 But on subsequent files, if it encounters an include file
@@ -314,18 +283,20 @@ For example,
 imagine you are compiling two files,
 .I file1.c
 and
-.I file2.c,
+.IR file2.c ,
 they each include the header file
-.I header.h,
+.IR header.h ,
 and the file
 .I header.h
 in turn includes the files
 .I def1.h
 and
-.I def2.h.
+.IR def2.h .
 When you run the command
 .sp
+.nf
     makedepend\0file1.c\0file2.c
+.fi
 .sp
 .B makedepend
 will parse
@@ -335,25 +306,28 @@ and consequently,
 and then
 .I def1.h
 and
-.I def2.h.
+.IR def2.h .
 It then decides that the dependencies for this file are
 .sp
+.nf
     file1.o:\0header.h\0def1.h\0def2.h
+.fi
 .sp
 But when the program parses
 .I file2.c
 and discovers that it, too, includes
-.I header.h,
+.IR header.h ,
 it does not parse the file,
 but simply adds
-.I header.h,
+.IR header.h ,
 .I def1.h
 and
 .I def2.h
 to the list of dependencies for
-.I file2.o.
+.IR file2.o .
 .SH "SEE ALSO"
-cc(1), make(1)
+.BR cc (1),
+.BR make (1)
 .SH BUGS
 .B makedepend
 parses, but does not currently evaluate, the SVR4 #predicate(token-list)
@@ -366,9 +340,9 @@ Imagine you are parsing two files,
 say
 .I file1.c
 and
-.I file2.c,
+.IR file2.c ,
 each includes the file
-.I def.h.
+.IR def.h .
 The list of files that
 .I def.h
 includes might truly be different when
@@ -376,7 +350,7 @@ includes might truly be different when
 is included by
 .I file1.c
 than when it is included by
-.I file2.c.
+.IR file2.c .
 But once
 .B makedepend
 arrives at a list of dependencies for a file,

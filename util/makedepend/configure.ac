@@ -3,7 +3,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.70])
-AC_INIT([makedepend], [1.0.9],
+AC_INIT([makedepend], [1.0.10],
         [https://gitlab.freedesktop.org/xorg/util/makedepend/-/issues])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([makedepend-config.h])

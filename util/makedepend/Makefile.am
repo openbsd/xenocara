@@ -14,7 +14,7 @@ makedepend_SOURCES = include.c \
 AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\"
 AM_CFLAGS = $(CWARNFLAGS)
 
-EXTRA_DIST = autogen.sh makedepend.man README.md
+EXTRA_DIST = autogen.sh makedepend.man README.md meson.build
 
 # Man page
 appmandir = $(APP_MAN_DIR)
