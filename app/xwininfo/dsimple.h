@@ -39,8 +39,6 @@ from The Open Group.
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 
-typedef enum { False = 0, True } Bool;
-
     /* Global variables used by routines in dsimple.c */
 
 extern const char *program_name;             /* Name of this program */

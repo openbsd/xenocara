@@ -62,6 +62,7 @@ from The Open Group.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <string.h>
 #include "clientwin.h"
 #include "dsimple.h"
@@ -203,13 +204,14 @@ xcb_window_t Select_Window(xcb_connection_t *dpy,
 
     /* Grab the pointer using target cursor, letting it room all over */
     grab_cookie = xcb_grab_pointer
-	(dpy, False, root,
+	(dpy, false, root,
 	 XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE,
 	 XCB_GRAB_MODE_SYNC, XCB_GRAB_MODE_ASYNC,
 	 root, cursor, XCB_TIME_CURRENT_TIME);
     grab_reply = xcb_grab_pointer_reply (dpy, grab_cookie, &err);
     if (grab_reply->status != XCB_GRAB_STATUS_SUCCESS)
 	Fatal_Error ("Can't grab the mouse.");
+    free (grab_reply);
 
     /* Let the user select a window... */
     while ((target_win == XCB_WINDOW_NONE) || (buttons != 0)) {
@@ -272,14 +274,14 @@ struct wininfo_cookies {
 
 #ifndef USE_XCB_ICCCM
 # define xcb_icccm_get_wm_name(Dpy, Win) \
-    xcb_get_property (Dpy, False, Win, XCB_ATOM_WM_NAME, \
+    xcb_get_property (Dpy, false, Win, XCB_ATOM_WM_NAME, \
 		      XCB_GET_PROPERTY_TYPE_ANY, 0, BUFSIZ)
 #endif
 
 static xcb_atom_t atom_net_wm_name, atom_utf8_string;
 
 # define xcb_get_net_wm_name(Dpy, Win)			 \
-    xcb_get_property (Dpy, False, Win, atom_net_wm_name, \
+    xcb_get_property (Dpy, false, Win, atom_net_wm_name, \
 		      atom_utf8_string, 0, BUFSIZ)
 
 
@@ -604,7 +606,7 @@ struct atom_cache_entry *Intern_Atom (xcb_connection_t * dpy, const char *name)
     a = calloc(1, sizeof(struct atom_cache_entry));
     if (a != NULL) {
 	a->name = name;
-	a->intern_atom = xcb_intern_atom (dpy, False, strlen (name), (name));
+	a->intern_atom = xcb_intern_atom (dpy, false, strlen (name), (name));
 	a->next = atom_cache;
 	atom_cache = a;
     }

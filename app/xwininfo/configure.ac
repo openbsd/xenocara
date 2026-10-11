@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xwininfo], [1.1.6],
+AC_INIT([xwininfo], [1.1.7],
 	[https://gitlab.freedesktop.org/xorg/app/xwininfo/-/issues], [xwininfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])

@@ -1,0 +1,13 @@
+option(
+  'xcb-errors',
+  type: 'feature',
+  value: 'disabled',
+  description: 'use xcb-errors (default: disabled)',
+)
+
+option(
+  'xcb-icccm',
+  type: 'feature',
+  value: 'disabled',
+  description: 'use xcb-icccm (default: disabled)',
+)

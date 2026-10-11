@@ -23,6 +23,7 @@
 #include <xcb/xproto.h>
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "clientwin.h"
@@ -33,13 +34,13 @@ static xcb_atom_t atom_wm_state = XCB_ATOM_NONE;
 /*
  * Check if window has given property
  */
-static Bool
+static bool
 Window_Has_Property(xcb_connection_t * dpy, xcb_window_t win, xcb_atom_t atom)
 {
     xcb_get_property_cookie_t prop_cookie;
     xcb_get_property_reply_t *prop_reply;
 
-    prop_cookie = xcb_get_property (dpy, False, win, atom,
+    prop_cookie = xcb_get_property (dpy, false, win, atom,
                                     XCB_GET_PROPERTY_TYPE_ANY, 0, 0);
 
     prop_reply = xcb_get_property_reply (dpy, prop_cookie, NULL);
@@ -48,19 +49,19 @@ Window_Has_Property(xcb_connection_t * dpy, xcb_window_t win, xcb_atom_t atom)
         xcb_atom_t reply_type = prop_reply->type;
         free (prop_reply);
         if (reply_type != XCB_NONE)
-            return True;
+            return true;
     }
 
-    return False;
+    return false;
 }
 
 /*
  * Check if window is viewable
  */
-static Bool
+static bool
 Window_Is_Viewable(xcb_connection_t * dpy, xcb_window_t win)
 {
-    Bool ok = False;
+    bool ok = false;
     xcb_get_window_attributes_cookie_t attr_cookie;
     xcb_get_window_attributes_reply_t *xwa;
 
@@ -152,7 +153,7 @@ Find_Roots(xcb_connection_t * dpy, xcb_window_t root, unsigned int *num)
     if (atom_virtual_root == XCB_ATOM_NONE)
         return NULL;
 
-    prop_cookie = xcb_get_property (dpy, False, root, atom_virtual_root,
+    prop_cookie = xcb_get_property (dpy, false, root, atom_virtual_root,
                                     XCB_ATOM_WINDOW, 0, 0x7fffffff);
     prop_reply = xcb_get_property_reply (dpy, prop_cookie, NULL);
     if (!prop_reply)

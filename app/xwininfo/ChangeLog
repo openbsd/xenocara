@@ -1,3 +1,181 @@
+commit 627235a304fcafc450045412c780c94a44a00031
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 19 09:45:06 2026 -0700
+
+    xwininfo 1.1.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3325cc82899468ef21cada20de6dd1b027a69812
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 6 15:32:23 2026 -0700
+
+    meson: include headers when checking for functions
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect missing functions in some cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/13>
+
+commit b735af3452cbc49161b9ea3cce0aabd6924cf263
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 3 16:37:31 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/12>
+
+commit 2c7bb587340f2428cc22c32256cf9d7cadbc4466
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 2 14:23:16 2026 -0700
+
+    configure: remove local copy of config.rpath
+    
+    Allow autogen to copy in latest version from autotools
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/12>
+
+commit 4e2dc1ace64aa4b8108a5dd495c798f2492b8fb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/12>
+
+commit af244681d8da641c06e4c1676630ebfdef86b288
+Author: Santiago Mola <santi@mola.io>
+Date:   Sun Jul 20 21:48:28 2025 +0200
+
+    Use stdbool.h
+    
+    Signed-off-by: Santiago Mola <santi@mola.io>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/11>
+
+commit 8e60b7c011d006e9906c14d4b8c277b465d92883
+Author: Santiago Mola <santi@mola.io>
+Date:   Sun Jul 20 22:08:49 2025 +0200
+
+    Fix memory leak in Select_Window
+    
+    Signed-off-by: Santiago Mola <santi@mola.io>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/10>
+
+commit dc80de17eb75b3f4ee33621b4d2c1f5a3c877b2b
+Author: Santiago Mola <santi@mola.io>
+Date:   Sun Jul 20 20:56:46 2025 +0200
+
+    Fix memory leak in Display_Window_Id
+    
+    Signed-off-by: Santiago Mola <santi@mola.io>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/9>
+
+commit 5306785506f978fa92cc62ad0a9f0d6f073bdb80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 13:24:34 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    mandoc: xwininfo.1:154:81: STYLE: input text line longer than 80 bytes: To get all informati...
+    mandoc: xwininfo.1:26:16: WARNING: cannot parse date, using it verbatim: TH xwininfo 1.1.6
+    mandoc: xwininfo.1:38:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xwininfo.1:51:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:55:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:63:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:69:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:74:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:80:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:85:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:89:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:97:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:105:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:111:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:120:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:128:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:137:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:150:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:155:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:160:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xwininfo.1:167:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xwininfo.1:194:2: WARNING: skipping paragraph macro: PP empty
+    
+    an.tmac:xwininfo.1:169: style: blank line in input
+    an.tmac:xwininfo.1:171: style: blank line in input
+    an.tmac:xwininfo.1:172: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:173: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:174: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:175: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:176: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:177: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:178: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:179: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:180: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:181: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:182: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:183: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:184: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:185: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:186: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:187: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:188: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:189: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:190: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:191: style: 2 leading space(s) on input line
+    an.tmac:xwininfo.1:192: style: blank line in input
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/8>
+
+commit 545128957da2e10c6211fb3497135ac8a6c8768d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 15:09:45 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/7>
+
+commit 4497925d886b70f67f1b4ce4ce1816bdb933f51a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 15:01:06 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/7>
+
+commit 76b7737e5be806e9fbcc5162d3f79c3b154b11c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 12 14:56:49 2025 -0700
+
+    -help should exit(0) not (1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xwininfo/-/merge_requests/7>
+
+commit ab427b9bfd495a7e9a5dc690f5abe5a2859b8de3
+Author: 積丹尼 Dan Jacobson <jidanni@jidanni.org>
+Date:   Thu Jun 8 18:08:42 2023 +0000
+
+    Update xwininfo.man for #2
+
 commit 13826f0412926eb4659bca21a6f0e179c7a45f11
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Apr 9 09:59:46 2023 -0700
@@ -138,7 +316,7 @@ Date:   Sun Jun 9 10:21:39 2019 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 58213a0cd39dc4ba044f48fab52ed3256ab9a9bd
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Wed Jul 3 00:29:17 2013 +0200
 
     Improve manpage and -h option
@@ -1167,7 +1345,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 97aa768841e147fde3cf16ba9a4c852358085d27
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 21:00:46 2005 +0000
 
     Build system for xwininfo
