@@ -1,3 +1,95 @@
+commit dfba8f9a9a6fed4ead08217fb0e5f5a0afbe04bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 19 12:31:50 2026 -0700
+
+    xclipboard 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d1a02ee469696689125dd59a348f865477c4674
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 28 17:19:42 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/10>
+
+commit 197de8fa35c351e6dc6339bf2d1e7595988eb045
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 28 16:47:48 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/10>
+
+commit a02f2ab7251a2db49d497c6d3a854517d3cadbb0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/10>
+
+commit 6d2fb3b8886bd9b47cba4930fc5867b7a2b4a537
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 18 17:13:17 2025 -0700
+
+    man pages: fix warnings from `mandoc -T lint` and `groff -rCHECKSTYLE=10`
+    
+    an.tmac:xclipboard.1:138: style: blank line in input
+    mandoc: xclipboard.1:26:18: WARNING: cannot parse date, using it verbatim: TH xclipboard 1.1.5
+    mandoc: xclipboard.1:149:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xcutsel.1:26:15: WARNING: cannot parse date, using it verbatim: TH xclipboard 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/9>
+
+commit cec2dbb51183030dfae69d11ff012901ca196eea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 30 10:28:23 2025 -0700
+
+    Improve man page formatting
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/8>
+
+commit fca73274dbc7bbd4f53ba1a18aaf8a49f0e955f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 14:10:43 2025 -0700
+
+    Add -help and -version options
+    
+    Accepts --help & --version as aliases
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/8>
+
+commit 2046fababcb104df45b3b39825658c39efe45bea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 23 13:59:31 2025 -0700
+
+    Print usage message for unknown arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclipboard/-/merge_requests/8>
+
 commit 02e7dc1231436274bd84232927bc99201a772b3d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Aug 26 18:36:09 2024 -0700

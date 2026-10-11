@@ -84,11 +84,12 @@ typedef struct {
 static ButtonState state;
 
 static void
-Syntax(char *call)
+Syntax(const char *call, int exitstatus)
 {
     fprintf (stderr, "usage:  %s [-selection name] [-cutbuffer number]\n",
 	     call);
-    exit (1);
+    fprintf (stderr, "usage:  %s -help | -version\n", call);
+    exit (exitstatus);
 }
 
 
@@ -266,12 +267,35 @@ main(int argc, char *argv[])
 
     XtSetLanguageProc(NULL, NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int a = 1; a < argc; a++) {
+	const char *argn = argv[a];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Syntax(argv[0], EXIT_SUCCESS);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
+	}
+    }
+
     shell =
 	XtAppInitialize( &appcon, "XCutsel", optionDesc, XtNumber(optionDesc),
 			 &argc, argv, NULL, NULL, 0 );
     rdb = XtDatabase(XtDisplay(shell));
 
-    if (argc != 1) Syntax(argv[0]);
+    if (argc > 1) {
+	fputs("Unrecognized argument(s):", stderr);
+	for (int a = 1; a < argc; a++) {
+	    fprintf(stderr, " %s", argv[a]);
+	}
+	fputs("\n\n", stderr);
+	Syntax(argv[0], EXIT_FAILURE);
+    }
 
     XtGetApplicationResources( shell, (XtPointer)&options,
 			       resources, XtNumber(resources),

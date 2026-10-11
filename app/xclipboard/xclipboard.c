@@ -81,6 +81,15 @@ static String fallback_resources[] = {
     NULL
 };
 
+static const char * const usage =
+    "Usage: xclipboard [-options ...]\n"
+    "\n"
+    "where options include all standard toolkit options plus:\n"
+    "    -w          Wrap long lines\n"
+    "    -nw         No Wrapping for long lines\n"
+    "    -help       Print usage message and exit\n"
+    "    -version    Print version and exit\n";
+
 static long
 TextLength(Widget w)
 {
@@ -685,8 +694,34 @@ main(int argc, char *argv[])
 
     XtSetLanguageProc(NULL, NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int a = 1; a < argc; a++) {
+	const char *argn = argv[a];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    fputs(usage, stdout);
+	    exit(EXIT_SUCCESS);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
+	}
+    }
+
     top = XtAppInitialize( &xtcontext, "XClipboard", table, XtNumber(table),
 			  &argc, argv, fallback_resources, NULL, 0);
+    if (argc > 1) {
+	fputs("Unrecognized argument(s):", stderr);
+	for (int a = 1; a < argc; a++) {
+	    fprintf(stderr, " %s", argv[a]);
+	}
+	fputs("\n\n", stderr);
+	fputs(usage, stderr);
+	exit(EXIT_FAILURE);
+    }
 
     XtGetApplicationResources(top, (XtPointer)&userOptions, resources,
 			      XtNumber(resources), NULL, 0);
