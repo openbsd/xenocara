@@ -40,6 +40,8 @@ appdefaultdir = @appdefaultdir@
 
 dist_appdefault_DATA = \
         app-defaults/XClock-color \
+        app-defaults/XClock-ampm \
+        app-defaults/XClock-grandfather \
         app-defaults/XClock
 
 EXTRA_DIST = \

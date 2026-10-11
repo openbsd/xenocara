@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# Copyright (c) 2025, Oracle and/or its affiliates.
+# Copyright (c) 2025, 2026, Oracle and/or its affiliates.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
 project(
   'xclock',
   'c',
-  version: '1.2.0',
+  version: '1.2.1',
   license: 'MIT-open-group AND HPND AND MIT',
   license_files: 'COPYING',
   meson_version: '>= 1.3.0',
@@ -42,16 +42,22 @@ if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
 endif
 
-# Checks for library functions.
+# Checks for headers
 conf.set('HAVE_XLOCALE_H', cc.has_header('xlocale.h') ? '1' : false)
-conf.set('HAVE_STRLCPY', cc.has_function('strlcpy') ? '1' : false)
-conf.set('HAVE_GETPID', cc.has_function('getpid') ? '1' : false)
-conf.set('HAVE_NL_LANGINFO', cc.has_function('nl_langinfo') ? '1' : false)
+
+# Checks for library functions.
+conf.set('HAVE_STRLCPY',
+  cc.has_function('strlcpy', prefix: '#include <string.h>') ? '1' : false)
+conf.set('HAVE_GETPID',
+  cc.has_function('getpid', prefix: '#include <unistd.h>') ? '1' : false)
+conf.set('HAVE_NL_LANGINFO',
+  cc.has_function('nl_langinfo', prefix: '#include <langinfo.h>') ? '1' : false)
 
 # Replacement for AM_ICONV
 dep_iconv = dependency('iconv', required: false)
 conf.set('HAVE_ICONV',
-         cc.has_function('iconv', dependencies: dep_iconv) ? '1' : false)
+  cc.has_function('iconv', dependencies: dep_iconv, prefix: '#include <iconv.h>')
+  ? '1' : false)
 iconv_const = cc.compiles('''
 #include <iconv.h>
 #include <string.h>
@@ -139,7 +145,12 @@ summary('appdefaultdir', appdefaultdir)
 
 # App default files  (*.ad)
 install_data(
- ['app-defaults/XClock', 'app-defaults/XClock-color'],
+ [
+   'app-defaults/XClock',
+   'app-defaults/XClock-color',
+   'app-defaults/XClock-ampm',
+   'app-defaults/XClock-grandfather',
+ ],
  install_dir: appdefaultdir,
 )
 

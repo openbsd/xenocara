@@ -1,0 +1,37 @@
+! Basic xclock design with an AM/PM marker
+! Apply with:  xclock -xrm '*customization: -ampm'
+
+#include "XClock"
+
+XClock.Clock.update: 1
+XClock.Clock.background: #191919
+XClock.Clock.hourColor: #304099
+XClock.Clock.minuteColor: #5060cc
+XClock.Clock.secondColor: #7080ff
+XClock.Clock.majorColor: #cc6050
+XClock.Clock.minorColor: #5060cc
+XClock.Clock.proportional: true
+XClock.Clock.hourShape: (-5, 30) (0, 5) (0, 40) -2 -2 (5, 30)
+XClock.Clock.minuteShape: (-5, 60) (0, 10) (0, 70) -2 -2 (5, 60)
+XClock.Clock.secondShape: (-5, 84) (0, 15) (0, 94) -2 -2 (5, 84) \
+                          (2, -17) (0, -15) (0, -19) -2 -2 (-2, -17)
+XClock.Clock.majorShape: (0, 92) (2, 94) (2, 98) (0, 92) (2, 98) (0, 100) (0, 92) (-2, 94) (-2, 98) (0, 92) (-2, 98) (0, 100)
+XClock.Clock.minorShape: (0, 96) (2, 98) (0, 100) (0, 96) (-2, 98) (0, 100)
+XClock.Clock.amShape: (41, -5) (43, -5) (43, 5) -2 -2 (45, 5) \
+                      -1 (47, 5) (47, -5) -2 -2 (49, -5) \
+                      (43, -1) (43, -3) (47, -1) -2 -2 (47, -3) \
+                      (50, -5) (52, -5) (50, 5) -2 -2 (52, 5) \
+                      -2 -2 (53, -5) -2 -2 (55, -5) \
+                      -2 -2 (56, 5) -2 -2 (58, 5) \
+                      -2 -2 (56, -5) -2 -2 (58, -5)
+XClock.Clock.pmShape: (43, -5) (45, -5) (43, 5) -2 -2 (45, 5) \
+                      -1 (45, 3) (49, 5) -2 -2 (49, 3) \
+                      -1 (47, 3) (49, -1) -2 -2 (47, -1) \
+                      -1 (47, 1) (45, -1) -2 -2 (45, 1) \
+                      (50, -5) (52, -5) (50, 5) -2 -2 (52, 5) \
+                      -2 -2 (53, -5) -2 -2 (55, -5) \
+                      -2 -2 (56, 5) -2 -2 (58, 5) \
+                      -2 -2 (56, -5) -2 -2 (58, -5)
+XClock.Clock.rotateAmpm: false
+XClock.Clock.amColor: #772010
+XClock.Clock.pmColor: #304099

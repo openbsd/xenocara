@@ -1,3 +1,80 @@
+commit a924be78686211bb1d3a04e8fdd37923be9dd540
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 18 09:10:46 2026 -0700
+
+    xclock 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50622fbe13e58895d101593d0187f7541bb7852d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 4 13:11:10 2026 -0700
+
+    meson: include headers when checking for functions
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect missing functions in some cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclock/-/merge_requests/31>
+
+commit 2338e0c61212725d4548406eb48e3fe7f9161d25
+Author: Axel Svensson <mail@axelsvensson.com>
+Date:   Mon Jun 29 02:57:16 2026 +0200
+
+    Demonstrate configurable shapes in app-defaults
+    
+    Add two clock-face designs built on the configurable-shapes feature,
+    alongside the existing XClock-color customization variant.
+    
+    - XClock-ampm: Coloured face with an AM/PM marker.
+    - XClock-grandfather: Classic Grandfather-clock style.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclock/-/merge_requests/30>
+
+commit 0e3e9e064c1a9cef78a994da512206d28b93a4b1
+Author: Axel Svensson <mail@axelsvensson.com>
+Date:   Mon Jun 29 02:46:17 2026 +0200
+
+    Do not call uselocale()
+    
+    !19 introduced a shape parser that called uselocale() to always read
+    coordinates in the C locale. However, uselocale() is not available on
+    NetBSD. Fix to use setlocale() instead.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclock/-/merge_requests/29>
+
+commit 22df9c94ad2c586772c23713f08d03fed0c3127f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 28 15:54:31 2026 -0700
+
+    configure: update checked in copy of config.rpath
+    
+    Causes autogen.sh to fail with autoconf 2.73:
+    autopoint: File config.rpath has been locally modified.
+    autopoint: *** Some files have been locally modified. Not overwriting them because --force has not been specified. For your convenience, you find the local modifications in the file '/tmp/araAQm1n/gtPpIAV1/autopoint.diff'.
+    autopoint: *** Stop.
+    autoreconf: error: autopoint failed with exit status: 1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclock/-/merge_requests/28>
+
+commit 8695506c946334854935ae7ce4c14ce9c2baddea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xclock/-/merge_requests/28>
+
 commit 98d715b01fdd7301c94ddb4a7b73de0331c31941
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jun 27 11:55:26 2026 -0700

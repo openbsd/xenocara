@@ -415,6 +415,8 @@ xclock_SOURCES = \
 DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 dist_appdefault_DATA = \
         app-defaults/XClock-color \
+        app-defaults/XClock-ampm \
+        app-defaults/XClock-grandfather \
         app-defaults/XClock
 
 EXTRA_DIST = \

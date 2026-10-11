@@ -24,7 +24,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xclock],
-	[1.2.0],
+	[1.2.1],
 	[https://gitlab.freedesktop.org/xorg/app/xclock/-/issues],
 	[xclock])
 AC_CONFIG_SRCDIR([Makefile.am])
