@@ -684,6 +684,10 @@ struct itmlst_3 {
 #include <floatingpoint.h>
 #endif
 
+#ifdef __OpenBSD__
+mode_t _permit_setugid = S_ISGID;
+#endif
+
 extern void checkResources(void);
 extern void defaultVisualInfo(Display * display, int screen);
 
