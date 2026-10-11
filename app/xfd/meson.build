@@ -25,7 +25,7 @@
 project(
   'xfd',
   'c',
-  version: '1.1.5',
+  version: '1.1.6',
   license: 'X11',
   license_files: 'COPYING',
   meson_version: '>= 1.1.0',
@@ -45,10 +45,12 @@ endif
 deps = []
 
 # Internationalization & localization support
-use_gettext = cc.has_function('gettext')
+libintl_prefix = '#include <libintl.h>'
+use_gettext = cc.has_function('gettext', prefix: libintl_prefix)
 if use_gettext == false
   dep_libintl = cc.find_library('intl', required: false)
-  use_gettext = cc.has_function('gettext', dependencies: dep_libintl)
+  use_gettext = cc.has_function('gettext', dependencies: dep_libintl,
+                                prefix: libintl_prefix)
   if use_gettext == true
     deps += dep_libintl
   endif

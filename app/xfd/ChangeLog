@@ -1,3 +1,37 @@
+commit d79291ecbbb3fa3537d37317c4a48c6145e8e082
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 19 15:27:35 2026 -0700
+
+    xfd 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0412ef04055eaf118c7a6e6aa612a84217d85a28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 13 15:47:43 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xfd/-/merge_requests/13>
+
+commit 4261cb09d5aa30f8dce0ee70f565dc242a75873c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 30 17:03:02 2026 -0700
+
+    meson: include libintl.h when checking for gettext()
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect it needs to link against libintl
+    for gettext() on NetBSD.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xfd/-/merge_requests/12>
+
 commit f51d1f8224a18d66b4f0df5fd06121be3d4c129f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 24 16:47:58 2026 -0800

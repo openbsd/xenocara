@@ -218,7 +218,7 @@ main(int argc, char *argv[])
 	fputs("\n\n", stderr);
 	usage (1);
     }
-    
+
 #ifdef USE_GETTEXT
     {
 	const char *domaindir;
