@@ -1,3 +1,97 @@
+commit f785a8ffe4765397c9f8ecea1500378637f68afa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 19 14:45:56 2026 -0700
+
+    xkbprint 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91206d2c2684376f85a504dbc0adc79cb7d41aea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 6 14:49:26 2026 -0700
+
+    meson: include headers when checking for functions
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect missing functions in some cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/12>
+
+commit 9aa4674adba24a3b216be096cf079688ca23ad17
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 24 10:52:00 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/11>
+
+commit 5bf31b57bad45634724b7892bf3121c8a9481d6d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 24 10:36:19 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/11>
+
+commit 16a41c3e8a26a571a6bc6533e906464226895ce0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/11>
+
+commit f82155060090e00a0524eafd025aad64ea3ba305
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 26 12:42:38 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xkbprint.1:2:16: WARNING: cannot parse date, using it verbatim: TH xkbprint 1.0.7
+    mandoc: xkbprint.1:9:2: WARNING: skipping paragraph macro: PP after SH
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/10>
+
+commit 89d31354bf9b0eedfdfa09518b6af56fa88e7868
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 10:59:50 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/9>
+
+commit 85b3cee2c244684b120e78472a985f4ca1965fe3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 10:52:11 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xkbprint/-/merge_requests/9>
+
 commit 8ea4c3e22a2ff79d373f8a364309c5a4a0c01ced
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 12 11:04:07 2024 -0700

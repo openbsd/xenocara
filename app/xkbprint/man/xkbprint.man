@@ -1,32 +1,34 @@
 .\"
-.TH XKBPRINT 1 __xorgversion__
+.TH XKBPRINT 1 2022-04-02 __xorgversion__
 .SH NAME
 xkbprint \- print an XKB keyboard description
 .SH SYNOPSIS
 .B xkbprint
-[options] source [ output_file ]
+[\fIoptions\fB] \fIsource\fB [\fIoutput_file\fB]
 .SH DESCRIPTION
-.PP
 The
-.I xkbprint
+.B xkbprint
 command generates a printable or encapsulated PostScript description of the
-XKB keyboard description specified by \fIsource\fP.  The \fIsource\fP can be
-any compiled keymap (.xkm) file that includes a geometry description or an
-X display specification.  If an \fIoutput_file\fP is specified, xkbprint
-writes to it.  If no output file is specified, xkbprint creates replaces
-the extension of the source file with \fI.ps\fP or \fI.eps\fP depending
-on the requested format.  If the source is a non-local X display (e.g.:0),
-xkbprint appends the appropriate prefix to the display specification,
-replacing the colon with a dash.  For a local display, xkprint uses
-server-\fIn\fP where \fIn\fP is the number of the display.
+XKB keyboard description specified by \fIsource\fP.
+The \fIsource\fP can be any compiled keymap (.xkm) file
+that includes a geometry description or an X display specification.
+If an \fIoutput_file\fP is specified, \fBxkbprint\fP writes to it.
+If no output file is specified,
+\fBxkbprint\fP replaces the extension of the source file with
+\fI.ps\fP or \fI.eps\fP depending on the requested format.
+If the source is a non-local X display (e.g., \fBexample.com:0\fP),
+\fBxkbprint\fP appends the appropriate prefix to the display specification,
+replacing the colon with a dash.
+For a local display, \fBxkbprint\fP uses
+\fBserver\-\fP\fIn\fP where \fIn\fP is the number of the display.
 .SH OPTIONS
 .TP 8
 .B \-?, \-help
 Prints a usage message.
 .TP 8
 .B \-color
-Print using the colors specified in the geometry file;  by default, xkbprint
-prints a black-and-white image of the keyboard.
+Print using the colors specified in the geometry file;
+by default, \fBxkbprint\fP prints a black-and-white image of the keyboard.
 .TP 8
 .B \-dflts
 Attempt to compute default names for any missing components, such as keys.
@@ -47,15 +49,15 @@ Print the keyboard at full size.
 Print a grid with \fIres\fP\ mm resolution over the keyboard.
 .TP 8
 .B \-if\ \fIfontName\fP
-Specifies an internal PostScript type 1 font to dump to the specified
+Specifies an internal PostScript Type 1 font to dump to the specified
 output file or to \fIfontName\fP.pfa, if no output file is specified.
 No keyboard description is printed if an internal font is dumped.
 .TP 8
 .B \-label\ \fItype\fP
-Specifies the labels to be printed on keys;  valid types are: \fInone\fP,
-\fIname\fP, \fIcode\fP, and \fIsymbols\fP.
+Specifies the labels to be printed on keys;
+valid types are: \fBnone\fP, \fBname\fP, \fBcode\fP, and \fBsymbols\fP.
 .TP 8
-.B \-lc\ \fI<locale>\fP
+.B \-lc\ \fIlocale\fP
 Specifies a locale in which KeySyms should be resolved.
 .TP 8
 .B \-level1
@@ -80,19 +82,19 @@ Print \fInum\fP copies.
 Print the symbols in \fInum\fP keyboard groups.
 .TP 8
 .B \-npk\ \fInum\fP
-Number of keyboard images to print on each page; for EPS files, this
-specifies the total number of keyboard images to print.
+Number of keyboard images to print on each page;
+for EPS files, this specifies the total number of keyboard images to print.
 .TP 8
 .B \-o\ \fIfile\fP
 Write output to \fIfile\fP.
 .TP 8
 .B \-R\fIdirectory\fP
-Use \fIdirectory\fP as the root directory; all path names are interpreted
-relative to \fIdirectory\fP.
+Use \fIdirectory\fP as the root directory;
+all path names are interpreted relative to \fIdirectory\fP.
 .TP 8
 .B \-pict \fIwhich\fP
 Controls use of pictographs instead of keysym names where available.
-\fIwhich\fP can be any of \fIall\fP, \fInone\fP, or \fIcommon\fP (default).
+\fIwhich\fP can be any of \fBall\fP, \fBnone\fP, or \fBcommon\fP (default).
 .TP 8
 .B \-synch
 Forces synchronization for X requests.

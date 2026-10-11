@@ -156,7 +156,8 @@ parseArgs(int argc, char *argv[])
             }
         }
         else if ((strcmp(argv[i], "-?") == 0) ||
-                 (strcmp(argv[i], "-help") == 0)) {
+                 (strcmp(argv[i], "-help") == 0) ||
+                 (strcmp(argv[i], "--help") == 0)) {
             Usage(argc, argv);
             exit(0);
         }
@@ -383,7 +384,8 @@ parseArgs(int argc, char *argv[])
                  (strcmp(argv[i], "-s") == 0)) {
             synch = True;
         }
-        else if (strcmp(argv[i], "-version") == 0) {
+        else if ((strcmp(argv[i], "-version") == 0) ||
+                 (strcmp(argv[i], "--version") == 0)) {
             puts(PACKAGE_STRING);
             exit(0);
         }
