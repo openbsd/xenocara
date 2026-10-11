@@ -1,3 +1,122 @@
+commit d1acb1a9da6a8a062c15e016b3c379b127846a91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 17 18:19:25 2026 -0700
+
+    xload 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 731cc931846fd613a244fc32b72ccdc873e95823
+Author: Thomas Klausner <wiz@gatalith.at>
+Date:   Sun Aug 9 09:04:52 2026 -0700
+
+    meson: deps needs to be initialized before it can be modified.
+    
+    Fix build on systems like NetBSD that need libintl for gettext()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/17>
+
+commit 54c418c46a2f1353be47b6a7d1cdb8e06c45fe8a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 19 15:00:19 2026 -0700
+
+    xload 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 62dddf6f1018db2ce9e5295e65f08c3a2523ec37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 2 17:39:48 2026 -0700
+
+    meson: include headers when checking for other functions
+    
+    Try to avoid the same problem fixed by the previous commit.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/15>
+
+commit c6a9dc74fb136b4a1ce2d322fb6d9c1f02d2a4a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 30 17:03:02 2026 -0700
+
+    meson: include libintl.h when checking for gettext()
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect it needs to link against libintl
+    for gettext() on NetBSD.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/15>
+
+commit 4ac6abc9300504e89f02aa22f30905b79c2c4df3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 24 13:50:42 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/14>
+
+commit c7f22b55c6966f8eef4e0a1ec5a03fb49e73d00e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 24 11:25:10 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/14>
+
+commit ea20032cdd9344ca4dc240a44107d30892b52339
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/14>
+
+commit 52c6fd2a0393d8cc0176dbafbd75fad178b66bb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 09:12:30 2025 -0700
+
+    man page: fix warnings from `mandoc -T lint`
+    
+    mandoc: xload.1:2:13: WARNING: cannot parse date, using it verbatim: TH xload 1.2.0
+    mandoc: xload.1:24:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xload.1:55:2: WARNING: skipping paragraph macro: PP empty
+    mandoc: xload.1:17:2: WARNING: skipping paragraph macro: PP after SH
+    mandoc: xload.1:94:2: WARNING: skipping paragraph macro: PP empty
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/13>
+
+commit c0497dad0bc0ca9a7c4c9b4aa3dea6c5584641c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 5 13:00:55 2025 -0700
+
+    Improve man page formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xload/-/merge_requests/12>
+
 commit 624100511d6ac22f254bcf7f0cde12febc2e74a2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 24 09:59:41 2024 -0700
