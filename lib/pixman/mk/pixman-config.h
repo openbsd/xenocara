@@ -5,10 +5,6 @@
 
 #pragma once
 
-#ifdef __sparc64__
-#define ASM_HAVE_FUNC_DIRECTIVE 1
-#endif
-
 #ifdef __arm__
 #define ASM_HAVE_SYNTAX_UNIFIED 1
 #endif
@@ -24,7 +20,9 @@
 #define HAVE_FENV_H 1
 
 #if defined(__amd64__) || defined(__i386__) || defined(__powerpc__) \
-	|| defined(__arm__)
+	|| defined(__aarch64__)|| defined(__arm__)                  \
+	|| defined(__mips64__) || defined(__riscv64__)              \
+ 	|| defined(__sparc_v9__)
 #define HAVE_GCC_VECTOR_EXTENSIONS 1
 #endif
 
@@ -55,7 +53,9 @@
 #endif
 
 #if defined(__amd64__) || defined(__i386__) || defined(__powerpc__) \
-	|| defined(__arm__)
+	|| defined(__aarch64__) || defined(__arm__)                 \
+	|| defined(__mips64__) || defined(__riscv64__)              \
+	|| defined(__sparc_v9__)
 #define TLS __thread
 #endif
 

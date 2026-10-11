@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2026/05/30 10:15:23 naddy Exp $
+# $OpenBSD: Makefile,v 1.5 2026/10/11 12:12:00 matthieu Exp $
 
 .include <bsd.own.mk>
 
@@ -65,6 +65,10 @@ CFLAGS_pixman-ssse3.o = -mssse3
 
 .if ${MACHINE_ARCH} == "mips64" || ${MACHINE_ARCH} == "mips64el"
 SRCS += 
+.endif
+
+.if ${MACHINE_ARCH} == "aarch64"
+SRCS += pixman-arma64-neon-asm.S pixman-arma64-neon-asm-bilinear.S
 .endif
 
 .if ${MACHINE_ARCH} == "arm"
