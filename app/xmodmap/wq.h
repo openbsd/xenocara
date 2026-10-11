@@ -29,7 +29,7 @@ from The Open Group.
 #ifndef _WQ_H
 #define _WQ_H
 
-/* 
+/*
  * Input is parsed and a work queue is built that is executed later.  This
  * allows us to swap keys as well as ensure that we don't mess up the keyboard
  * by doing a partial rebind.

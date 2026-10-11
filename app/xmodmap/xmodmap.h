@@ -51,7 +51,7 @@ extern void print_pointer_map(void);
 
 extern int UpdateModifierMapping(XModifierKeymap *map);
 extern int AddModifier(XModifierKeymap **mapp, KeyCode keycode, int modifier);
-extern int RemoveModifier(XModifierKeymap **mapp, KeyCode keycode, 
+extern int RemoveModifier(XModifierKeymap **mapp, KeyCode keycode,
 			  int modifier);
 extern int ClearModifier(XModifierKeymap **mapp, int modifier);
 extern void PrintModifierMapping(XModifierKeymap *map, FILE *fp);

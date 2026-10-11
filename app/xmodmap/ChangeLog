@@ -1,3 +1,185 @@
+commit 55b2208d2acea9609d81afe657da00859ae19e70
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 19 10:24:27 2026 -0700
+
+    xmodmap 1.0.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 999fd957e61aa60f364ee2e0dd0e90bb67b8a3c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 6 15:12:27 2026 -0700
+
+    meson: include headers when checking for functions
+    
+    Trying to workaround https://github.com/mesonbuild/meson/issues/3740
+    which causes meson to fail to detect missing functions in some cases.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/12>
+
+commit dd0c5dadaa76dfad10a28365e0c5e80676adae36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 16 17:27:17 2026 -0700
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/11>
+
+commit 4fb8c64f605386b9e6afc8341b8cdc41ae20e171
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 16 14:58:01 2026 -0700
+
+    handle.c: handle -Wuse-after-free warning from gcc 15
+    
+    Avoid double free in the case a size of 0 ends up passed to realloc,
+    which causes it to both free the pointer and return NULL.
+    
+    Clears up:
+    In function ‘reallocfarray’,
+        inlined from ‘KeysymToKeycodes’ at handle.c:98:13:
+    handle.c:80:9: warning: pointer ‘kcs’ may be used after ‘realloc’
+     [-Wuse-after-free]
+       80 |         free(old);
+          |         ^~~~~~~~~
+    handle.c:77:15: note: call to ‘realloc’ here
+       77 |         new = realloc(old, num * size);
+          |               ^~~~~~~~~~~~~~~~~~~~~~~~
+    In function ‘reallocfarray’,
+        inlined from ‘do_remove’ at handle.c:723:15:
+    handle.c:80:9: warning: pointer ‘kclist’ may be used after ‘realloc’
+     [-Wuse-after-free]
+       80 |         free(old);
+          |         ^~~~~~~~~
+    handle.c:77:15: note: call to ‘realloc’ here
+       77 |         new = realloc(old, num * size);
+          |               ^~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/11>
+
+commit 0b9e54f20341c8ad85ecd0e15f40d5233b402c91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/11>
+
+commit 0761a37a6111f22e2552f9f2245bddbb6d3db2bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 15:43:51 2025 -0700
+
+    parse_keysym: handle possible NULL return from copy_to_scratch()
+    
+    Handles report from gcc 15.1:
+    
+    handle.c: In function ‘parse_keysym’:
+    handle.c:333:10: warning: use of NULL ‘tmpname’ where non-null expected
+     [CWE-476] [-Wanalyzer-null-argument]
+      333 |     if (!strcmp(*name, "NoSymbol")) {
+          |          ^~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/10>
+
+commit 35e135831743406db39b7319aad6e16cbbd8451e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 9 15:38:08 2025 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/10>
+
+commit 506799613210b64cb8175468fa5dd8b0cc2ddd9c
+Author: Bjarni Ingi Gislason <bjarniig@simnet.is>
+Date:   Mon Jan 27 02:56:28 2025 +0000
+
+    xmodmap.1: Some editorial changes for this man page [Debian bug #1094313]
+    
+    Originally from https://bugs.debian.org/1094313
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/9>
+
+commit 4a6c7c88ae7eea7003cb37385c87c83ec1355f2a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 10:18:02 2025 -0700
+
+    Improve man page text & formatting
+    
+    More closely follow common style as described on
+    https://man7.org/linux/man-pages/man7/man-pages.7.html
+    and suggest that you probably want to use XKB instead now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/8>
+
+commit 1193e13739a3eb0259b40d3ffdd90f006d36dd5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 6 09:51:22 2025 -0700
+
+    Accept --help & --version as aliases to -help & -version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/8>
+
+commit 0c36017f486f5a71e481f185cdf5a095e7606594
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 13 16:09:49 2024 -0800
+
+    Use _strnicmp() instead of strncasecmp() on Windows
+    
+    Fixes: 61bde50 ("Assume target platforms have strncasecmp now")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/7>
+
+commit 61bde5017786d60df7cc377a3b9f2e6bb11caeef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 22 12:16:06 2024 -0700
+
+    Assume target platforms have strncasecmp now
+    
+    It has been required since Unix98/SUSv2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/app/xmodmap/-/merge_requests/6>
+
+commit caffed31bcc00bb588ee3bc956a93f80da80fdc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:01:29 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b7e31a52f6717428b19eeeb805ba28de0b976f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5579ae02a6b44f3072955f3e2f3249d2bd1201e4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 10 15:49:43 2022 -0700
@@ -288,7 +470,7 @@ Date:   Fri Sep 6 15:56:02 2013 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit bf4620e2d78d2a4766948f136f2372a596ac275d
-Author: Stéphane Aulery  <lkppo@free.fr>
+Author: Stéphane Aulery <lkppo@free.fr>
 Date:   Sun Jun 30 01:50:58 2013 +0200
 
     error in manpage example about swapping Control_L/Caps_Lock keys
@@ -857,7 +1039,7 @@ Date:   Fri Oct 14 00:25:47 2005 +0000
     Use sed to fill in variables in man page
 
 commit c4483b314106bcd2bb13e49650cfd279f74da73e
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Wed Sep 28 19:28:15 2005 +0000
 
     Copy bits from COPYING here.
@@ -885,7 +1067,7 @@ Date:   Thu Jul 28 02:58:59 2005 +0000
     Add build system for xmodmap Add xmodmap to build script
 
 commit 9145de293109ba96fc8b97ac59c16c51b992f416
-Author: Kristian Høgsberg  <krh@redhat.com>
+Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Thu Nov 11 15:37:01 2004 +0000
 
     Fix #1818
@@ -909,7 +1091,7 @@ Date:   Sat Oct 30 20:33:44 2004 +0000
         4637857 - fix by Sam Lau)
 
 commit ce64b2b312a73b9a4f266da8810ab552af4fbb1e
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Oct 15 00:44:08 2004 +0000
 
     Thu Oct 14 20:43:03 2004 Søren Sandmann <sandmann@redhat.com>

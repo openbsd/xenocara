@@ -50,7 +50,7 @@ void process_file (const char *filename)	/* NULL means use stdin */
 
     if (!filename) {
 	fp = stdin;
-	inputFilename = "stdin"; 
+	inputFilename = "stdin";
     } else {
 	fp = fopen (filename, "r");
 	if (!fp) {
@@ -96,7 +96,7 @@ void process_line (const char *line)
 	fprintf(stderr, "%s: Could not allocate %d bytes\n", ProgramName, len);
 	Exit(-1);
     }
-    
+
     for (i = 0; i < len; i++) {		/* look for blank lines */
 	register char c = buffer[i];
 	if (!(isspace(c) || c == '\n')) break;

@@ -27,7 +27,7 @@ from The Open Group.
 */
 
 /*
- * Copyright (c) 1987, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1987, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -111,7 +111,7 @@ mapping_busy_pointer(int timeout)
 	     "%s:  please release the following buttons within %d seconds:\n",
 	     ProgramName, timeout);
     for (i = 0; i < 5; i++) {
-	if (mask & masks[i]) 
+	if (mask & masks[i])
 	  fprintf (stderr, "    Button%d\n", i+1);
     }
     sleep (timeout);
@@ -124,7 +124,7 @@ mapping_busy_pointer(int timeout)
  * and deals with retransmissions due to the keyboard being busy.
  */
 
-int 
+int
 UpdateModifierMapping(XModifierKeymap *map)
 {
     int retries, timeout;
@@ -160,7 +160,7 @@ UpdateModifierMapping(XModifierKeymap *map)
  * AddModifier - this adds a keycode to the modifier list
  */
 
-int 
+int
 AddModifier(XModifierKeymap **mapp, KeyCode keycode, int modifier)
 {
     if (keycode) {
@@ -177,7 +177,7 @@ AddModifier(XModifierKeymap **mapp, KeyCode keycode, int modifier)
  * DeleteModifier - this removes a keycode from the modifier list
  */
 
-int 
+int
 RemoveModifier(XModifierKeymap **mapp, KeyCode keycode, int modifier)
 {
     if (keycode) {
@@ -194,7 +194,7 @@ RemoveModifier(XModifierKeymap **mapp, KeyCode keycode, int modifier)
  * ClearModifier - this removes all entries from the modifier list
  */
 
-int 
+int
 ClearModifier(XModifierKeymap **mapp, int modifier)
 {
     int i;
@@ -231,7 +231,7 @@ PrintModifierMapping(XModifierKeymap *map, FILE *fp)
     int keysyms_per_keycode = GetKeysymsPerKeycode();
 
     fprintf (fp,
-    	     "%s:  up to %d keys per modifier, (keycodes in parentheses):\n\n", 
+    	     "%s:  up to %d keys per modifier, (keycodes in parentheses):\n\n",
     	     ProgramName, map->max_keypermod);
     for (int i = 0; i < 8; i++) {
 	fprintf(fp, "%-10s", modifier_table[i].name);
@@ -247,7 +247,7 @@ PrintModifierMapping(XModifierKeymap *map, FILE *fp)
 		} while ( !ks && index < keysyms_per_keycode);
 		nm = XKeysymToString(ks);
 
-		fprintf (fp, "%s  %s (0x%0x)", (j > 0 ? "," : ""), 
+		fprintf (fp, "%s  %s (0x%0x)", (j > 0 ? "," : ""),
 			 (nm ? nm : "BadKey"), map->modifiermap[k]);
 	    }
 	    k++;
@@ -276,8 +276,8 @@ PrintKeyTable(Bool exprs, FILE *fp)
 	return;
     }
     if (!exprs) {
-	fprintf (fp, 
-		 "There are %d KeySyms per KeyCode; KeyCodes range from %d to %d.\n\n", 
+	fprintf (fp,
+		 "There are %d KeySyms per KeyCode; KeyCodes range from %d to %d.\n\n",
 		 keysyms_per_keycode, min_keycode, max_keycode);
 	fprintf (fp, "    KeyCode\tKeysym (Keysym)\t...\n");
 	fprintf (fp, "    Value  \tValue   (Name) \t...\n\n");
@@ -301,7 +301,7 @@ PrintKeyTable(Bool exprs, FILE *fp)
 	    else
 		s = "NoSymbol";
 	    if (!exprs)
-		fprintf (fp, "0x%04x (%s)\t", 
+		fprintf (fp, "0x%04x (%s)\t",
 			 (unsigned int)ks, s ? s : "no name");
 	    else if (s)
 		fprintf (fp, " %s", s);
@@ -329,7 +329,7 @@ PrintPointerMap(FILE *fp)
     fprintf (fp, "     Button          Code\n");
 /*               "      ###            ###\n"               */
     for (i = 0; i < count; i++) {
-	fprintf (fp, "      %3u            %3u\n", 
+	fprintf (fp, "      %3u            %3u\n",
 		 i+1, (unsigned int) pmap[i]);
     }
     fprintf (fp, "\n");
@@ -341,7 +341,7 @@ PrintPointerMap(FILE *fp)
  * SetPointerMap - set the pointer map
  */
 
-int 
+int
 SetPointerMap(unsigned char *map, int n)
 {
     unsigned char defmap[MAXBUTTONCODES];
