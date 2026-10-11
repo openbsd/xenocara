@@ -43,7 +43,7 @@ xdpr: xdpr.script
 
 CLEANFILES = xdpr
 
-EXTRA_DIST = xdpr.script ChangeLog autogen.sh README.md
+EXTRA_DIST = xdpr.script ChangeLog autogen.sh README.md meson.build
 
 MAINTAINERCLEANFILES=ChangeLog
 

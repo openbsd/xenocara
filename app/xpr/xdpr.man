@@ -1,69 +1,66 @@
-.TH XDPR 1 __xorgversion__
+.TH XDPR 1 2022-04-02 __xorgversion__
 .SH NAME
 xdpr \- dump an X window directly to a printer
 .SH SYNOPSIS
 .B xdpr
-[
-.I filename
-]
-[
-.B \-display
-.I host:display
-]
-[
-.B \-P\fIprinter\fP
-]
-[
-.B \-device
-.I devtype
-]
-[
-.I option
-\&.\|.\|.
-]
-
+.RI [ filename ]
+.RB [ \-display
+.IR host:display ]
+.RB [ \-P\fIprinter\fP ]
+.RB [ \-device
+.IR devtype ]
+.br
+.RI "     [" option \&.\|.\|.]
 .SH DESCRIPTION
-.I Xdpr
+.B Xdpr
 uses the commands
-.I xwd,
-.I xpr,
+.BR xwd (1),
+.BR xpr (1),
 and
-.I lpr
+.BR lpr (1)
 or
-.I lp
-to dump an X window, process it for a particular printer type, and
-print it out on the printer of your choice.  This is the easiest way
-to get a printout of a window.  \fIXdpr\fP by default will print the
+.BR lp (1)
+to dump an X window, process it for a particular printer type,
+and print it out on the printer of your choice.
+This is the easiest way to get a printout of a window.
+\fBXdpr\fP by default will print the
 largest possible representation of the window on the output page.
 .PP
-The options for \fIxdpr\fP are the same as those for \fIxpr\fP,
-\fIxwd\fP, and \fIlpr\fP or \fIlp\fP.
-The most commonly-used options are described
-below; see the manual pages for these commands for
+The options for \fBxdpr\fP are the same as those for
+.BR xwd (1),
+.BR xpr (1),
+and
+.BR lpr (1)
+or
+.BR lp (1).
+The most commonly-used options are described below;
+see the manual pages for these commands for
 more detailed descriptions of the many options available.
 .SH OPTIONS
 .TP
 .I filename
-Specifies a file containing a window dump (created by \fIxwd\fP) to be
+Specifies a file containing a window dump (created by \fBxwd\fP) to be
 printed instead of selecting an X window.
 .TP
 .B \-P\fIprinter\fP
-Specifies a printer to send the output to.  If a printer name is not
-specified here, \fIxdpr\fP (really, \fIlpr\fP or \fIlp\fP)
-will send your output to the
-printer specified by the \fIPRINTER\fP environment variable.
+Specifies a printer to send the output to.
+If a printer name is not specified here, \fBxdpr\fP
+(really, \fBlpr\fP or \fBlp\fP) will send your output to the
+printer specified by the \fBPRINTER\fP environment variable.
 Be sure that type of the printer matches the type specified
-with the \fI\-device\fP option.
+with the \fB\-device\fP option.
 .TP
-.B \-display \fIhost:display\fP[\fI.screen\fP]
+\fB\-display\fP \fIhost:display\fP[\fI.screen\fP]
 Normally,
-.I xdpr
-gets the host and display number to use from the environment
-variable ``DISPLAY.''
-One can, however, specify them explicitly; see \fIX\fP(__miscmansuffix__).
+.B xdpr
+gets the host and display number to use from the environment variable
+.BR DISPLAY .
+One can, however, specify them explicitly; see
+.BR X (__miscmansuffix__).
 .TP
 .B \-device \fIdevtype\fP
-Specifies the device on which the file will be printed.  Currently supported:
+Specifies the device on which the file will be printed.
+Currently supported:
 .RS 12
 .PD 0
 .TP
@@ -92,30 +89,29 @@ provided only for backwards compatibility.
 .TP
 .B \-help
 This option displays the list of options known to
-.I xdpr.
+.BR xdpr .
 .PP
-Any other arguments
-will be passed to the
-.I xwd,
-.I xpr,
+Any other arguments will be passed to the
+.BR xwd (1),
+.BR xpr (1),
 and
-.I lpr
+.BR lpr (1)
 or
-.I lp
+.BR lp (1)
 commands as appropriate for each.
 .SH SEE ALSO
-.IR xwd (1),
-.IR xpr (1),
-.IR lpr (1),
-.IR lp (1),
-.IR xwud (1),
-.IR X (__miscmansuffix__)
+.BR xwd (1),
+.BR xpr (1),
+.BR lpr (1),
+.BR lp (1),
+.BR xwud (1),
+.BR X (__miscmansuffix__)
 .SH ENVIRONMENT
 .TP 10
-DISPLAY
+.B DISPLAY
 which display to use by default.
 .TP 10
-PRINTER
+.B PRINTER
 which printer to use by default.
 .SH AUTHORS
 Paul Boutin, MIT Project Athena

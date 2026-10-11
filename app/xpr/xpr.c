@@ -243,7 +243,7 @@ char hex2[]="000000000000000088888888888888884444444444444444cccccccccccccccc\
 
 
 /* Local prototypes */
-static void usage(void) _X_NORETURN;
+static void usage(int exitstatus) _X_NORETURN _X_COLD;
 static
 void parse_args(
   int argc,
@@ -483,25 +483,25 @@ invalid_arg_value(const char *arg, const char *value)
 {
     fprintf (stderr, "%s: %s is not a valid value for %s\n\n",
 	     progname, value, arg);
-    usage();
+    usage(EXIT_FAILURE);
 }
 
 static void _X_NORETURN _X_COLD
 missing_arg(const char *arg)
 {
     fprintf (stderr, "%s: %s requires an argument\n\n", progname, arg);
-    usage();
+    usage(EXIT_FAILURE);
 }
 
 static void _X_NORETURN _X_COLD
 unknown_arg(const char *arg)
 {
     fprintf (stderr, "%s: unrecognized argument %s\n\n", progname, arg);
-    usage();
+    usage(EXIT_FAILURE);
 }
 
 static void _X_NORETURN _X_COLD
-usage(void)
+usage(int exitstatus)
 {
     fprintf(stderr, "usage: %s [options] [file]\n%s", progname,
 	    "    -append <file>  -noff  -output <file>\n"
@@ -510,13 +510,14 @@ usage(void)
 	    "    -dump\n"
 	    "    -gamma <correction>\n"
 	    "    -gray {2 | 3 | 4}\n"
-	    "    -height <inches>  -width <inches>\n"
 	    "    -header <string>  -trailer <string>\n"
+	    "    -height <inches>  -width <inches>\n"
+	    "    -help\n"
 	    "    -landscape  -portrait\n"
 	    "    -left <inches>  -top <inches>\n"
 	    "    -noposition\n"
 	    "    -papertype {letter | legal | A0-A10 | B0-B10 | C0-C10}\n"
-	    "	 -pheight <inches>[in | cm | mm] -pwidth <inches>[in | cm | mm]\n"
+	    "    -pheight <n>[in | cm | mm] -pwidth <n>[in | cm | mm]\n"
 	    "    -plane <n>\n"
 	    "    -psfig\n"
 	    "    -render <type>\n"
@@ -527,7 +528,7 @@ usage(void)
 	    "    -split <n-pages>\n"
 	    "    -version\n"
 	);
-    exit(EXIT_FAILURE);
+    exit(exitstatus);
 }
 
 static
@@ -642,6 +643,8 @@ void parse_args(
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
 	    *header = *argv;
+	} else if (!strcmp(*argv, "-help") || !strcmp(*argv, "--help")) {
+            usage(EXIT_SUCCESS);
 	} else if (!strcmp(*argv, "-landscape")) {
 	    *flags |= F_LANDSCAPE;
 	} else if (!strcmp(*argv, "-left")) {
@@ -673,7 +676,7 @@ void parse_args(
 		    *paper_length = (int)(300.0 * paper_size[i].length);
 		}
 	    }
-	    if (!found) usage();
+	    if (!found) invalid_arg_value(arg, *argv);
 	} else if (!strcmp(*argv, "-plane")) {
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
@@ -726,7 +729,7 @@ void parse_args(
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
 	    *trailer = *argv;
-	} else if (strcmp(*argv, "-version") == 0) {
+	} else if (!strcmp(*argv, "-version") || !strcmp(*argv, "--version")) {
 	    puts(PACKAGE_STRING);
 	    exit(0);
 	} else if (!strcmp(*argv, "-width")) {

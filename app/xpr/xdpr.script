@@ -47,8 +47,12 @@ while [ $1 ]; do
 
 # ...arguments interpreted by xdpr itself...
 
-	-help)
+	-help|--help)
 		echo $usage;
+		exit 0;;
+
+	-version|--version)
+		exec xpr -version;
 		exit 0;;
 
 # ...arguments to xwd...
