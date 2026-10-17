@@ -726,11 +726,15 @@ parse_reply_call_callback(
 {
     XRecordInterceptData *data;
     unsigned int current_index;
+    unsigned int end;
     int datum_bytes = 0;
 
     /* call the callback for each protocol element in the reply */
     current_index = 0;
+    end = rep->length << 2;
     do {
+	unsigned int start_index = current_index;
+
 	data = alloc_inter_data(info);
 	if (!data)
 	    return Error;
@@ -806,6 +810,9 @@ parse_reply_call_callback(
 	    if (datum_bytes < 0 || datum_bytes > INT_MAX >> 2)
 		goto out;
 	    datum_bytes <<= 2;
+	    /* A client request cannot be zero-sized (incl. BIG-REQUESTS). */
+	    if (datum_bytes == 0)
+		goto out;
 	    break;
 	case XRecordClientStarted:
 	    if (reply == NULL)
@@ -836,13 +843,28 @@ parse_reply_call_callback(
 		goto out;
 	    datum_bytes = 0;
 	    break;
+	default:
+	    /*
+	     * A follow-up on the previous fix for CVE-2016-7952:
+	     * An unknown category would leave datum_bytes at 0 and
+	     * "livelock" the loop.
+	     */
+	    goto out;
 	}
 
+	/*
+	 * Malformed if this element neither grew nor advanced the index.
+	 * StartOfData / EndOfData are already rejected if current_index < end
+	 * so not a change in behavior.
+	 */
+	if (datum_bytes == 0 && current_index == start_index && current_index < end)
+	    goto out;
+
 	if (datum_bytes > 0) {
-	    if (INT_MAX - datum_bytes < (rep->length << 2) - current_index) {
+	    if ((unsigned int)datum_bytes > end - current_index) {
 		fprintf(stderr,
-			"XRecord: %lu-byte reply claims %d-byte element (seq %lu)\n",
-			(unsigned long)rep->length << 2, current_index + datum_bytes,
+			"XRecord: %u-byte reply claims %u-byte element (seq %lu)\n",
+			end, current_index + (unsigned int)datum_bytes,
 			dpy->last_request_read);
 		goto out;
 	    }
@@ -861,7 +883,7 @@ parse_reply_call_callback(
 	(*callback)(closure, data);
 
 	current_index += datum_bytes;
-    } while (current_index<rep->length<<2);
+    } while (current_index < end);
 
     if (rep->category == XRecordEndOfData)
 	return End;

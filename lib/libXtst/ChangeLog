@@ -1,3 +1,85 @@
+commit b95aac652cd77f66c4b472aa840b30c337b77715
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 16 13:33:36 2026 -0700
+
+    libXtst 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac60f5f474bc6440332a88225763a71cdbaed570
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Oct 1 16:09:33 2026 +0200
+
+    parse_reply_call_callback: reject zero-progress RECORD reply elements
+    
+    Commit 9556ad67a to address CVE-2016-7952 added no-forward-progress
+    checks for StartOfData, EndOfData, and ClientDied without a sequence.
+    
+    That is however missing two server-controlled cases that can still leave
+    datum_bytes at 0 while bytes remain in the reply buffer:
+    
+    - A XRecordFromClient with a zero BIG-REQUESTS length
+    - An undefined category byte (switch had no default)
+    
+    So XRecordEnableContext() enters an endless busy loop keeping the lock
+    and invoking the application callback with empty data.
+    
+    We need to take care of special case XRecordClientDied though, which is
+    a legitimate case with zero-sized element, so we cannot just reject any
+    element that make no forward progress.
+    
+    To avoid that issue, reject zero-sized XRecordFromClient elements,
+    unknown categories, and any iteration that makes no progress while data
+    remains.
+    
+    This is a follow-up on CVE-2016-7952 and CVE-2026-94286.
+    
+    CVE-2026-109088
+    
+    Reported-by: Kaya Emre Arikan <kayaemrearikan@gmail.com>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/11>
+
+commit b84737d8400db7f06293822838d0e1c374cf71c4
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 31 11:24:59 2026 +0200
+
+    parse_reply_call_callback: check element size against remaining reply buffer
+    
+    The previous INT_MAX-oriented check only caught arithmetic overflow, not
+    an oversized datum_bytes claimed by a RECORD reply element.
+    
+    A malicious server could hand the RECORD callback a pointer/length pair
+    whose advertised length exceeds the actual reply buffer.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-16762
+    
+    CVE-2026-94286
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Co-authored-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/10>
+
+commit a1086d8f255e89f8148110a7f03f4a0a3398b784
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxtst/-/merge_requests/9>
+
 commit abf3ff74b97c4231d2324d66318bfa1d22e44913
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Aug 1 17:25:18 2024 -0700
