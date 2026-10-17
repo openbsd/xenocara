@@ -1,5 +1,5 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" $XTermId: ctlseqs.ms,v 1.746 2026/04/19 12:55:13 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.748 2026/08/23 23:04:10 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1991, 1994 X Consortium
@@ -40,8 +40,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #410
-.ds RF 2026/04/19
+.ds LF Patch #411
+.ds RF 2026/08/23
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -1175,7 +1175,7 @@ Delete \*(Ps Character(s) (default = 1) (DCH).
 .IP \\*(Cs\\*#\\*P
 .IP \\*(Cs\\*(Pm\\*s\\*#\\*P
 Push current dynamic- and ANSI-palette colors onto stack
-(XTPUSHCOLORS), \fI\*(xt\fP.
+\%(XTPUSHCOLORS), \fI\*(xt\fP.
 Parameters (integers in the range 1 through 10, since the default 0 will push)
 may be used to store the palette into the stack without pushing.
 .
@@ -1183,16 +1183,16 @@ may be used to store the palette into the stack without pushing.
 .IP \\*(Cs\\*#\\*Q
 .IP \\*(Cs\\*(Pm\\*s\\*#\\*Q
 Pop stack to set dynamic- and ANSI-palette colors
-(XTPOPCOLORS), \fI\*(xt\fP.
+\%(XTPOPCOLORS), \fI\*(xt\fP.
 Parameters (integers in the range 1 through 10, since the default 0 will pop)
 may be used to restore the palette from the stack without popping.
 .
 .iP
 .IP \\*(Cs\\*#\\*R
 Report the current entry on the palette stack, and the number of
-palettes stored on the stack, using the same form as XTPOPCOLORS
+palettes stored on the stack, using the same form as \%XTPOPCOLORS
 (default = 0)
-(XTREPORTCOLORS), \fI\*(xt\fP.
+\%(XTREPORTCOLORS), \fI\*(xt\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*S
@@ -2218,6 +2218,12 @@ Set cursor style (DECSCUSR), VT520.
   \*(Ps = \*4 \(-> steady underline.
   \*(Ps = \*5 \(-> blinking bar, \fI\*(xt\fP.
   \*(Ps = \*6 \(-> steady bar, \fI\*(xt\fP.
+  \*(Ps = \*7 \(-> initial resources, \fI\*(xt\fP.
+\fI\*(XT\fP restores the initial state of the cursor
+using resource settings:
+\fB\%cursorBlink\fP,
+\fB\%cursorUnderLine\fP, and
+\fB\%cursorBar\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*(Dq\\*q
@@ -2810,7 +2816,7 @@ Since XFree86-3.1.2Ee (August 1996), \*(xt has accepted \*(ST
   \*(Ps = \*4\*;\fIc\fP\*s\*;\fIspec\fP \(-> Change Color Number \fIc\fP to
 the color specified by \fIspec\fP.
 .sP
-The \fIspec\fP can be a name or RGB specification as per \fIXParseColor\fP.
+The \fIspec\fP can be a name or RGB specification as per \fI\%XParseColor\fP.
 Any number of \fIc\fP/\fIspec\fP pairs may be given.
 The color numbers correspond to the ANSI colors 0-7,
 their bright versions 8-15,
@@ -2826,7 +2832,7 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
 the color specified by \fIspec\fP.
 .sP
 The \fIspec\fP parameter can be a name or RGB specification
-as per \fIXParseColor\fP.
+as per \fI\%XParseColor\fP.
 Any number of \fIc\fP/\fIspec\fP pairs may be given.
 The special colors can also be set by adding the maximum number of colors
 (e.g., 88 or 256)
@@ -2859,7 +2865,8 @@ These controls may be disabled using the \fBallowColorOps\fP resource.
 At least one parameter is expected for \*(Pt.
 Each successive parameter changes the next color in the list.
 The value of \*(Ps tells the starting point in the list.
-The colors are specified by name or RGB specification as per \fIXParseColor\fP.
+The colors are specified by name or RGB specification
+as per \fI\%XParseColor\fP.
 .TS H
 center;
 lf3w(2c)	lf3w(2c) .
@@ -2900,6 +2907,8 @@ be given in one control sequence, \fI\*(xt\fR can make more than one reply.
   \*(Ps = \*1\*7 \(-> Change highlight background color to \*(Pt.
   \*(Ps = \*1\*8 \(-> Change Tektronix cursor color to \*(Pt.
   \*(Ps = \*1\*9 \(-> Change highlight foreground color to \*(Pt.
+.sp
+  \*(Ps = \*2\*1 \(-> Change Window Title to \*(Pt (DECSWT), VT520.
 .sp
   \*(Ps = \*2\*2 \(-> Change pointer cursor shape to \*(Pt.
 The parameter \*(Pt sets the \fB\%pointerShape\fP resource.
@@ -3242,7 +3251,7 @@ is used for the numeric keypad
 is unused.
 .IP IsCursorKey(\fIkeysym\fP)
 is used for the cursor keys, including \fIHome\fP and \fIEnd\fP
-(see \fBmodifyCursorKeys\fP and \fBformatCursorKeys\fP).
+(see \fB\%modifyCursorKeys\fP and \fBformatCursorKeys\fP).
 \fI\*(XT\fP makes a special check for the PC keyboard's editing keypad,
 which is not handled by the \fIXutil.h\fP macros.
 .IP IsPFKey(\fIkeysym\fP)
@@ -4950,7 +4959,7 @@ distinguish the window and icon labels.
 .bP
 The SCOSC/SCORC control sequences for saving/restoring the cursor and
 for saving/restoring \*(``DEC Private Mode Values\*(''
-(XTSAVE and XTRESTORE)
+\%(XTSAVE and \%XTRESTORE)
 may appear to be
 related (since the \*(``save\*('' controls both end with \*(cs),
 but that is coincidental.

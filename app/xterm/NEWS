@@ -1,10 +1,17 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #410 - 2026/05/01
+                            Patch #412 - 2026/10/11
 
-     * amend  one  of  the  fixes  for Debian #738794 in patch #407, which
-       caused combining characters to be outlined (report by "Martin").
-     * clarify  in  ctlseqs.ms  which modes listed for DECSET are readonly
-       (prompted by discussion with Thomas Wolff).
+     * improve  fix  for  regex-selection  of a wrapped line (adapted from
+       patch by Albert Flügel, Redhat #2479962).
+     * fix some cppcheck warnings.
+     * improve  a  special case where an exposure event happens to cause a
+       hidden character to be drawn at the beginning of a string.
+     * correct  limits  for  a  partial  screen  clear  operation  (Debian
+       #1149533).
+     * amend response for DECRQM 1046 to return “set” when titeInhibit is
+       set rather than the reverse (report by Vladislav Korikhin).
+     * update tables in wcwidth.c based on Unicode 18.0.0
+     * update config.guess, config.sub
 

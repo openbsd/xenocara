@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.111 2026/04/07 23:20:20 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.112 2026/10/11 09:52:57 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2026 by Thomas E. Dickey
@@ -148,7 +148,7 @@ void
 xterm_ResetDouble(XtermWidget xw)
 {
 #if OPT_DEC_CHRSET
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     Boolean changed = False;
     int row;
 

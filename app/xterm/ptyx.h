@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.1165 2026/02/16 18:30:52 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.1174 2026/10/07 19:06:37 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -2001,6 +2001,20 @@ typedef struct {
 
 typedef const LineData CLineData;
 
+typedef struct {
+    /* parameters set by caller */
+    int col_1st;
+    int col_end;
+    int num_col;		/* number of columns, e.g., end - 1st + 1 */
+    /* in/out working parameters for LineRefresh */
+    int level;			/* level in recursion */
+    Char *sizes;
+    unsigned chg_gc;
+#if OPT_WIDE_ATTRS
+    unsigned chg_attr;
+#endif
+} LineLimits;
+
 /*
  * We use CellData in a few places, when copying a cell's data to a temporary
  * variable.
@@ -2477,6 +2491,7 @@ typedef enum {
 	, STEADY_UNDERLINE
 	, BLINK_BAR
 	, STEADY_BAR
+	, INITIAL_CURSOR
 } XtCursorStyle;
 
 #if OPT_GRAPHICS
@@ -2785,6 +2800,7 @@ typedef struct {
 
 	int		cursor_state;	/* ON, OFF, or BLINKED_OFF	*/
 	int		cursor_busy;	/* do not redraw...		*/
+	int		initial_cursor;	/* see DECSCUSR			*/
 	Boolean		cursor_underline; /* true if cursor is in underline mode */
 	Boolean         cursor_bar;     /* true if cursor is in bar mode */
 	XtCursorShape	cursor_shape;
@@ -2871,6 +2887,8 @@ typedef struct {
 	Boolean		do_wrap;	/* true if cursor in last column
 					    and character just output    */
 
+	Boolean		brokenCopyArea;	/* resource for no_copy_area */
+	Boolean		no_copy_area;	/* true to suppress XCopyArea calls */
 	int		incopy;		/* 0 idle; 1 XCopyArea issued;
 					    -1 first GraphicsExpose seen,
 					    but last not seen		*/
@@ -3848,11 +3866,16 @@ typedef struct {
 #define PrinterOf(screen) (screen)->printer_state
 
 #ifdef SCROLLBAR_RIGHT
-#define OriginX(screen) (((term->misc.useRight)?0:ScrollbarWidth(screen)) + screen->border)
+#define UseRightSb(screen) ((term)->misc.useRight)
+#define RightSb(screen) (UseRightSb(screen) ? ScrollbarWidth(screen) : 0)
+#define LeftSb(screen)  (UseRightSb(screen) ? 0 : ScrollbarWidth(screen))
 #else
-#define OriginX(screen) (ScrollbarWidth(screen) + screen->border)
+#define UseRightSb(screen) False
+#define RightSb(screen) 0
+#define LeftSb(screen)  ScrollbarWidth(screen)
 #endif
 
+#define OriginX(screen) (LeftSb(screen) + screen->border)
 #define OriginY(screen) (screen->border)
 
 #define CursorMoved(screen) \

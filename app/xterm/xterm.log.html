@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2778 2026/05/01 23:27:57 tom Exp $
+  $XTermId: xterm.log.html,v 1.2799 2026/10/11 23:04:59 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -70,6 +70,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_412">Patch #412 - 2026/10/11</a></li>
+
+    <li><a href="#xterm_411">Patch #411 - 2026/08/24</a></li>
+
     <li><a href="#xterm_410">Patch #410 - 2026/05/01</a></li>
 
     <li><a href="#xterm_409">Patch #409 - 2026/04/13</a></li>
@@ -1098,6 +1102,75 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_412" id="xterm_412">Patch #412 -
+  2026/10/11</a></h1>
+
+  <ul>
+    <li>improve fix for regex-selection of a wrapped line (adapted
+    from patch by Albert Fl&uuml;gel, Redhat #2479962).</li>
+
+    <li>fix some cppcheck warnings.</li>
+
+    <li>improve a special case where an exposure event happens to
+    cause a hidden character to be drawn at the beginning of a
+    string.</li>
+
+    <li>correct limits for a partial screen clear operation (Debian
+    #1149533).</li>
+
+    <li>amend response for <tt>DECRQM 1046</tt> to return
+    &ldquo;set&rdquo; when <tt>titeInhibit</tt> is set rather than
+    the reverse (report by Vladislav Korikhin).</li>
+
+    <li>update tables in <code>wcwidth.c</code> based on Unicode
+    18.0.0</li>
+
+    <li>update config.guess, config.sub</li>
+  </ul>
+
+  <h1><a name="xterm_411" id="xterm_411">Patch #411 -
+  2026/08/24</a></h1>
+
+  <ul>
+    <li>add a case for <tt>DECSWT</tt> in VT520 mode (prompted by
+    discussion with James Holderness).</li>
+
+    <li>correct an index computation in VS15/VS16 logic for
+    <tt>-emoji_width</tt> option (report by Arpit Jain).</li>
+
+    <li>add <tt>ich1</tt> to <tt>terminfo</tt> where
+    appropriate.</li>
+
+    <li>drop &ldquo;<tt>GTK_*</tt>&rdquo; from environment
+    filtering (report by Stefan Klinger).</li>
+
+    <li>fix a couple of places in <tt>terminfo</tt> which used
+    <tt>BEL</tt> rather than <tt>ST</tt>.</li>
+
+    <li>add <tt>DECSCUSR 7</tt> for the &ldquo;power-up&rdquo;
+    configuration, which can be different from the documented VT520
+    behavior (prompted by discussion with
+    &ldquo;heurist&rdquo;).</li>
+
+    <li>correct a limit-check added in <a href="#xterm_399">patch
+    #399</a>, which resulted in regex-based selections to be
+    limited to the first row of a wrapped line (Redhat
+    #2479962).</li>
+
+    <li>add resource <tt>brokenCopyArea</tt>, using that to control
+    whether <tt>XCopyArea</tt> is used for indexing and scrolling,
+    as well as inserting or deleting characters and lines.</li>
+
+    <li>amend check for validity of C1 controls to check both
+    whether wide-characters have been initialized, as well as
+    whether the current encoding is UTF-8 (Debian #687699).</li>
+
+    <li>call <tt>Cleanup</tt> directly when processing
+    <tt>SIGHUP</tt>, because the process running in xterm may
+    ignore a <tt>killpg</tt> sent to the top-level screen's process
+    (Debian #243598).</li>
+  </ul>
+
   <h1><a name="xterm_410" id="xterm_410">Patch #410 -
   2026/05/01</a></h1>
 
@@ -1614,7 +1687,7 @@
     <li>improve logic which ignores APC, PM and SOS controls to
     also not accumulate their data temporarily in a buffer.</li>
 
-    <li>exclude <tt>TERM_INGRESS</tt> from cleanup of environment
+    <li>exclude <tt>TERM_INGRES</tt> from cleanup of environment
     variables (patch by Iain Riley).</li>
 
     <li>fix some documentation typos (report by Thomas Wolff).</li>

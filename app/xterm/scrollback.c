@@ -1,4 +1,4 @@
-/* $XTermId: scrollback.c,v 1.25 2026/01/22 00:53:17 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.26 2026/07/30 18:16:02 tom Exp $ */
 
 /*
  * Copyright 2009-2024,2026 by Thomas E. Dickey
@@ -42,7 +42,7 @@
  * So we just count backwards from the last saved line.
  */
 LineData *
-getScrollback(TScreen *screen, int row)
+getScrollback(const TScreen *screen, int row)
 {
     LineData *result = NULL;
 

@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.184 2026/04/07 23:12:06 tom Exp $ */
+/* $XTermId: print.c,v 1.185 2026/06/28 13:53:18 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -259,7 +259,7 @@ printLines(XtermWidget xw, int top, int bot, const PrinterFlags *p)
 }
 
 void
-xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags *p)
+xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, const PrinterFlags *p)
 {
     if (XtIsRealized((Widget) xw)) {
 	TScreen *screen = TScreenOf(xw);
@@ -294,7 +294,7 @@ xtermPrintScreen(XtermWidget xw, Bool use_DECPEX, PrinterFlags *p)
  *	8 = saved lines
  */
 void
-xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
+xtermPrintEverything(XtermWidget xw, const PrinterFlags *p)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean was_open = SPS.isOpen;

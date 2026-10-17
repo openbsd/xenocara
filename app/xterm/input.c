@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.390 2026/04/07 22:53:42 tom Exp $ */
+/* $XTermId: input.c,v 1.391 2026/10/11 09:53:28 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -312,7 +312,7 @@ IsControlOutput(const KEY_DATA * kd)
  * control ?   0x7f DEL
  */
 static Bool
-IsControlAlias(KEY_DATA * kd)
+IsControlAlias(const KEY_DATA * kd)
 {
     Bool result = False;
 

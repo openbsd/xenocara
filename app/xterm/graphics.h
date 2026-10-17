@@ -1,7 +1,7 @@
-/* $XTermId: graphics.h,v 1.33 2025/04/03 10:22:55 tom Exp $ */
+/* $XTermId: graphics.h,v 1.35 2026/10/11 10:31:03 tom Exp $ */
 
 /*
- * Copyright 2013-2023,2025 by Thomas E. Dickey
+ * Copyright 2013-2025,2026 by Thomas E. Dickey
  * Copyright 2013-2022,2023 by Ross Combs
  *
  *                         All Rights Reserved
@@ -88,7 +88,7 @@ typedef struct {
 
 extern Graphic *get_new_graphic(XtermWidget /* xw */, int /* charrow */, int /* charcol */, unsigned /* type */);
 extern Graphic *get_new_or_matching_graphic(XtermWidget /* xw */, int /* charrow */, int /* charcol */, int /* actual_width */, int /* actual_height */, unsigned /* type */);
-extern RegisterNum read_pixel(Graphic */* graphic */, int /* x */, int /* y */);
+extern RegisterNum read_pixel(const Graphic */* graphic */, int /* x */, int /* y */);
 extern void draw_solid_pixel(Graphic */* graphic */, int /* x */, int /* y */, unsigned /* color */);
 extern void draw_solid_rectangle(Graphic */* graphic */, int /* x1 */, int /* y1 */, int /* x2 */, int /* y2 */, unsigned /* color */);
 extern void copy_overlapping_area(Graphic */* graphic */, int /* src_x */, int /* src_y */, int /* dst_x */, int /* dst_y */, unsigned /* w */, unsigned /* h */, unsigned /* default_color */);

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.159 2026/04/07 23:17:04 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.160 2026/06/28 13:23:17 tom Exp $ */
 
 /*
  * Copyright 2014-2025,2026 by Thomas E. Dickey
@@ -7682,8 +7682,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
      */
-    if (screen->scroll_amt)
-	FlushScroll(xw);
+    ScrollJump(xw, screen->scroll_amt);
 
     /* Only reset on the first ReGIS image unless it is being requested. */
     if (context->width == 0 || context->height == 0 ||

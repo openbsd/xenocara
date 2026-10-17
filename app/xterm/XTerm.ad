@@ -1,8 +1,8 @@
-! $XTermId: XTerm.ad,v 1.106 2021/02/03 01:02:03 tom Exp $
+! $XTermId: XTerm.ad,v 1.108 2026/10/11 10:30:51 tom Exp $
 ! -----------------------------------------------------------------------------
 ! this file is part of xterm
 !
-! Copyright 1996-2020,2021 by Thomas E. Dickey
+! Copyright 1996-2021,2026 by Thomas E. Dickey
 ! 
 !                         All Rights Reserved
 ! 
@@ -103,6 +103,7 @@
 *vtMenu*tekmode*Label:  Switch to Tek Mode
 *vtMenu*vthide*Label:  Hide VT Window
 *vtMenu*altscreen*Label:  Show Alternate Screen
+*vtMenu*copy_area*Label:  Enable XCopyArea
 *vtMenu*sixelScrolling*Label:  Sixel Scrolling
 *vtMenu*privateColorRegisters*Label:  Private Color Registers
 

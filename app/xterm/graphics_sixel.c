@@ -1,7 +1,7 @@
-/* $XTermId: graphics_sixel.c,v 1.63 2024/12/01 15:41:40 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.66 2026/06/28 14:05:27 tom Exp $ */
 
 /*
- * Copyright 2014-2023,2024 by Thomas E. Dickey
+ * Copyright 2014-2024,2026 by Thomas E. Dickey
  * Copyright 2024           by Benjamin A. Wong
  * Copyright 2014-2022,2023 by Ross Combs
  *
@@ -280,8 +280,7 @@ finished_parsing(Graphic *graphic)
     /* Update the screen scrolling and do a refresh.
      * The refresh may not cover the whole graphic.
      */
-    if (screen->scroll_amt)
-	FlushScroll(s_xw);
+    ScrollJump(s_xw, screen->scroll_amt);
 
     if (SixelScrolling(s_xw)) {
 	int new_row, new_col;
@@ -855,7 +854,7 @@ parse_sixel_char(char cp)
 	    if (SixelScrolling(s_xw)) {
 		xtermScroll(s_xw, scroll_lines);
 		if (s_screen->incremental_graphics) {
-		    FlushScroll(s_xw);
+		    ScrollJump(s_xw, s_screen->scroll_amt);
 		    XSync(s_screen->display, False);
 		    s_graphic->dirty = True;
 		    refresh_modified_displayed_graphics(s_xw);

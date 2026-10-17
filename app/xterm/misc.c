@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1131 2026/04/07 23:33:31 tom Exp $ */
+/* $XTermId: misc.c,v 1.1137 2026/10/11 10:33:08 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -419,11 +419,11 @@ mergeExposeEvents(XEvent *target)
 	 */
 	if (p->window == q->window) {
 	    if (ExposeContains(p, q)) {
-		TRACE(("pending Expose...merged forward\n"));
+		TRACE_PENDING("Expose...merged forward");
 		merge_this = True;
 		next_event = *target;
 	    } else if (ExposeContains(q, p)) {
-		TRACE(("pending Expose...merged backward\n"));
+		TRACE_PENDING("Expose...merged backward");
 		merge_this = True;
 	    }
 	}
@@ -466,11 +466,11 @@ mergeConfigureEvents(XEvent *target)
 	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
-	    TRACE(("pending Configure...merged\n"));
+	    TRACE_PENDING("Configure...merged");
 	    merge_this = True;
 	}
 	if (!merge_this) {
-	    TRACE(("pending Configure...skipped\n"));
+	    TRACE_PENDING("Configure...skipped");
 	    XtDispatchEvent(target);
 	}
 	*target = next_event;
@@ -519,11 +519,11 @@ mergeButtonEvents(XEvent *target)
 	TRACE_EVENT("pending", &next_event, (String *) 0, NULL);
 
 	if (p->window == q->window) {
-	    TRACE(("pending ButtonEvent...merged\n"));
+	    TRACE_PENDING("ButtonEvent...merged");
 	    merge_this = True;
 	}
 	if (!merge_this) {
-	    TRACE(("pending ButtonEvent...skipped\n"));
+	    TRACE_PENDING("ButtonEvent...skipped");
 	    XtDispatchEvent(target);
 	}
 	*target = next_event;
@@ -584,8 +584,8 @@ xevents(XtermWidget xw)
     if (need_cleanup)
 	NormalExit();
 
-    if (screen->scroll_amt)
-	FlushScroll(xw);
+    ScrollJump(xw, screen->scroll_amt);
+
     /*
      * process timeouts, relying on the fact that XtAppProcessEvent
      * will process the timeout and return without blockng on the
@@ -3484,6 +3484,7 @@ typedef enum {
     ,OSC_SetAnsiColor = 4
     ,OSC_GetAnsiColors = 5
     ,OSC_ColorMode = 6
+    ,OSC_DECSWT = 21
     ,OSC_SetupPointer = 22
     ,OSC_Unused_30 = 30		/* Konsole (unused) */
     ,OSC_Unused_31 = 31		/* Konsole (unused) */
@@ -4167,6 +4168,12 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_IconOnly:		/* new icon name only */
 	ChangeIconName(xw, buf);
 	break;
+
+    case OSC_DECSWT:
+	/* https://invisible-island.net/xterm/xterm.faq.html#bug_dxterm */
+	if (screen->terminal_id < 520)
+	    break;
+	/* FALLTHRU */
 
     case OSC_TitleOnly:	/* new title only */
 	ChangeTitle(xw, buf);
@@ -5704,7 +5711,7 @@ do_dec_rqm(XtermWidget xw, int nparams, int *params)
 	    result = MdBool(screen->keepClipboard);
 	    break;
 	case srm_ALLOW_ALTBUF:
-	    result = MdBool(xw->misc.titeInhibit);
+	    result = MdBool(!xw->misc.titeInhibit);
 	    break;
 	case srm_SAVE_CURSOR:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
@@ -6173,7 +6180,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
      */
     titleIsUTF8 = isValidUTF8((Char *) value);
     if (IsSetUtf8Title(xw) && titleIsUTF8) {
-	TScreen *screen = TScreenOf(xw);
 	char *testc = malloc(strlen(value) + 1);
 	Char *nextc = (Char *) value;
 	Boolean ok8bit = True;
@@ -6189,7 +6195,7 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 		nextc = convertFromUTF8(nextc, &ch);
 		if (ch > 255) {
 		    ok8bit = False;
-		} else if (!IsLatin1(screen, ch)) {
+		} else if (!IsLatin1(TScreenOf(xw), ch)) {
 		    ch = OnlyLatin1(ch);
 		}
 		*lastc++ = (Char) ch;

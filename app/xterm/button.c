@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.683 2026/04/07 10:54:25 tom Exp $ */
+/* $XTermId: button.c,v 1.686 2026/10/11 22:57:41 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -3903,7 +3903,7 @@ lengthOfLines(TScreen *screen, int firstRow, int lastRow)
  * the line.
  */
 static char *
-make_indexed_text(TScreen *screen, int row, unsigned length, int *indexed)
+make_indexed_text(TScreen *screen, int row, unsigned length, int *indexed, int *l_offs)
 {
     Char *result = NULL;
     size_t need = (length + 1);
@@ -3920,6 +3920,19 @@ make_indexed_text(TScreen *screen, int row, unsigned length, int *indexed)
 	LineData *ld = GET_LINEDATA(screen, row);
 	unsigned used = 0;
 	Char *last = result;
+
+	if (row == 0) {
+	    LineData *ld_bef;
+	    int row_bef;
+	    /* for the first line we must look upward, if the line is wrapped */
+	    for (row_bef = row - 1; (ld_bef = GET_LINEDATA(screen,
+							   row_bef));
+		 row_bef--) {
+		if (!LineTstWrapped(ld_bef))
+		    break;
+		*l_offs += MaxCols(screen);
+	    }
+	}
 
 	do {
 	    int col = 0;
@@ -4029,7 +4042,7 @@ cellToColumn(TScreen *screen, CELL *cell)
 	int adj;
 	if ((ld = GET_LINEDATA(screen, row)) == NULL)
 	    break;
-	if ((adj = LastTextCol(screen, ld, row++)) < 0)
+	if ((adj = LastTextCol(screen, ld, row++)) > 0)
 	    col += adj;
     }
 #if OPT_DEC_CHRSET
@@ -4064,16 +4077,19 @@ do_select_regex(TScreen *screen, CELL *startc, CELL *endc)
 
 	    if ((indexed = TypeCallocN(int, size + 1)) != NULL) {
 		char *search;
+		int line_offset = 0;
 		if ((search = make_indexed_text(screen,
 						firstRow,
 						size,
-						indexed)) != NULL) {
+						indexed,
+						&line_offset)) != NULL) {
 		    int len = (int) strlen(search);
 		    int col;
 		    int offset;
 		    int best_col = -1;
 		    int best_len = -1;
 
+		    actual -= line_offset;
 		    startc->row = 0;
 		    startc->col = 0;
 		    endc->row = 0;

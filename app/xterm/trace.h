@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.99 2026/04/07 22:23:47 tom Exp $ */
+/* $XTermId: trace.h,v 1.101 2026/06/19 22:52:51 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -98,6 +98,8 @@ extern	const	char *trace_who;
 extern	void	TraceEvent(const char *, XEvent *, String *, const Cardinal *);
 #undef  TRACE_EVENT
 #define	TRACE_EVENT(t,e,s,n) TraceEvent(t, (XEvent *)e, s, n)
+#undef  TRACE_PENDING
+#define	TRACE_PENDING(s) TRACE(("pending " s "\n"))
 
 #undef  TRACE_FALLBACK
 #if OPT_RENDERFONT && OPT_WIDE_CHARS
@@ -180,6 +182,7 @@ extern const char * ModifierName(unsigned /* modifier */);
 #define TRACE_HINTS(hints)	/*nothing*/
 #define TRACE_IDS		/*nothing*/
 #define TRACE_OPTS(opts,ress,lens) /*nothing*/
+#define TRACE_PENDING(msg)	/*nothing*/
 #define TRACE_TRANS(name,w)	/*nothing*/
 #define TRACE_WIN_ATTRS(w)	/*nothing*/
 #define TRACE_WM_HINTS(w)	/*nothing*/

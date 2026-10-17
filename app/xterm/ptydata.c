@@ -1,4 +1,4 @@
-/* $XTermId: ptydata.c,v 1.172 2026/04/07 22:11:47 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.173 2026/10/11 09:55:15 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -248,7 +248,7 @@ decodeUtf8(const TScreen *screen, PtyData *data)
 int
 readPtyData(XtermWidget xw, PtySelect * select_mask, PtyData *data)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int size = 0;
 
     if (FD_ISSET(screen->respond, select_mask)) {

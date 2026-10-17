@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.259 2026/04/07 22:57:51 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.260 2026/10/11 09:56:38 tom Exp $ */
 
 /*
  * Copyright 2001-2025,2026 by Thomas E. Dickey
@@ -982,7 +982,7 @@ void
 TekRefresh(TekWidget tw)
 {
     if (tw != NULL) {
-	TScreen *screen = TScreenOf(tw->vt);
+	const TScreen *screen = TScreenOf(tw->vt);
 	TekScreen *tekscr = TekScreenOf(tw);
 	static Cursor wait_cursor = None;
 
@@ -1369,7 +1369,7 @@ TekInitialize(Widget wrequest,
 	      Cardinal *num_args)
 {
     XtermWidget xw = term;
-    TScreen *vtscr = TScreenOf(xw);
+    const TScreen *vtscr = TScreenOf(xw);
 
     TekWidget request = (TekWidget) wrequest;
     TekWidget wnew = (TekWidget) new_arg;
@@ -1967,9 +1967,9 @@ TekCopy(TekWidget tw)
 #ifdef ALLOWLOGGING
     if (tw != NULL) {
 	const TekScreen *tekscr = TekScreenOf(tw);
-	TScreen *screen = TScreenOf(tw->vt);
+	const TScreen *screen = TScreenOf(tw->vt);
 
-	TekLink *Tp;
+	const TekLink *Tp;
 	char buf[TIMESTAMP_LEN + 10];
 	int tekcopyfd;
 

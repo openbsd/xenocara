@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2026)
-               updated for XTerm Patch #410 (2026/04/19)
+               updated for XTerm Patch #411 (2026/08/23)
 
 
 
@@ -1551,6 +1551,9 @@ CSI Ps SP q
             Ps = 4  -> steady underline.
             Ps = 5  -> blinking bar, xterm.
             Ps = 6  -> steady bar, xterm.
+            Ps = 7  -> initial resources, xterm.  XTerm restores the
+          initial state of the cursor using resource settings:
+          cursorBlink, cursorUnderLine, and cursorBar.
 
 CSI Ps " q
           Select character protection attribute (DECSCA), VT220.  Valid
@@ -2119,6 +2122,8 @@ OSC Ps ; Pt ST
             Ps = 1 7  -> Change highlight background color to Pt.
             Ps = 1 8  -> Change Tektronix cursor color to Pt.
             Ps = 1 9  -> Change highlight foreground color to Pt.
+
+            Ps = 2 1  -> Change Window Title to Pt (DECSWT), VT520.
 
             Ps = 2 2  -> Change pointer cursor shape to Pt.  The
           parameter Pt sets the pointerShape resource.  If Pt is empty,

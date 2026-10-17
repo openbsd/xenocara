@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.110 2026/04/07 22:11:47 tom Exp $ */
+/* $XTermId: linedata.c,v 1.111 2026/07/30 18:15:55 tom Exp $ */
 
 /*
  * Copyright 2009-2025,2026 by Thomas E. Dickey
@@ -42,7 +42,7 @@
  * If the data comes from the scrollback, defer that to getScrollback().
  */
 LineData *
-getLineData(TScreen *screen, int row)
+getLineData(const TScreen *screen, int row)
 {
     LineData *result = NULL;
     ScrnBuf buffer;

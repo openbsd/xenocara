@@ -1,4 +1,4 @@
-/* $XTermId: testxmc.c,v 1.56 2026/04/07 21:02:26 tom Exp $ */
+/* $XTermId: testxmc.c,v 1.57 2026/10/11 09:51:12 tom Exp $ */
 
 /*
  * Copyright 1997-2024,2026 by Thomas E. Dickey
@@ -163,7 +163,7 @@ Mark_XMC(XtermWidget xw, int param)
 void
 Jump_XMC(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     if (!screen->move_sgr_ok
 	&& screen->cur_col <= LineMaxCol(screen,
 					 getLineData(screen, screen->cur_row))) {

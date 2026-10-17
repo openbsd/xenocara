@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.141 2026/04/07 23:17:57 tom Exp $ */
+/* $XTermId: graphics.c,v 1.142 2026/10/11 10:00:04 tom Exp $ */
 
 /*
  * Copyright 2013-2025,2026 by Thomas E. Dickey
@@ -245,8 +245,8 @@ deactivateSlot(unsigned n)
     }
 }
 
-extern RegisterNum
-read_pixel(Graphic *graphic, int x, int y)
+RegisterNum
+read_pixel(const Graphic *graphic, int x, int y)
 {
     return (((x) >= 0 &&
 	     (x) < (graphic)->actual_width &&

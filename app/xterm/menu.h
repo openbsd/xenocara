@@ -1,7 +1,7 @@
-/* $XTermId: menu.h,v 1.149 2025/06/23 20:23:21 tom Exp $ */
+/* $XTermId: menu.h,v 1.153 2026/08/09 20:14:58 tom Exp $ */
 
 /*
- * Copyright 1999-2024,2025 by Thomas E. Dickey
+ * Copyright 1999-2025,2026 by Thomas E. Dickey
  * Copyright 1989  X Consortium
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -35,8 +35,12 @@
 
 #include <xterm.h>
 
+#ifndef OPT_MENU_COPY_AREA
+#define OPT_MENU_COPY_AREA	1	/* useful for more than debugging */
+#endif
+
 #ifndef OPT_MENU_KEEPCLIPBOARD
-#define OPT_MENU_KEEPCLIPBOARD 0	/* useful for debugging */
+#define OPT_MENU_KEEPCLIPBOARD	0	/* useful for debugging */
 #endif
 
 typedef struct _MenuEntry {
@@ -237,6 +241,9 @@ typedef enum {
 #ifndef NO_ACTIVE_ICON
     vtMenu_activeicon,
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+    vtMenu_copy_area,
+#endif
     vtMenu_line1,
     vtMenu_softreset,
     vtMenu_hardreset,
@@ -513,11 +520,19 @@ extern void update_font_loadable(void);
 #define update_font_loadable() /* nothing */
 #endif
 
-#if OPT_RENDERFONT
-extern void update_font_renderfont(void);
+#if OPT_MENU_COPY_AREA
+extern void update_copy_area(void);
 #else
-#define update_font_renderfont() /* nothing */
+#define update_copy_area() /* nothing */
+#endif /* OPT_MENU_COPY_AREA */
+
+#if OPT_RENDERFONT
+extern void update_font_renderfont(XtermWidget xw);
+#else
+#define update_font_renderfont(xw) /* nothing */
 #endif
+
+extern void disableCopyArea(XtermWidget xw);
 
 #if OPT_WIDE_CHARS
 extern void update_font_utf8_mode(void);

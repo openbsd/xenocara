@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.946 2026/04/12 23:39:54 tom Exp $
+.\" $XTermId: xterm.man,v 1.948 2026/08/09 20:18:39 tom Exp $
 .\" ---------------------------------------------------------------------------
 .\" Copyright 1996-2025,2026 by Thomas E. Dickey
 .\" Copyright 1989  X Consortium
@@ -2747,6 +2747,10 @@ end of the directory specification for \*(``misc\*(''.
 .IP
 The bitmap scaling feature is also used by \fI\*n\fP to implement
 VT102 double-width and double-height characters.
+.TP 8
+.B "brokenCopyArea\fP (class\fB BrokenCopyArea\fP)"
+If true, \fI\*n\fP uses an alternative method to compensate
+for the removal of hardware acceleration from recent X servers.
 .TP 8
 .B "brokenLinuxOSC\fP (class\fB BrokenLinuxOSC\fP)"
 If true, \fI\*n\fP applies a workaround to ignore malformed control
@@ -7162,6 +7166,11 @@ There is no corresponding command-line option.
 .B Enable Active Icon\fP (resource \fBactiveicon\fP)
 Enable (or disable) the active-icon feature.
 This corresponds to the \fB\-ai\fP option and the \fBactiveIcon\fP resource.
+.
+.TP
+.B Enable XCopyArea Icon\fP (resource \fBbrokenCopyArea\fP)
+Enable (or disable) a workaround for removal of hardware acceleration
+from recent X servers.
 .
 .TP
 .B Sixel Scrolling\fP (resource \fBsixelScrolling\fP)

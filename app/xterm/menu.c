@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.381 2026/04/07 22:11:47 tom Exp $ */
+/* $XTermId: menu.c,v 1.390 2026/10/11 09:54:06 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -108,9 +108,9 @@
 #include <signal.h>
 
 #if OPT_TRACE
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, val)
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(func, mn, mi, (val))
 #else
-#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, val)
+#define UpdateCheckbox(func, mn, mi, val) UpdateMenuItem(mn, mi, (val))
 #endif
 
 #define ToggleFlag(flag) flag = (Boolean) !flag
@@ -186,6 +186,10 @@ static void do_cursorblink     PROTO_XT_CALLBACK_ARGS;
 static void do_font_boxchars   PROTO_XT_CALLBACK_ARGS;
 static void do_font_packed     PROTO_XT_CALLBACK_ARGS;
 #endif
+
+#if OPT_MENU_COPY_AREA
+static void do_copy_area       PROTO_XT_CALLBACK_ARGS;
+#endif /* OPT_MENU_COPY_AREA */
 
 #if OPT_DEC_CHRSET
 static void do_font_doublesize PROTO_XT_CALLBACK_ARGS;
@@ -361,6 +365,9 @@ MenuEntry vtMenuEntries[] = {
 #ifndef NO_ACTIVE_ICON
     { "activeicon",	do_activeicon,	NULL },
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+    { "copy_area",	do_copy_area,	NULL },
+#endif /* OPT_MENU_COPY_AREA */
     { "line1",		NULL,		NULL },
     { "softreset",	do_softreset,	NULL },
     { "hardreset",	do_hardreset,	NULL },
@@ -676,7 +683,7 @@ create_menu(Widget w, XtermWidget xw, MenuIndex num)
 	   data->internal_name, (void *) list->w, XtWindow(list->w)));
 #endif
     if (list->w != NULL) {
-	Boolean *unused = unusedEntries(xw, num);
+	const Boolean *unused = unusedEntries(xw, num);
 	Cardinal n;
 #if OPT_TOOLBAR
 	Boolean useLocale = !strcmp(resource.menuLocale, "");
@@ -822,6 +829,9 @@ domenu(Widget w,
 #ifndef NO_ACTIVE_ICON
 	    update_activeicon();
 #endif /* NO_ACTIVE_ICON */
+#if OPT_MENU_COPY_AREA
+	    update_copy_area();
+#endif
 	    update_privatecolorregisters();
 	}
 	break;
@@ -858,7 +868,7 @@ domenu(Widget w,
 				      False);
 #endif
 #if OPT_RENDERFONT
-	    update_font_renderfont();
+	    update_font_renderfont(xw);
 #endif
 #if OPT_WIDE_CHARS
 	    update_font_utf8_mode();
@@ -964,8 +974,13 @@ handle_send_signal(Widget gw GCC_UNUSED, int sig)
 
     if (hold_screen > 1)
 	hold_screen = 0;
-    if (screen->pid > 1)
-	kill_process_group(screen->pid, sig);
+    if (screen->pid > 1) {
+	if (sig == SIGHUP) {
+	    Cleanup(0);
+	} else {
+	    kill_process_group(screen->pid, sig);
+	}
+    }
 }
 
 #if OPT_VT52_MODE
@@ -1434,8 +1449,7 @@ do_jumpscroll(Widget gw GCC_UNUSED,
     term->flags ^= SMOOTHSCROLL;
     if (term->flags & SMOOTHSCROLL) {
 	screen->jumpscroll = False;
-	if (screen->scroll_amt)
-	    FlushScroll(term);
+	ScrollJump(term, screen->scroll_amt);
     } else {
 	screen->jumpscroll = True;
     }
@@ -1681,6 +1695,32 @@ do_activeicon(Widget gw GCC_UNUSED,
 }
 #endif /* NO_ACTIVE_ICON */
 
+#if OPT_MENU_COPY_AREA
+void
+update_copy_area(void)
+{
+    XtermWidget xw = term;
+
+    disableCopyArea(xw);
+    UpdateCheckbox("update_copy_area",
+		   vtMenuEntries,
+		   vtMenu_copy_area,
+		   !TScreenOf(xw)->brokenCopyArea);
+}
+
+/* ARGSUSED */
+static void
+do_copy_area(Widget gw GCC_UNUSED,
+	     XtPointer closure GCC_UNUSED,
+	     XtPointer data GCC_UNUSED)
+{
+    XtermWidget xw = term;
+
+    ToggleFlag(TScreenOf(xw)->brokenCopyArea);
+    update_copy_area();
+}
+#endif
+
 static void
 do_softreset(Widget gw GCC_UNUSED,
 	     XtPointer closure GCC_UNUSED,
@@ -1808,7 +1848,7 @@ do_font_renderfont(Widget gw GCC_UNUSED,
 
     DefaultRenderFont(xw);
     ToggleFlag(xw->work.render_font);
-    update_font_renderfont();
+    update_font_renderfont(xw);
     xtermLoadFont(xw, xtermFontName(name), True, fontnum);
     ScrnRefresh(term, 0, 0,
 		MaxRows(screen),
@@ -2768,7 +2808,7 @@ HandleFontLoading(Widget w,
 static void
 update_fontmenu(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    const TScreen *screen = TScreenOf(xw);
     int n;
 
     for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
@@ -3797,27 +3837,42 @@ update_font_loadable(void)
 
 #if OPT_RENDERFONT
 void
-update_font_renderfont(void)
+update_font_renderfont(XtermWidget xw)
 {
     UpdateCheckbox("update_font_renderfont",
 		   fontMenuEntries,
 		   fontMenu_render_font,
-		   (term->work.render_font == True));
+		   (xw->work.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
-		       !IsEmpty(CurrentXftFont(term)));
+		       !IsEmpty(CurrentXftFont(xw)));
 
 #if OPT_BOX_CHARS
-    if (term->work.render_font) {
-	TScreenOf(term)->broken_box_chars = term->work.broken_box_chars;
+    if (xw->work.render_font) {
+	TScreenOf(xw)->broken_box_chars = xw->work.broken_box_chars;
     } else {
-	TScreenOf(term)->broken_box_chars = False;
+	TScreenOf(xw)->broken_box_chars = False;
     }
 #endif
+    disableCopyArea(xw);
     update_font_boxchars();
 
-    update_fontmenu(term);
+    update_fontmenu(xw);
 }
 #endif
+
+void
+disableCopyArea(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    screen->no_copy_area = screen->brokenCopyArea;
+#if OPT_RENDERFONT
+    if (xw->work.render_font == True) {
+	screen->no_copy_area = False;
+	TRACE(("TrueType fonts are enabled (keep XCopyArea)\n"));
+    }
+#endif
+    TRACE(("XCopyArea is %sabled\n", screen->no_copy_area ? "dis" : "en"));
+}
 
 #if OPT_WIDE_CHARS
 void

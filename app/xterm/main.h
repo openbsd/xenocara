@@ -1,7 +1,7 @@
-/* $XTermId: main.h,v 1.91 2025/11/16 22:09:02 tom Exp $ */
+/* $XTermId: main.h,v 1.93 2026/07/27 00:09:30 tom Exp $ */
 
 /*
- * Copyright 2000-2023,2025 by Thomas E. Dickey
+ * Copyright 2000-2025,2026 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -220,6 +220,10 @@
 
 #ifndef DEF_COLOR12
 #define DEF_COLOR12		"rgb:5c/5c/ff"	/* see XTerm-col.ad */
+#endif
+
+#ifndef DEF_COPY_AREA
+#define DEF_COPY_AREA		False
 #endif
 
 #ifndef DEF_INITIAL_ERASE

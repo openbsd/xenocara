@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.216 2026/02/12 22:20:25 tom Exp $
+# $XTermId: terminfo,v 1.221 2026/08/16 09:52:23 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -37,10 +37,10 @@
 #
 # Special Capabilities:
 # --------------------
-# ich has a corresponding capability that inserts a single blank.  We could
-#	have used ich1=\E[@, which works with ncurses, but that is not standard
-#	behavior.  If it is set, then SVr4 vi (e.g., Solaris 2.6) emits both
-#	smir/rmir and ich1.
+# ich has a corresponding capability ich1 that inserts a single blank.
+#	If it is set, then SVr4 vi (e.g., Solaris 2.6) emits both smir/rmir
+#	and ich1.  This works (because it was a direct translation from the
+#	original termcap implementation), but is not optimal.
 # meml locks memory above the cursor; memu unlocks (ala HP terminals).  This
 #	is not recognized by some older (e.g., SVr3) tic programs, but none
 #	do more than warn about it.  Ignore the warning.
@@ -141,7 +141,7 @@ xterm-new|modern xterm terminal emulator,
 	use=ansi+rep,
 	use=ecma+strikeout,
 	use=xterm+pcfkeys,
-	use=xterm+tmux,
+	use=xterm+tmux2,
 	use=xterm+nofkeys,
 	use=bracketed+paste,
 	use=report+version,
@@ -423,12 +423,12 @@ xterm+pcfkeys|fragment for PC-style keys,
 # Se resets the cursor style to the terminal power-on default.
 #
 # Cs and Ce set and reset the cursor colour.
-xterm+tmux|advanced xterm features used in tmux,
+xterm+tmux2|advanced xterm features used in tmux,
 	Cr=\E]112\E\\,
 	Cs=\E]12;%p1%s\E\\,
-	Ms=\E]52;%p1%s;%p2%s
-	   \E\\,
-	Se=\E[2\sq,
+	Ms=\E]52;%p1%s;%p2%s\E
+	   \\,
+	Se=\E[\sq,
 	Ss=\E[%p1%d\sq,
 #
 # The ctrlFKeys resource is only relevant to the xterm+pcfn and xterm+pcfN
@@ -1230,6 +1230,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	flash=\E[?5h$<100/>\E[?5l,
 	home=\E[H,
 	ich=\E[%p1%d@,
+	ich1=\E[@,
 	ind=\n,
 	is2=\E[!p\E[?3;4l\E[4l\E>,
 	kmous=\E[M,
@@ -1345,7 +1346,7 @@ xterm+nofkeys|building block for xterm fkey-variants,
 	use=ecma+strikeout,
 	use=vt420+lrmm,
 	use=xterm+sm+1006,
-	use=xterm+tmux,
+	use=xterm+tmux2,
 	use=xterm+focus,
 	use=ecma+italics,
 	use=xterm+keypad,
@@ -1396,7 +1397,7 @@ xterm-vt220|xterm emulating vt220,
 	use=ecma+strikeout,
 	use=xterm+focus,
 	use=xterm+sm+1006,
-	use=xterm+tmux,
+	use=xterm+tmux2,
 	use=xterm+keypad,
 	use=xterm-basic,
 #
@@ -2117,7 +2118,7 @@ xterm-nrc|xterm with VT220 national replacement character sets,
 #
 # SVr4 curses does not use more than 8 colors anyway, so using 16 colors is
 # either for terminfo-level applications or via ncurses.
-xterm-16color|xterm with 16 colors,
+ibm+16color|IBM aixterm color definitions,
 	colors#16,
 	pairs#0x100,
 	setab=\E[
@@ -2166,8 +2167,15 @@ xterm-16color|xterm with 16 colors,
 		%e%ga%d
 		%;
 		m,
-	use=xterm+256color2,
+xterm-16color|xterm with 16 colors,
+	ccc,
+	initc=\E]4;
+		%p1%d;rgb:
+		%p2%{255}%*%{1000}%/%2.2X/
+		%p3%{255}%*%{1000}%/%2.2X/
+		%p4%{255}%*%{1000}%/%2.2X\E\\,
 	use=xterm+osc104,
+	use=ibm+16color,
 	use=xterm-new,
 
 # xterm OSC 104 resets the color palette.  Using it as part of xterm+256color
@@ -2176,6 +2184,7 @@ xterm-16color|xterm with 16 colors,
 xterm+osc104|reset color palette,
 	oc=\E]104\E\\,
 	rs1=\Ec\E]104\E\\,
+
 
 # "indexed color" is mentioned without definition in ISO 8613-6 (ITU T.416).
 #
@@ -2198,7 +2207,7 @@ xterm+256color|original xterm 256-color feature,
 		%p2%{255}%*%{1000}%/%2.2X/
 		%p3%{255}%*%{1000}%/%2.2X/
 		%p4%{255}%*%{1000}%/%2.2X\E\\,
-	oc=\E]104\E\\,
+	oc=\E]104\007,
 	setab=\E[
 		%?
 			%p1%{8}%<
@@ -2227,7 +2236,9 @@ xterm+256color|original xterm 256-color feature,
 		m,
 	setb@,
 	setf@,
+
 xterm+256color2|xterm 256-color feature,
+	oc=\E]104\007,
 	setab=\E[
 		%?
 			%p1%{8}%<
@@ -2255,13 +2266,20 @@ xterm+256color2|xterm 256-color feature,
 		%;
 		m,
 	use=xterm+256color,
+
 xterm-256color|xterm with 256 colors,
-	use=xterm+256color,
 	use=xterm+osc104,
+	use=xterm+256color,
 	use=xterm-new,
-xterm-88color|xterm with 88 colors,
+
+xterm+88color|original xterm 88-color feature,
 	colors#88,
 	pairs#7744,
+	use=xterm+256color,
+
+xterm-88color|xterm with 88 colors,
+	use=xterm+osc104,
+	use=xterm+88color,
 	use=xterm-256color,
 
 # "direct color" is mentioned without definition in ISO 8613-6 (ITU T.416).
@@ -2307,6 +2325,7 @@ xterm+direct|xterm fragment with direct-color indexing,
 		m,
 	setb@,
 	setf@,
+
 xterm-direct|xterm with direct-color indexing,
 	use=xterm+direct,
 	use=xterm,
@@ -2369,6 +2388,7 @@ xterm-8bit|xterm terminal emulator with 8-bit controls (X Window System),
 	ht=^I,
 	hts=\210,
 	ich=\233%p1%d@,
+	ich1=\233@,
 	il=\233%p1%dL,
 	il1=\233L,
 	ind=\n,
@@ -2551,8 +2571,8 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	flash=\E[?5h$<100/>\E[?5l,
 	hpa=\E[%i%p1%dG,
 	ich=\E[%p1%d@,
+	ich1=\E[@,
 	ind=\n,
-	indn=\E[%p1%dS,
 	is2=\E[!p\E[?3;4l\E[4l\E>,
 	kDC=\E[3;2~,
 	kEND=\E[1;2F,
@@ -2623,7 +2643,6 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	memu=\Em,
 	op=\E[39;49m,
 	ri=\EM,
-	rin=\E[%p1%dT,
 	rmacs=^O,
 	rmam=\E[?7l,
 	rmir=\E[4l,
@@ -2718,6 +2737,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	use=ansi+local,
 	use=ansi+pp,
 	use=ansi+sgrbold,
+	use=ecma+index,
 	use=xterm+alt1049,
 
 xterm-xfree86|xterm terminal emulator (XFree86),
@@ -2750,11 +2770,7 @@ xterm-r6|xterm X11R6 version,
 	cud=\E[%p1%dB,
 	cud1=\n,
 	cuf=\E[%p1%dC,
-	cuf1=\E[C,
 	cuu=\E[%p1%dA,
-	cuu1=\E[A,
-	dch=\E[%p1%dP,
-	dch1=\E[P,
 	dl=\E[%p1%dM,
 	dl1=\E[M,
 	enacs=\E)0,
@@ -2796,7 +2812,6 @@ xterm-r6|xterm X11R6 version,
 	ri=\EM,
 	rmacs=^O,
 	rmcup=\E[2J\E[?47l\E8,
-	rmir=\E[4l,
 	rmkx=\E[?1l\E>,
 	rmso=\E[m,
 	rmul=\E[m,
@@ -2805,7 +2820,6 @@ xterm-r6|xterm X11R6 version,
 	sgr0=\E[m,
 	smacs=^N,
 	smcup=\E7\E[?47h,
-	smir=\E[4h,
 	smkx=\E[?1h\E=,
 	smso=\E[7m,
 	smul=\E[4m,
@@ -2816,6 +2830,8 @@ xterm-r6|xterm X11R6 version,
 	use=ansi+csr,
 	use=ansi+cup,
 	use=ansi+erase,
+	use=ansi+idc,
+	use=ansi+local1,
 	use=xterm+kbs,
 	use=xterm+decedit,
 xterm-old|antique xterm version,
@@ -2848,10 +2864,8 @@ xterm-r5|xterm R5 version,
 	cr=\r,
 	cub1=^H,
 	cud1=\n,
-	cup=\E[%i%p1%d;%p2%dH,
 	ed=\E[J,
 	el=\E[K,
-	home=\E[H,
 	ht=^I,
 	hts=\EH,
 	ind=\n,
@@ -2914,6 +2928,7 @@ xterm-r5|xterm R5 version,
 	use=xterm+kbs,
 	use=ansi+apparrows,
 	use=ansi+csr,
+	use=ansi+cup,
 	use=ansi+enq,
 	use=ansi+idc,
 	use=ansi+idl,
