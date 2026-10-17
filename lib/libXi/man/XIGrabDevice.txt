@@ -20,7 +20,7 @@ SYNOPSIS
                         int paired_device_mode,
                         Bool owner_events,
                         XIEventMask *mask);
-   
+
    Status XIUngrabDevice( Display *display,
                           int deviceid,
                           Time time);

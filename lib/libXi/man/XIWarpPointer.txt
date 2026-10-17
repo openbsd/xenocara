@@ -21,7 +21,7 @@ SYNOPSIS
                        int src_height,
                        double dest_x,
                        double dest_y);
-   
+
    dest_w
           Specifies the destination window or None.
 

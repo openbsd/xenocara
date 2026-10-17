@@ -14,7 +14,7 @@ SYNOPSIS
 
    XDeviceState* XQueryDeviceState( Display *display,
                                     XDevice *device);
-   
+
    display
           Specifies the connection to the X server.
 

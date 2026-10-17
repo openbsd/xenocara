@@ -31,7 +31,7 @@ SYNOPSIS
    XIEventMask *XIGetSelectedEvents( Display *display,
                                      Window win,
                                      int *num_masks_return);
- 
+
    display
           Specifies the connection to the X server.
 

@@ -105,13 +105,17 @@ XGetDeviceControl(
 	sav = d;
 	_XRead(dpy, (char *)d, nbytes);
 
+	/* Allocation and fill must agree; reject a mismatched reply type. */
+	if (d->control != control)
+	    goto out;
+
         /* In theory, we should just be able to use d->length to get the size.
          * Turns out that a number of X servers (up to and including server
          * 1.4) sent the wrong length value down the wire. So to not break
          * apps that run against older servers, we have to calculate the size
          * manually.
          */
-	switch (d->control) {
+	switch (control) {
 	case DEVICE_RESOLUTION:
 	{
 	    xDeviceResolutionState *r;
@@ -146,6 +150,13 @@ XGetDeviceControl(
             if (sizeof(xDeviceCoreState) > nbytes)
                 goto out;
             size = sizeof(XDeviceCoreState);
+            break;
+        }
+        case DEVICE_ENABLE:
+        {
+            if (sizeof(xDeviceEnableState) > nbytes)
+                goto out;
+            size = sizeof(XDeviceEnableState);
             break;
         }
 	default:
@@ -237,7 +248,7 @@ XGetDeviceControl(
             XDeviceEnableState *E = (XDeviceEnableState *) Device;
 
             E->control = DEVICE_ENABLE;
-            E->length = sizeof(E);
+            E->length = sizeof(XDeviceEnableState);
             E->enable = e->enable;
 
             break;

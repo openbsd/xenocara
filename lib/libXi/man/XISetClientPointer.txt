@@ -15,7 +15,7 @@ SYNOPSIS
    XISetClientPointer( Display *display,
                        Window win,
                        int deviceid);
-   
+
    Bool XIGetClientPointer( Display *display,
                             Window win,
                             int *device);

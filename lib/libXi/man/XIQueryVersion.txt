@@ -14,7 +14,7 @@ SYNOPSIS
    Status XIQueryVersion( Display *display,
                           int *major_version_inout,
                           int *minor_version_inout);
-   
+
    display
           Specifies the connection to the X server.
 
@@ -30,16 +30,16 @@ DESCRIPTION
 -----------
 
    XIQueryVersion announces the client's supported XI2 version to
-   the server and returns server's supported X Input version. Clients 
-   are required to use XIQueryVersion instead of XGetExtensionVersion 
-   if they use XI2 calls. The server may treat a client differently 
+   the server and returns server's supported X Input version. Clients
+   are required to use XIQueryVersion instead of XGetExtensionVersion
+   if they use XI2 calls. The server may treat a client differently
    depending on the supported version announced by the client.
-   The major_version_inout must be 2 or greater, otherwise a BadValue 
+   The major_version_inout must be 2 or greater, otherwise a BadValue
    error occurs.
 
-   If the server does not support XI2, XIQueryVersion returns BadRequest 
-   to the client. Otherwise, XIQueryVersion returns Success. In both 
-   cases major_version_inout and minor_version_inout are set to the 
+   If the server does not support XI2, XIQueryVersion returns BadRequest
+   to the client. Otherwise, XIQueryVersion returns Success. In both
+   cases major_version_inout and minor_version_inout are set to the
    server's supported version.
 
    If the client has previously called XIQueryVersion, then the result

@@ -29,7 +29,7 @@ DESCRIPTION
 -----------
 
 The XIListProperties function returns a list of the
-properties associated with the input device specified with 
+properties associated with the input device specified with
 deviceid. Each device may have an arbitrary number of properties
 attached, some of which were created by the driver and/or
 server, others created by clients at runtime.

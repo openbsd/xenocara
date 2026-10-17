@@ -10,7 +10,7 @@ This document describes an extension to
 the X11 server.  The purpose of this extension is to support the use
 of additional input devices beyond the pointer and keyboard devices
 defined by the core X protocol.  This first section gives an overview
-of the input extension.  The following sections correspond to 
+of the input extension.  The following sections correspond to
 chapters 9, 10, and 11, ``Window and Session Manager Functions'',
 ``Events'', and ``Event Handling Functions'' of the
 ``Xlib - C Language Interface'' manual
@@ -40,10 +40,10 @@ is not currently reportable via the core input events.
 <para>
 <!-- .LP -->
 The X server core protocol supports two input devices:  a pointer and a
-keyboard.  The pointer device has two major functions. 
+keyboard.  The pointer device has two major functions.
 First, it may be used to generate motion information
 that client programs can detect. Second, it may also be used to indicate the
-current location and focus of the X keyboard.  To accomplish this, the server 
+current location and focus of the X keyboard.  To accomplish this, the server
 echoes a cursor at the current position of the X pointer.  Unless the X
 keyboard has been explicitly focused, this cursor also shows the current
 location and focus of the X keyboard.
@@ -54,9 +54,9 @@ The X keyboard is used to generate input that client programs can detect.
 </para>
 <para>
 <!-- .LP -->
-The X keyboard and X pointer are referred to in this document as 
+The X keyboard and X pointer are referred to in this document as
 the <emphasis remap='I'>core devices</emphasis>, and the input
-events they generate 
+events they generate
 <function>( KeyPress ,</function>
 <function>KeyRelease ,</function>
 <function>ButtonPress ,</function>
@@ -64,7 +64,7 @@ events they generate
 and
 <function>MotionNotify )</function>
 are known as the <emphasis remap='I'>core input events</emphasis>.  All other
-input devices are referred to as <emphasis remap='I'>extension input devices</emphasis>, and the 
+input devices are referred to as <emphasis remap='I'>extension input devices</emphasis>, and the
 input events they generate are referred to as <emphasis remap='I'>extension input events</emphasis>.
 <!-- .NT -->
 This input extension does not change the behavior or functionality of the
@@ -76,7 +76,7 @@ in the section titled ``Event Synchronization and Core Grabs.''
 </para>
 <para>
 <!-- .LP -->
-Selection of the physical devices to be initially used by the server as the 
+Selection of the physical devices to be initially used by the server as the
 core devices is left implementation dependent.  Functions are defined that
 allow client programs to change which physical devices are used as the
 core devices.
@@ -90,10 +90,10 @@ core devices.
 <para>
 <!-- .LP -->
 The input extension controls access to input devices other than the X keyboard
-and X pointer.  It allows client programs to select input from these devices 
+and X pointer.  It allows client programs to select input from these devices
 independently
 from each other and independently from the core devices.  Input events from
-these devices are of extension types 
+these devices are of extension types
 <function>( DeviceKeyPress ,</function>
 <function>DeviceKeyRelease ,</function>
 <function>DeviceButtonPress ,</function>
@@ -118,7 +118,7 @@ are responsible for combining these into one or more client XEvents.
 Any input device that generates key, button, or motion data may be used as
 an extension input device.
 Extension input devices may have zero or more keys, zero or more buttons,
-and may report zero or more axes of motion.  Motion may be reported 
+and may report zero or more axes of motion.  Motion may be reported
 as relative movements from a previous position or as an absolute
 position.  All valuators reporting motion information for a given
 extension input device must report the same kind of motion information
@@ -153,7 +153,7 @@ is determined by the location of the core X pointer.
 <!-- .LP -->
 Some of the input extension requests divide input devices into classes
 based on their functionality.  This is intended to allow new classes of input
-devices to be defined at a later time without changing the semantics of 
+devices to be defined at a later time without changing the semantics of
 these functions.  The following input device classes are currently
 defined:
 <variablelist>
@@ -210,11 +210,11 @@ The device supports feedbacks.
 <para>
 <!-- .LP -->
 Additional classes may be added in the future.
-Functions that support multiple input classes, such as the 
+Functions that support multiple input classes, such as the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function that lists all available input devices,
 organize the data they return by input class.  Client programs that
-use these functions should not access data unless it matches a 
+use these functions should not access data unless it matches a
 class defined at the time those clients were compiled.  In this way,
 new classes can be added without forcing existing clients that use
 these functions to be recompiled.
@@ -236,9 +236,9 @@ that a client would make is as follows:
   <listitem>
     <para>
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
-- lists all of the available input devices.  From the 
+- lists all of the available input devices.  From the
 information returned by this request, determine whether the desired input
-device is attached to the server.  For a description of the 
+device is attached to the server.  For a description of the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request, see the section entitled ``Listing Available Devices.''
     </para>
@@ -247,11 +247,11 @@ request, see the section entitled ``Listing Available Devices.''
     <para>
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
 - requests that the server open the device for access by this client.
-This request returns an 
+This request returns an
 <function>XDevice</function>
 structure that is used
 by most other input extension requests to identify the specified device.
-For a description of the 
+For a description of the
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request, see the section entitled ``Enabling and Disabling Extension Devices.''
     </para>
@@ -271,7 +271,7 @@ see the section entitled ``Selecting Extension Device Events.''
     <para>
 <xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 - selects the desired events from the server.
-For a description of the 
+For a description of the
 <function>XSelextExtensionEvent</function>
 request, see the section entitled ``Selecting Extension Device Events.''
     </para>
@@ -302,12 +302,12 @@ These functions are described in the following sections.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Extension input devices are accessed by client programs through the 
+Extension input devices are accessed by client programs through the
 use of new protocol requests.
 The following requests are provided as extensions to Xlib.  Constants
-and structures referenced by these functions may be found in the 
+and structures referenced by these functions may be found in the
 files <function>&lt;X11/extensions/XI.h&gt;</function> and <function>&lt;X11/extensions/XInput.h&gt;</function>,
-which are attached to this document as 
+which are attached to this document as
 Appendix A.<!-- xref -->
 </para>
 <para>
@@ -405,7 +405,7 @@ as the X pointer or X keyboard.
 <!-- .NT -->
 <note><para>
 Using these functions may change the characteristics of the core devices.
-The new pointer device may have a different number of buttons from the 
+The new pointer device may have a different number of buttons from the
 old one, or the new keyboard device may have a different number of
 keys or report a different range of keycodes.  Client programs may be
 running that depend on those characteristics.  For example, a client
@@ -413,7 +413,7 @@ program could allocate an array based on the number of buttons on the
 pointer device and then use the button numbers received in button events
 as indices into that array.  Changing the core devices could cause
 such client programs to behave improperly or to terminate abnormally
-if they ignore the 
+if they ignore the
 <function>ChangeDeviceNotify</function>
 event generated by these requests.
 </para></note>
@@ -425,18 +425,18 @@ These functions change the X keyboard or X pointer device and generate an
 <function>XChangeDeviceNotify</function>
 event and a
 <function>MappingNotify</function>
-event.  
+event.
 The specified device becomes the
 new X keyboard or X pointer device.  The location of the core device
 does not change as a result of this request.
 </para>
 <para>
 <!-- .LP -->
-These requests fail and return 
+These requests fail and return
 <function>AlreadyGrabbed</function>
 if either the specified
 device or the core device it would replace are grabbed by some other client.
-They fail and return 
+They fail and return
 <function>GrabFrozen</function>
 if either device is frozen by the active grab of another client.
 </para>
@@ -465,14 +465,14 @@ error.
 </para>
 <para>
 <!-- .LP -->
-To change which physical device is used as the X keyboard, use the 
+To change which physical device is used as the X keyboard, use the
 <xref linkend='XChangeKeyboardDevice' xrefstyle='select: title'/>
 function.
-The specified device must support input class 
+The specified device must support input class
 <function>Keys</function>
 (as reported in the
 <function>ListInputDevices</function>
-request) or the request will fail with a 
+request) or the request will fail with a
 <function>BadMatch</function>
 error.
 </para>
@@ -513,21 +513,21 @@ Specifies the desired device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-If no error occurs, 
+If no error occurs,
 <xref linkend='XChangeKeyboardDevice' xrefstyle='select: title'/>
-returns 
+returns
 <function>Success .</function>
-A 
+A
 <function>ChangeDeviceNotify</function>
-event with the request field set to 
+event with the request field set to
 <function>NewKeyboard</function>
 is sent to all clients selecting that event.
-A 
+A
 <function>MappingNotify</function>
 event with the request field set to
 <function>MappingKeyboard</function>
 is sent to all clients.
-The requested device becomes the X keyboard, and the old keyboard becomes 
+The requested device becomes the X keyboard, and the old keyboard becomes
 available as an extension input device.
 The focus state of the new keyboard is the same as
 the focus state of the old X keyboard.
@@ -539,7 +539,7 @@ can generate
 <function>AlreadyGrabbed ,</function>
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
-and 
+and
 <function>GrabFrozen</function>
 errors.
 <!-- .sp -->
@@ -550,12 +550,12 @@ To change which physical device is used as the X pointer,
 use the
 <xref linkend='XChangePointerDevice' xrefstyle='select: title'/>
 function.
-The specified device must support input class 
+The specified device must support input class
 <function>Valuators</function>
 (as reported in the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request) and report at least two axes of motion,
-or the request will fail with a 
+or the request will fail with a
 <function>BadMatch</function>
 error.
 If the specified device reports more than two axes, the two specified in
@@ -564,9 +564,9 @@ valuators on the device will be ignored.
 </para>
 <para>
 <!-- .LP -->
-If the specified device reports absolute positional information, and the 
-server implementation does not allow such a device to be used as the 
-X pointer, the request will fail with a 
+If the specified device reports absolute positional information, and the
+server implementation does not allow such a device to be used as the
+X pointer, the request will fail with a
 <function>BadDevice</function>
 error.
 <!-- .sM -->
@@ -607,7 +607,7 @@ Specifies the desired device.
     </term>
     <listitem>
       <para>
-Specifies the zero-based index of the axis to be used as the x-axis of the 
+Specifies the zero-based index of the axis to be used as the x-axis of the
 pointer device.
       </para>
     </listitem>
@@ -618,7 +618,7 @@ pointer device.
     </term>
     <listitem>
       <para>
-Specifies the zero-based index of the axis to be used as the y-axis of the 
+Specifies the zero-based index of the axis to be used as the y-axis of the
 pointer device.
     </para>
   </listitem>
@@ -628,13 +628,13 @@ pointer device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-If no error occurs, 
+If no error occurs,
 <xref linkend='XChangePointerDevice' xrefstyle='select: title'/>
-returns 
+returns
 <function>Success .</function>
-A 
+A
 <function>ChangeDeviceNotify</function>
-event with the request field set to 
+event with the request field set to
 <function>NewPointer</function>
 is sent to all clients selecting that event.
 A
@@ -642,7 +642,7 @@ A
 event with the request field set to
 <function>MappingPointer</function>
 is sent to all clients.
-The requested device becomes the X pointer, and the old pointer becomes 
+The requested device becomes the X pointer, and the old pointer becomes
 available as an extension input device.
 </para>
 <para>
@@ -652,7 +652,7 @@ can generate
 <function>AlreadyGrabbed ,</function>
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
-and 
+and
 <function>GrabFrozen</function>
 errors.
 </para>
@@ -675,11 +675,11 @@ The core grab requests require a pointer_mode and keyboard_mode
 argument.  The meaning of these modes is changed by the input extension.
 For the
 <olink targetdoc='libX11' targetptr='XGrabPointer'><function>XGrabPointer</function></olink>
-and 
+and
 <olink targetdoc='libX11' targetptr='XGrabButton'><function>XGrabButton</function></olink>
-requests, pointer_mode controls synchronization of the pointer device, 
-and keyboard_mode controls the synchronization of all other input devices.  
-For the 
+requests, pointer_mode controls synchronization of the pointer device,
+and keyboard_mode controls the synchronization of all other input devices.
+For the
 <olink targetdoc='libX11' targetptr='XGrabKeyboard'><function>XGrabKeyboard</function></olink>
 and
 <olink targetdoc='libX11' targetptr='XGrabKey'><function>XGrabKey</function></olink>
@@ -698,22 +698,22 @@ is controlled by the mode specified for the device not being grabbed.
 <para>
 <!-- .LP -->
 Active grabs of
-extension devices are supported via the 
+extension devices are supported via the
 <xref linkend='XGrabDevice' xrefstyle='select: title'/>
-function in the same way that core devices are grabbed using the core 
+function in the same way that core devices are grabbed using the core
 <olink targetdoc='libX11' targetptr='XGrabKeyboard'><function>XGrabKeyboard</function></olink>
 function, except that an extension input device
-is passed as a function parameter.  
-The 
+is passed as a function parameter.
+The
 <xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 function allows a previous active grab for an extension device to be released.
 </para>
 <para>
 <!-- .LP -->
 Passive grabs of buttons and keys on extension devices are supported
-via the 
+via the
 <xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
-and 
+and
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 functions.
 These passive grabs are released via the
@@ -784,9 +784,9 @@ Specifies the ID of a window associated with the device specified above.
     </term>
     <listitem>
       <para>
-Specifies a boolean value of either 
+Specifies a boolean value of either
 <function>True</function>
-or 
+or
 <function>False .</function>
       </para>
     </listitem>
@@ -808,7 +808,7 @@ Specifies the number of elements in the event_list array.
     <listitem>
       <para>
 Specifies a pointer to a list of event classes that indicate which events
-the client wishes to receive.  
+the client wishes to receive.
 These event classes must have been obtained
 using the device being grabbed.
       </para>
@@ -821,9 +821,9 @@ using the device being grabbed.
     <listitem>
       <para>
 Controls further processing of events from this device.  You can pass one
-of these constants: 
+of these constants:
 <function>GrabModeSync</function>
-or 
+or
 <function>GrabModeAsync .</function>
       </para>
     </listitem>
@@ -837,7 +837,7 @@ or
 Controls further processing of events from all other devices.  You can pass one
 of these constants:
 <function>GrabModeSync</function>
-or 
+or
 <function>GrabModeAsync .</function>
       </para>
     </listitem>
@@ -860,9 +860,9 @@ milliseconds or
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XGrabDevice' xrefstyle='select: title'/>
-actively grabs an extension input device and generates 
+actively grabs an extension input device and generates
 <function>DeviceFocusIn</function>
-and 
+and
 <function>DeviceFocusOut</function>
 events.
 Further input events from this device are reported only to the grabbing client.
@@ -872,9 +872,9 @@ This function overrides any previous active grab by this client for this device.
 <!-- .LP -->
 The event_list parameter is a pointer to a list of event classes.  This list
 indicates which events the client wishes to receive while the grab is active.
-If owner_events is 
+If owner_events is
 <function>False ,</function>
-input events from this device are reported with respect to 
+input events from this device are reported with respect to
 grab_window and are reported only if specified in event_list.
 If owner_events is
 <function>True ,</function>
@@ -885,14 +885,14 @@ reported if specified in event_list.
 </para>
 <para>
 <!-- .LP -->
-The this_device_mode argument controls the further processing 
+The this_device_mode argument controls the further processing
 of events from this device, and the other_device_mode argument controls
 the further processing of input events from all other devices.
 </para>
 <itemizedlist>
   <listitem>
     <para>
-If the this_device_mode argument is 
+If the this_device_mode argument is
 <function>GrabModeAsync ,</function>
 device event processing continues
 normally; if the device is currently frozen by this client, then
@@ -902,7 +902,7 @@ If the this_device_mode  argument is
 the state of the grabbed device
 (as seen by client applications) appears to freeze,
 and no further device events are generated by the server until the
-grabbing client issues a releasing 
+grabbing client issues a releasing
 <xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 call or until the device grab is released.
 Actual device input events are not lost while the device is frozen; they are
@@ -911,18 +911,18 @@ simply queued for later processing.
   </listitem>
   <listitem>
     <para>
-If the other_device_mode is 
+If the other_device_mode is
 <function>GrabModeAsync ,</function>
 event processing from other input devices is unaffected
-by activation of the grab.  
-If other_device_mode is 
+by activation of the grab.
+If other_device_mode is
 <function>GrabModeSync ,</function>
 the state of all devices except the grabbed device
 (as seen by client applications) appears to freeze, and no further
 events are generated by the server until the grabbing client issues a
-releasing 
+releasing
 <olink targetdoc='libX11' targetptr='XAllowEvents'><function>XAllowEvents</function></olink>
-or 
+or
 <xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 call or until the device grab is released.
 Actual events are not lost
@@ -957,7 +957,7 @@ or later than the current X server time, it returns
 <function>GrabInvalidTime .</function>
 Otherwise,
 the last-grab-time for the specified device is set
-to the specified time and 
+to the specified time and
 <function>CurrentTime</function>
 is replaced by the current X server time.
     </para>
@@ -971,8 +971,8 @@ If the device is frozen by an active grab of another client, it returns
 </itemizedlist>
 <para>
 <!-- .LP -->
-If a grabbed device is closed by a client while an active grab by that 
-client is in effect, that active grab will be released. 
+If a grabbed device is closed by a client while an active grab by that
+client is in effect, that active grab will be released.
 Any passive grabs established by that client will be released.
 If the device is frozen only by an active grab
 of the requesting client, it is thawed.
@@ -1035,7 +1035,7 @@ Specifies the desired device.
     <listitem>
       <para>
 Specifies the time.  This may be either a timestamp expressed in
-milliseconds, or 
+milliseconds, or
 <function>CurrentTime .</function>
     </para>
   </listitem>
@@ -1053,12 +1053,12 @@ or
 <function>XGrabDeviceKey .</function>
 If any other devices are frozen by the grab,
 <xref linkend='XUngrabDevice' xrefstyle='select: title'/>
-thaws them. 
+thaws them.
 This function does not release the device and any
 queued events if the specified time is earlier than the last-device-grab
-time or is later than the current X server time.  It also generates 
+time or is later than the current X server time.  It also generates
 <function>DeviceFocusIn</function>
-and 
+and
 <function>DeviceFocusOut</function>
 events.  The X server automatically performs an
 <xref linkend='XUngrabDevice' xrefstyle='select: title'/>
@@ -1086,7 +1086,7 @@ That device must have previously been opened using the
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function, or the request will fail with a
 <function>BadDevice</function>
-error.  
+error.
 If the specified device does not support input class
 <function>Keys ,</function>
 the request will fail with a
@@ -1138,7 +1138,7 @@ Specifies the desired device.
     <listitem>
       <para>
 Specifies the keycode of the key that is to be grabbed.  You can pass
-either the keycode or 
+either the keycode or
 <function>AnyKey .</function>
       </para>
     </listitem>
@@ -1150,7 +1150,7 @@ either the keycode or
     <listitem>
       <para>
 Specifies the set of keymasks.  This mask is the bitwise inclusive OR
-of these keymask bits:  
+of these keymask bits:
 <function>ShiftMask ,</function>
 <function>LockMask ,</function>
 <function>ControlMask ,</function>
@@ -1165,13 +1165,13 @@ and
   </varlistentry>
   <varlistentry>
     <term>
-      
+
     </term>
     <listitem>
       <para>
-You can also pass 
+You can also pass
 <function>AnyModifier ,</function>
-which is equivalent to issuing the grab key request 
+which is equivalent to issuing the grab key request
 for all possible modifier combinations (including the combination
 of no modifiers).
       </para>
@@ -1183,7 +1183,7 @@ of no modifiers).
     </term>
     <listitem>
       <para>
-Specifies the device whose modifiers are to be used.  If NULL is 
+Specifies the device whose modifiers are to be used.  If NULL is
 specified, the core X keyboard is used as the modifier_device.
       </para>
     </listitem>
@@ -1253,7 +1253,7 @@ or
     <listitem>
       <para>
 Controls further processing of events from all other devices.
-You can pass one of these constants: 
+You can pass one of these constants:
 <function>GrabModeSync</function>
 or
 <function>GrabModeAsync .</function>
@@ -1266,19 +1266,19 @@ or
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
-is analogous to the core 
+is analogous to the core
 <olink targetdoc='libX11' targetptr='XGrabKey'><function>XGrabKey</function></olink>
 function.  It creates an
 explicit passive grab for a key on an extension device.
-The 
+The
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 function establishes a passive grab on a device.
-Consequently, in the future, 
+Consequently, in the future,
 </para>
 <itemizedlist>
   <listitem>
     <para>
-IF the device is not grabbed and the specified key, 
+IF the device is not grabbed and the specified key,
 which itself can be a modifier key, is logically pressed
 when the specified modifier keys logically are down on the specified
 modifier device (and no other keys are down),
@@ -1306,9 +1306,9 @@ ancestor of the grab window,
 THEN the device is actively grabbed, as for
 <function>XGrabDevice ,</function>
 the last-device-grab time is set to the time at which the key was pressed
-(as transmitted in the 
+(as transmitted in the
 <function>DeviceKeyPress</function>
-event), and the 
+event), and the
 <function>DeviceKeyPress</function>
 event is reported.
     </para>
@@ -1329,21 +1329,21 @@ may lag the physical state if device event processing is frozen.
 </para>
 <para>
 <!-- .LP -->
-A modifier of 
+A modifier of
 <function>AnyModifier</function>
 is equivalent to issuing the request for all
-possible modifier combinations (including the combination of no modifiers).  
+possible modifier combinations (including the combination of no modifiers).
 It is not required that all modifiers specified have
 currently assigned keycodes.
-A key of 
+A key of
 <function>AnyKey</function>
 is equivalent to issuing
 the request for all possible keycodes.  Otherwise, the key must be in
-the range specified by min_keycode and max_keycode in the 
+the range specified by min_keycode and max_keycode in the
 information returned by the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function.
-If it is not within that range, 
+If it is not within that range,
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 generates a
 <function>BadValue</function>
@@ -1354,7 +1354,7 @@ error.
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 generates a
 <function>BadAccess</function>
-error if some other client has issued a 
+error if some other client has issued a
 <xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 with the same device and key combination on the same window.
 When using
@@ -1459,13 +1459,13 @@ and
   </varlistentry>
   <varlistentry>
     <term>
-      
+
     </term>
     <listitem>
       <para>
 You can also pass
 <function>AnyModifier ,</function>
-which is equivalent to issuing the ungrab key 
+which is equivalent to issuing the ungrab key
 request for all possible modifier combinations (including the combination
 of no modifiers).
       </para>
@@ -1477,7 +1477,7 @@ of no modifiers).
     </term>
     <listitem>
       <para>
-Specifies the device whose modifiers are to be used.  If NULL is 
+Specifies the device whose modifiers are to be used.  If NULL is
 specified, the core X keyboard is used as the modifier_device.
       </para>
     </listitem>
@@ -1500,7 +1500,7 @@ Specifies the ID of a window associated with the device specified above.
 <xref linkend='XUngrabDeviceKey' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XUngrabKey'><function>XUngrabKey</function></olink>
-function.  It releases an explicit passive grab for a key 
+function.  It releases an explicit passive grab for a key
 on an extension input device.
 </para>
 <para>
@@ -1511,7 +1511,7 @@ can generate
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
 <function>BadValue ,</function>
-and 
+and
 <function>BadWindow</function>
 errors.
 </para>
@@ -1527,11 +1527,11 @@ To establish a passive grab for a single button on an extension device, use
 <function>XGrabDeviceButton .</function>
 The specified device must have previously been opened using the
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
-function, or the request will fail with a 
+function, or the request will fail with a
 <function>BadDevice</function>
 error.  If the specified device does not support input class
 <function>Buttons ,</function>
-the request will fail with a 
+the request will fail with a
 <function>BadMatch</function>
 error.
 <!-- .sM -->
@@ -1607,13 +1607,13 @@ and
   </varlistentry>
   <varlistentry>
     <term>
-      
+
     </term>
     <listitem>
       <para>
-You can also pass 
+You can also pass
 <function>AnyModifier ,</function>
-which is equivalent to issuing the grab request 
+which is equivalent to issuing the grab request
 for all possible modifier combinations (including the combination
 of no modifiers).
       </para>
@@ -1625,7 +1625,7 @@ of no modifiers).
     </term>
     <listitem>
       <para>
-Specifies the device whose modifiers are to be used.  If NULL is 
+Specifies the device whose modifiers are to be used.  If NULL is
 specified, the core X keyboard is used as the modifier_device.
       </para>
     </listitem>
@@ -1669,7 +1669,7 @@ Specifies the number of elements in the event_list array.
     </term>
     <listitem>
       <para>
-Specifies a list of event classes that indicates which device events are to be 
+Specifies a list of event classes that indicates which device events are to be
 reported to the client.
       </para>
     </listitem>
@@ -1710,7 +1710,7 @@ or
 <xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XGrabButton'><function>XGrabButton</function></olink>
-function.  
+function.
 It creates an explicit passive grab for a button on an extension input device.
 Because the server does not track extension devices,
 no cursor is specified with this request.
@@ -1724,13 +1724,13 @@ function.
 The
 <xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 function establishes a passive grab on a device.
-Consequently, in the future, 
+Consequently, in the future,
 </para>
 <itemizedlist>
   <listitem>
     <para>
 IF the device is not grabbed and the specified button is logically pressed
-when the specified modifier keys logically are down 
+when the specified modifier keys logically are down
 (and no other buttons or modifier keys are down),
     </para>
   </listitem>
@@ -1742,7 +1742,7 @@ OR the grab window is a descendent of the focus window and contains the pointer,
   </listitem>
   <listitem>
     <para>
-AND a passive grab on the same device and button/key combination does not 
+AND a passive grab on the same device and button/key combination does not
 exist on any ancestor of the grab window,
     </para>
   </listitem>
@@ -1753,7 +1753,7 @@ THEN the device is actively grabbed, as for
 the last-grab time is set to the time at which the button was pressed
 (as transmitted in the
 <function>DeviceButtonPress</function>
-event), and the 
+event), and the
 <function>DeviceButtonPress</function>
 event is reported.
     </para>
@@ -1761,10 +1761,10 @@ event is reported.
 </itemizedlist>
 <para>
 <!-- .LP -->
-The interpretation of the remaining arguments is as for 
+The interpretation of the remaining arguments is as for
 <function>XGrabDevice .</function>
 The active grab is terminated automatically when logical state of the
-device has all buttons released (independent of the logical state of 
+device has all buttons released (independent of the logical state of
 the modifier keys).
 </para>
 <para>
@@ -1778,14 +1778,14 @@ A modifier of
 <function>AnyModifier</function>
 is equivalent to issuing the request for all
 possible modifier combinations (including the combination of no
-modifiers).  
+modifiers).
 It is not required that all modifiers specified have
 currently assigned keycodes.
 A button of
 <function>AnyButton</function>
 is equivalent to issuing
 the request for all possible buttons.
-Otherwise, it is not required that the 
+Otherwise, it is not required that the
 specified button be assigned to a physical button.
 </para>
 <para>
@@ -1793,9 +1793,9 @@ specified button be assigned to a physical button.
 <xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 generates a
 <function>BadAccess</function>
-error if some other client has issued a 
+error if some other client has issued a
 <xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
-with the same device and button combination on the same window.  
+with the same device and button combination on the same window.
 When using
 <function>AnyModifier</function>
 or
@@ -1821,7 +1821,7 @@ errors.
 </para>
 <para>
 <!-- .LP -->
-To release a passive grab of a button on an extension device, use 
+To release a passive grab of a button on an extension device, use
 <function>XUngrabDeviceButton .</function>
 <!-- .sM -->
 <funcsynopsis id='XUngrabDeviceButton'>
@@ -1891,13 +1891,13 @@ and
   </varlistentry>
   <varlistentry>
     <term>
-      
+
     </term>
     <listitem>
       <para>
 You can also pass
 <function>AnyModifier ,</function>
-which is equivalent to issuing the ungrab key 
+which is equivalent to issuing the ungrab key
 request for all possible modifier combinations (including the combination
 of no modifiers).
       </para>
@@ -1909,7 +1909,7 @@ of no modifiers).
     </term>
     <listitem>
       <para>
-Specifies the device whose modifiers are to be used.  If NULL is 
+Specifies the device whose modifiers are to be used.  If NULL is
 specified, the core X keyboard is used as the modifier_device.
       </para>
     </listitem>
@@ -1946,7 +1946,7 @@ A modifier of
 <function>AnyModifier</function>
 is equivalent to issuing the request for all
 possible modifier combinations (including the combination of no
-modifiers).  
+modifiers).
 </para>
 <para>
 <!-- .LP -->
@@ -2038,8 +2038,8 @@ milliseconds, or
 <!-- .eM -->
 <xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 releases some queued events if the client has caused a device to freeze.
-It has no effect if the specified time is earlier than the last-grab 
-time of the most recent active grab for the client and device, 
+It has no effect if the specified time is earlier than the last-grab
+time of the most recent active grab for the client and device,
 or if the specified time is later than the current X server time.
 The following describes the processing that occurs depending on what constant
 you pass to the event_mode argument:
@@ -2052,13 +2052,13 @@ you pass to the event_mode argument:
   </listitem>
   <listitem>
     <para>
-If the specified device is frozen by the client, event processing for that 
-continues as usual.  If the device is frozen multiple times by the client on 
-behalf of multiple separate grabs, 
+If the specified device is frozen by the client, event processing for that
+continues as usual.  If the device is frozen multiple times by the client on
+behalf of multiple separate grabs,
 <function>AsyncThisDevice</function>
 thaws for all.
 <function>AsyncThisDevice</function>
-has no effect if the specified device is not frozen by the 
+has no effect if the specified device is not frozen by the
 client, but the device need not be grabbed by the client.
     </para>
   </listitem>
@@ -2070,9 +2070,9 @@ client, but the device need not be grabbed by the client.
   <listitem>
     <para>
 If the specified device is frozen and actively grabbed by the client,
-event processing for that device continues normally until the next 
+event processing for that device continues normally until the next
 key or button event is reported to the client.
-At this time, 
+At this time,
 the specified device again appears to freeze.
 However, if the reported event causes the grab to be released,
 the specified device does not freeze.
@@ -2090,16 +2090,16 @@ or is not grabbed by the client.
     <para>
 If the specified device is actively grabbed by the client
 and is frozen as the result of an event having been sent to the client
-(either from the activation of a 
+(either from the activation of a
 <function>GrabDeviceButton</function>
 or from a previous
 <function>AllowDeviceEvents</function>
-with mode 
+with mode
 <function>SyncThisDevice , </function>
 but not from a
 <function>Grab ),</function>
 the grab is released and that event is completely reprocessed.
-This time, however, the request ignores any passive grabs at or above 
+This time, however, the request ignores any passive grabs at or above
 (toward the root) the grab-window of the grab just released.
 The request has no effect if the specified device is not grabbed by the client
 or if it is not frozen as the result of an event.
@@ -2114,7 +2114,7 @@ or if it is not frozen as the result of an event.
     <para>
 If the remaining devices are frozen by the client,
 event processing for them continues as usual.
-If the other devices are frozen multiple times  by the client on behalf of 
+If the other devices are frozen multiple times  by the client on behalf of
 multiple separate grabs,
 <function>AsyncOtherDevices</function>
 ``thaws'' for all.
@@ -2138,13 +2138,13 @@ at which time the devices again appear to
 freeze.  However, if the reported event causes the grab to be released,
 then the devices do not freeze (but if any device is still
 grabbed, then a subsequent event for it will still cause all devices
-to freeze).  
+to freeze).
 <function>SyncAll</function>
 has no effect unless all devices are frozen by the client.
 If any device is frozen twice
-by the client on behalf of two separate grabs, 
+by the client on behalf of two separate grabs,
 <function>SyncAll</function>
-"thaws" for both (but a subsequent freeze for 
+"thaws" for both (but a subsequent freeze for
 <function>SyncAll</function>
 will freeze each device only once).
     </para>
@@ -2159,7 +2159,7 @@ will freeze each device only once).
 If all devices are frozen by the
 client, event processing (for all devices) continues normally.
 If any device is frozen multiple times by the client on behalf of multiple
-separate grabs, 
+separate grabs,
 <function>AsyncAll</function>
 ``thaws ''for all.
 If any device is frozen twice by the client on behalf of two separate grabs,
@@ -2187,13 +2187,13 @@ the device parameter is ignored.
 </para>
 <para>
 <!-- .LP -->
-It is possible for several grabs of different devices (by the same 
+It is possible for several grabs of different devices (by the same
 or different clients) to be active simultaneously.
 If a device is frozen on behalf of any grab,
 no event processing is performed for the device.
 It is possible for a single device to be frozen because of several grabs.
 In this case,
-the freeze must be released on behalf of each grab before events can 
+the freeze must be released on behalf of each grab before events can
 again be processed.
 </para>
 <para>
@@ -2201,7 +2201,7 @@ again be processed.
 <xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
-and 
+and
 <function>BadValue</function>
 errors.
 </para>
@@ -2213,7 +2213,7 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-The current focus window for an extension input device can be 
+The current focus window for an extension input device can be
 determined using the
 <xref linkend='XGetDeviceFocus' xrefstyle='select: title'/>
 function.
@@ -2407,14 +2407,14 @@ milliseconds, or
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XSetDeviceFocus' xrefstyle='select: title'/>
-changes the focus for an extension input device and the 
-last-focus-change-time.  It has no effect if the specified 
+changes the focus for an extension input device and the
+last-focus-change-time.  It has no effect if the specified
 time is earlier than the last-focus-change-time or is later than the
 current X server time.  Otherwise, the last-focus-change-time is set to the
 specified time.
 This function causes the X server to generate
 <function>DeviceFocusIn</function>
-and 
+and
 <function>DeviceFocusOut</function>
 events.
 </para>
@@ -2436,8 +2436,8 @@ is set.  In this case, the revert_to argument is ignored.
     <para>
 If the focus argument is a window ID, it becomes the focus
 window of the device.  If an input event from the device would normally
-be reported to this window or to one of its inferiors, the event is 
-reported normally.  Otherwise, the event is reported relative to the focus 
+be reported to this window or to one of its inferiors, the event is
+reported normally.  Otherwise, the event is reported relative to the focus
 window.
     </para>
   </listitem>
@@ -2445,7 +2445,7 @@ window.
     <para>
 If the focus argument is
 <function>PointerRoot ,</function>
-the focus window is dynamically taken to be the root window 
+the focus window is dynamically taken to be the root window
 of whatever screen the pointer is on at each input event.
 In this case, the revert_to argument is ignored.
     </para>
@@ -2573,7 +2573,7 @@ returns a list of
 structures that describe the feedbacks supported by the specified device.
 There is an
 <function>XFeedbackState</function>
-structure for each class of feedback.  These are of 
+structure for each class of feedback.  These are of
 variable length, but the first three members are common to all.
 </para>
 <para>
@@ -2677,7 +2677,7 @@ The percent member specifies the bell volume and has a value in the range
   </listitem>
   <listitem>
     <para>
-The pitch member specifies the bell pitch in Hz. The range of the value is 
+The pitch member specifies the bell pitch in Hz. The range of the value is
 implementation-dependent.
     </para>
   </listitem>
@@ -2688,7 +2688,7 @@ The duration member specifies the duration in milliseconds of the bell.
   </listitem>
   <listitem>
     <para>
-The led_mask member is a bit mask that describes the current state of up to 
+The led_mask member is a bit mask that describes the current state of up to
 32 LEDs.  A value of 1 in a bit indicates that the corresponding LED is on.
     </para>
   </listitem>
@@ -2817,13 +2817,13 @@ String feedbacks are those that can display character information
 and are reported via the
 <function>XStringFeedbackState</function>
 structure.
-Clients set these feedbacks by passing a list of 
+Clients set these feedbacks by passing a list of
 <function>KeySyms</function>
 to be displayed.
-The 
+The
 <xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
 function returns the
-set of key symbols that the feedback can display, as well as the 
+set of key symbols that the feedback can display, as well as the
 maximum number of symbols that can be displayed.
 The
 <function>XStringFeedbackState</function>
@@ -2884,7 +2884,7 @@ feedback.  Class
 is provided for implementations that do not choose to do
 so and for devices that support multiple feedbacks that can produce sound.
 The meaning of the members is the same as that of the corresponding fields in
-the 
+the
 <function>XKbdFeedbackState</function>
 structure.
 </para>
@@ -2910,14 +2910,14 @@ typedef struct {
 Led feedbacks are those that can generate a light and are reported via the
 <function>XLedFeedbackState</function>
 structure.
-Up to 32 lights per feedback are supported.  
+Up to 32 lights per feedback are supported.
 Each bit in led_mask
 corresponds to one supported light, and the corresponding bit in led_values
 indicates whether that light is currently on (1) or off (0).
 Some implementations may support leds as part of a
 <function>KbdFeedback</function>
 feedback.
-Class 
+Class
 <function>LedFeedback</function>
 is provided for implementations that do not choose to do
 so and for devices that support multiple led feedbacks.
@@ -2952,7 +2952,7 @@ errors.
 <!-- .LP -->
 To free the information returned by the
 <xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
-function, use 
+function, use
 <function>XFreeFeedbackList .</function>
 <!-- .sM -->
 <funcsynopsis id='XFreeFeedbackList'>
@@ -2969,7 +2969,7 @@ function, use
     </term>
     <listitem>
       <para>
-Specifies the pointer to the 
+Specifies the pointer to the
 <function>XFeedbackState</function>
 structure returned by
 a previous call to
@@ -3059,11 +3059,11 @@ structure.
 <xref linkend='XChangeFeedbackControl' xrefstyle='select: title'/>
 controls the device characteristics described by the
 <function>XFeedbackControl</function>
-structure. 
+structure.
 There is an
 <function>XFeedbackControl</function>
-structure for each class of feedback.  
-These are of variable length, but the first 
+structure for each class of feedback.
+These are of variable length, but the first
 three members are common to all and are as follows:
 </para>
 <para>
@@ -3082,7 +3082,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-Feedback class 
+Feedback class
 <function>KbdFeedback</function>
 controls feedbacks equivalent to those provided by the core keyboard using the
 <function>KbdFeedbackControl</function>
@@ -3185,10 +3185,10 @@ Valid masks are as follows:
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The acceleration, expressed as a fraction, is a multiplier for movement. 
+The acceleration, expressed as a fraction, is a multiplier for movement.
 For example,
 specifying 3/1 means that the device moves three times as fast as normal.
-The fraction may be rounded arbitrarily by the X server.  
+The fraction may be rounded arbitrarily by the X server.
 Acceleration takes effect only if the device moves more than threshold pixels at
 once and applies only to the amount beyond the value in the threshold argument.
 Setting a value to -1 restores the default.
@@ -3456,7 +3456,7 @@ Specifies the volume in the range -100 (quiet) to 100 percent (loud).
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XDeviceBell' xrefstyle='select: title'/>
-is analogous to the core 
+is analogous to the core
 <olink targetdoc='libX11' targetptr='XBell'><function>XBell</function></olink>
 function.  It rings the specified bell on the specified input device feedback,
 using the specified volume.
@@ -3506,9 +3506,9 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To get the key mapping of an extension device that supports input class 
+To get the key mapping of an extension device that supports input class
 <function>Keys ,</function>
-use 
+use
 <function>XGetDeviceKeyMapping .</function>
 <!-- .sM -->
 <funcsynopsis id='XGetDeviceKeyMapping'>
@@ -3581,21 +3581,21 @@ Returns the number of keysyms per keycode.
 <xref linkend='XGetDeviceKeyMapping' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XGetKeyboardMapping'><function>XGetKeyboardMapping</function></olink>
-function.  
-It returns the symbols for the specified number of keycodes for the 
+function.
+It returns the symbols for the specified number of keycodes for the
 specified extension device.
 </para>
 <para>
 <!-- .LP -->
 <xref linkend='XGetDeviceKeyMapping' xrefstyle='select: title'/>
-returns the symbols for the 
-specified number of keycodes for the 
+returns the symbols for the
+specified number of keycodes for the
 specified extension device, starting with the specified keycode.
 The first_keycode_wanted must be greater than or equal to
-min-keycode as returned 
+min-keycode as returned
 by the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
-request (else a 
+request (else a
 <function>BadValue</function>
 error results). The following value:
 <literallayout class="monospaced">
@@ -3604,10 +3604,10 @@ first_keycode_wanted + keycode_count - 1
 </para>
 <para>
 <!-- .LP -->
-must be less than or equal to max-keycode as returned 
-by the 
+must be less than or equal to max-keycode as returned
+by the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
-request (else a 
+request (else a
 <function>BadValue</function>
 error results).
 </para>
@@ -3645,7 +3645,7 @@ this request will fail with a
 error.
 If that device does not support input class
 <function>Keys ,</function>
-this request will fail with a 
+this request will fail with a
 <function>BadMatch</function>
 error.
 </para>
@@ -3662,9 +3662,9 @@ errors.
 </para>
 <para>
 <!-- .LP -->
-To change the keyboard mapping of an extension device that supports input class 
+To change the keyboard mapping of an extension device that supports input class
 <function>Keys ,</function>
-use 
+use
 <function>XChangeDeviceKeyMapping .</function>
 <!-- .sM -->
 <funcsynopsis id='XChangeDeviceKeyMapping'>
@@ -3748,8 +3748,8 @@ Specifies the number of keycodes that are to be changed.
 <xref linkend='XChangeDeviceKeyMapping' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XChangeKeyboardMapping'><function>XChangeKeyboardMapping</function></olink>
-function.  
-It defines the symbols for the specified number of keycodes for the 
+function.
+It defines the symbols for the specified number of keycodes for the
 specified extension keyboard device.
 </para>
 <para>
@@ -3802,7 +3802,7 @@ errors.
 </para>
 <para>
 <!-- .LP -->
-To obtain the keycodes that are used as modifiers on an 
+To obtain the keycodes that are used as modifiers on an
 extension device that supports input class
 <function>Keys ,</function>
 use
@@ -3845,7 +3845,7 @@ Specifies the desired device.
 <xref linkend='XGetDeviceModifierMapping' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XGetModifierMapping'><function>XGetModifierMapping</function></olink>
-function.  
+function.
 The
 <xref linkend='XGetDeviceModifierMapping' xrefstyle='select: title'/>
 function returns a newly created
@@ -3922,10 +3922,10 @@ structure.
 <xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
 is analogous to the core
 <olink targetdoc='libX11' targetptr='XSetModifierMapping'><function>XSetModifierMapping</function></olink>
-function.  
-The 
+function.
+The
 <xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
-function specifies the keycodes of the keys, if any, 
+function specifies the keycodes of the keys, if any,
 that are to be used as modifiers.  A zero value means
 that no key should be used.  No two arguments can have the same nonzero
 keycode value.  Otherwise,
@@ -3933,10 +3933,10 @@ keycode value.  Otherwise,
 generates a
 <function>BadValue</function>
 error.
-There are eight modifiers, and the modifiermap member of the 
+There are eight modifiers, and the modifiermap member of the
 <function>XModifierKeymap</function>
-structure contains eight sets of max_keypermod 
-keycodes, one for each modifier in the order 
+structure contains eight sets of max_keypermod
+keycodes, one for each modifier in the order
 <function>Shift ,</function>
 <function>Lock ,</function>
 <function>Control ,</function>
@@ -3948,7 +3948,7 @@ and
 <function>Mod5 .</function>
 Only nonzero keycodes have meaning in each set, and zero keycodes
 are ignored.
-In addition, all of the nonzero keycodes must be in the range specified by 
+In addition, all of the nonzero keycodes must be in the range specified by
 min_keycode and max_keycode reported by the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function.
@@ -3957,24 +3957,24 @@ Otherwise,
 generates a
 <function>BadValue</function>
 error.
-No keycode may appear twice in the entire map. 
+No keycode may appear twice in the entire map.
 Otherwise, it generates a
 <function>BadValue</function>
 error.
 </para>
 <para>
 <!-- .LP -->
-A X server can impose restrictions on how modifiers can be changed, 
+A X server can impose restrictions on how modifiers can be changed,
 for example,
 if certain keys do not generate up transitions in hardware or if multiple
-modifier keys are not supported.  
-If some such restriction is violated, 
+modifier keys are not supported.
+If some such restriction is violated,
 the status reply is
 <function>MappingFailed ,</function>
 and none of the modifiers are changed.
 If the new keycodes specified for a modifier differ from those
 currently defined and any (current or new) keys for that modifier are
-in the logically down state, 
+in the logically down state,
 the status reply is
 <function>MappingBusy , </function>
 and none of the modifiers are changed.
@@ -4074,7 +4074,7 @@ returns
 Elements of the list are indexed starting from one.
 The length of the list must be the same as
 <xref linkend='XGetDeviceButtonMapping' xrefstyle='select: title'/>
-would return, or a 
+would return, or a
 <function>BadValue</function>
 error results.
 The index is a button number, and the element of the list
@@ -4169,7 +4169,7 @@ Elements of the list are indexed starting from one.
 returns the number of physical buttons actually on the pointer.
 The nominal mapping for the buttons is the identity mapping: map[i]=i.
 The nmap argument specifies the length of the array where the button
-mapping is returned, and only the first nmap elements are returned 
+mapping is returned, and only the first nmap elements are returned
 in map_return.
 </para>
 <para>
@@ -4189,7 +4189,7 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-To obtain information that describes the state of the keys, buttons, and 
+To obtain information that describes the state of the keys, buttons, and
 valuators of an extension device, use
 <function>XQueryDeviceState .</function>
 <!-- .sM -->
@@ -4231,7 +4231,7 @@ Specifies the desired device.
 returns a pointer to an
 <function>XDeviceState</function>
 structure, which points to a list of
-structures that describe the state of the keys, buttons, and valuators 
+structures that describe the state of the keys, buttons, and valuators
 on the device:
 </para>
 <para>
@@ -4250,7 +4250,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The structures are of variable length, but the first 
+The structures are of variable length, but the first
 two members are common to all and are as follows:
 </para>
 <para>
@@ -4269,7 +4269,7 @@ typedef struct {
 <!-- .LP -->
 <!-- .eM -->
 The class member contains a class identifier.  This identifier can be
-compared with constants defined in the file 
+compared with constants defined in the file
 <function>&lt; X11/extensions/XI.h &gt;.</function>
 Currently defined constants are:
 <function>KeyClass ,</function>
@@ -4284,7 +4284,7 @@ by clients to traverse the list.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <function>XValuatorState</function>
 structure describes the current state of the valuators
 on the device.
@@ -4301,7 +4301,7 @@ The following bits are currently defined:
 </literallayout>
 The valuators member contains a pointer to an array of integers that
 describe the current value of the valuators.
-If the mode is 
+If the mode is
 <function>Relative ,</function>
 these values are undefined.
 </para>
@@ -4451,7 +4451,7 @@ Event structures
 <para>
 <!-- .LP -->
 Event types are integer numbers that a client can use to determine what
-kind of event it has received.  The client compares the type field of 
+kind of event it has received.  The client compares the type field of
 the event structure with known event types to make this determination.
 </para>
 <para>
@@ -4475,7 +4475,7 @@ of events received by the client.
 <para>
 <!-- .LP -->
 Extension events propagate up the window hierarchy in the same manner
-as core events.  If a window is not interested in an extension event, 
+as core events.  If a window is not interested in an extension event,
 it usually propagates to the closest ancestor that is interested,
 unless the dont_propagate list prohibits it.
 Grabs of extension devices may alter the set of windows that receive a particular
@@ -4574,9 +4574,9 @@ classes must be obtained by the client from the server.
 <para>
 <!-- .LP -->
 The event class for an extension event and device is obtained from
-information returned by the 
+information returned by the
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
-function. 
+function.
 This class can then be used in an
 <xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 request to ask that events of that type from that device be sent to
@@ -4630,7 +4630,7 @@ window combination.
 The client may also select
 <function>DeviceMotion</function>
 events only when a button is down.
-It does this by specifying the event classes 
+It does this by specifying the event classes
 <function>DeviceButton1Motion</function>
 through
 <function>DeviceButton5Motion .  </function>
@@ -4681,7 +4681,7 @@ Set from the serial number reported in the protocol but expanded from the
     </term>
     <listitem>
       <para>
-Set to 
+Set to
 <function>True</function>
 if the event came from an
 <olink targetdoc='libX11' targetptr='XSendEvent'><function>XSendEvent</function></olink>
@@ -4695,7 +4695,7 @@ request.
     </term>
     <listitem>
       <para>
-Set to a pointer to a structure that defines the display 
+Set to a pointer to a structure that defines the display
 on which the event was read.
     </para>
   </listitem>
@@ -4733,7 +4733,7 @@ the axes_count member  contains zero (0).
 </para>
 <para>
 <!-- .LP -->
-The location reported in 
+The location reported in
 the x, y and x_root, y_root members is the location of the core X pointer.
 </para>
 <para>
@@ -4801,7 +4801,7 @@ the axes_count member contains zero (0).
 </para>
 <para>
 <!-- .LP -->
-The location reported in 
+The location reported in
 the x, y and x_root, y_root members is the location of the core X pointer.
 </para>
 <para>
@@ -4851,14 +4851,14 @@ a device ID and report the current value of any valuators on the device.
 </para>
 <para>
 <!-- .LP -->
-The location reported in 
-the x, y and x_root, y_root members is the location of the core X pointer, 
+The location reported in
+the x, y and x_root, y_root members is the location of the core X pointer,
 and so is 2-dimensional.
 </para>
 <para>
 <!-- .LP -->
-Extension motion devices may report motion data for a variable number of 
-axes.  
+Extension motion devices may report motion data for a variable number of
+axes.
 The axes_count member contains the number of axes that are being
 reported.  The server sends as many of these events as are
 needed to report the device data.  Each event contains the total number
@@ -4933,9 +4933,9 @@ typedef struct {
      int mode;                      /* NotifyNormal, NotifyGrab, NotifyUngrab */
      int detail;
                                     /*
-                                     * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+                                     * NotifyAncestor, NotifyVirtual, NotifyInferior,
                                      * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
-                                     * NotifyPointerRoot, NotifyDetailNone 
+                                     * NotifyPointerRoot, NotifyDetailNone
                                      */
      Time time;
 } XDeviceFocusChangeEvent;
@@ -5009,7 +5009,7 @@ typedef struct {
      Time time;
      int num_classes;
      char data[64];
-} XDeviceStateNotifyEvent;     
+} XDeviceStateNotifyEvent;
 
 typedef struct {
      unsigned char class;
@@ -5057,7 +5057,7 @@ modifiers, or buttons on an extension device has changed.
 <!-- .ta .5i 3i -->
 typedef struct {
      int type;
-     unsigned long serial;     
+     unsigned long serial;
      Bool send_event;
      Display *display;
      Window window;
@@ -5136,19 +5136,19 @@ the axes_count member contains zero (0).
 <!-- .TA .5i 3i -->
 <!-- .ta .5i 3i -->
 typedef struct {
-     int type;                 /* ProximityIn or ProximityOut */        
+     int type;                 /* ProximityIn or ProximityOut */
      unsigned long serial;     /* # of last request processed by server */
      Bool send_event;          /* true if this came from a SendEvent request */
      Display *display;         /* Display the event was read from */
-     Window window;      
+     Window window;
      XID deviceid;
-     Window root;            
-     Window subwindow;      
-     Time time;            
-     int x, y;            
-     int x_root, y_root;  
-     unsigned int state;           
-     Bool same_screen;     
+     Window root;
+     Window subwindow;
+     Time time;
+     int x, y;
+     int x_root, y_root;
+     unsigned int state;
+     Bool same_screen;
      unsigned int device_state;   /* device key or button mask */
      unsigned char axes_count;
      unsigned char first_axis;
@@ -5283,7 +5283,7 @@ the desired version of the input extension.
 </para>
 <para>
 <!-- .LP -->
-The 
+The
 <function>XExtensionVersion</function>
 structure returns information about the version of the extension
 supported by the server and is defined as follows:
@@ -5295,7 +5295,7 @@ supported by the server and is defined as follows:
 <!-- .TA .5i -->
 <!-- .ta .5i -->
 typedef struct {
-     Bool present;   
+     Bool present;
      short major_version;
      short minor_version;
 } XExtensionVersion;
@@ -5305,13 +5305,13 @@ typedef struct {
 <!-- .LP -->
 <!-- .eM -->
 The major and minor versions can be compared with constants defined in
-the header file 
+the header file
 <function>&lt; X11/extensions/XI.h &gt;.</function>
 Each version is a superset of the previous versions.
 </para>
 <para>
 <!-- .LP -->
-You should use 
+You should use
 <olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 to free the data returned by this function.
 </para>
@@ -5333,8 +5333,8 @@ of the names defined in the
 <function>&lt; X11/extensions/XI.h &gt;</function>
 header file in an
 <olink targetdoc='libX11' targetptr='XInternAtom'><function>XInternAtom</function></olink>
-request to determine the device type of the desired device.  This type 
-can then be compared with the device types returned by the 
+request to determine the device type of the desired device.  This type
+can then be compared with the device types returned by the
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request.
 </para>
@@ -5377,7 +5377,7 @@ can return the number of input devices available to the X server.
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XListInputDevices' xrefstyle='select: title'/>
-allows a client to determine which devices 
+allows a client to determine which devices
 are available for X input and information about those devices.
 An array of
 <function>XDeviceInfo</function>
@@ -5387,10 +5387,10 @@ The number of devices is returned in the ndevices argument.
 <para>
 <!-- .LP -->
 The X pointer device and X keyboard device are reported, as well as
-all available extension input devices.  The use member of the 
+all available extension input devices.  The use member of the
 <function>XDeviceInfo</function>
 structure specifies the current use of the device.
-If the value of this member is 
+If the value of this member is
 <function>IsXPointer ,</function>
 the device is the X pointer device.  If the value is
 <function>IsXKeyboard ,</function>
@@ -5402,7 +5402,7 @@ the device is available for use as an extension input device.
 <!-- .LP -->
 Each
 <function>XDeviceInfo</function>
-entry contains a pointer to a list of structures 
+entry contains a pointer to a list of structures
 that describe the characteristics of each class
 of input supported by that device.  The num_classes member
 contains the number of entries in that list.
@@ -5420,8 +5420,8 @@ contains the address of an array of
 <function>XAxisInfo</function>
 structures.
 There is one element in this array for each axis of motion
-reported by the device.  The number of elements in this 
-array is contained in the num_axes element of the 
+reported by the device.  The number of elements in this
+array is contained in the num_axes element of the
 <function>XValuatorInfo</function>
 structure.
 The size of the motion buffer for the device is
@@ -5442,7 +5442,7 @@ structure is defined as follows:
 <!-- .TA .5i -->
 <!-- .ta .5i -->
 typedef struct _XDeviceInfo {
-     XID id;        
+     XID id;
      Atom type;
      char *name;
      int num_classes;
@@ -5513,7 +5513,7 @@ typedef struct _XAxisInfo {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The following atom names are defined in the 
+The following atom names are defined in the
 <function>&lt; X11/extensions/XI.h &gt;</function>
 header file.
 <literallayout class="monospaced">
@@ -5535,7 +5535,7 @@ TRACKBALL     NINE_KNOB\s+1
 These names can be used in an
 <olink targetdoc='libX11' targetptr='XInternAtom'><function>XInternAtom</function></olink>
 request to return an atom that can be used for comparison
-with the type member of the 
+with the type member of the
 <function>XDeviceInfo</function>
 structure.
 </para>
@@ -5547,7 +5547,7 @@ returns NULL if there are no input devices to list.
 </para>
 <para>
 <!-- .LP -->
-To free the data returned by 
+To free the data returned by
 <function>XListInputDevices ,</function>
 use
 <function>XFreeDeviceList .</function>
@@ -5686,7 +5686,7 @@ typedef struct {
 <!-- .LP -->
 <!-- .eM -->
 A client program can determine the event
-type and event class for a given event by using macros defined by the 
+type and event class for a given event by using macros defined by the
 input extension.  The name of the macro corresponds to the desired event,
 and the macro is passed the structure that describes the device from which
 input is desired, for example:
@@ -5800,7 +5800,7 @@ errors.
 <para>
 <!-- .LP -->
 Some devices are capable of reporting either relative or absolute motion
-data. 
+data.
 To change the mode of a device from relative to absolute, use
 <function>XSetDeviceMode .</function>
 <!-- .sM -->
@@ -5853,9 +5853,9 @@ or
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XSetDeviceMode' xrefstyle='select: title'/>
-allows a client to request the server to change the mode of a 
+allows a client to request the server to change the mode of a
 device that is capable of reporting either absolute positional data or relative
-motion data.  If the device is invalid or if the client has not previously 
+motion data.  If the device is invalid or if the client has not previously
 requested that the server open the device via an
 <xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request, this request will fail with a
@@ -5864,7 +5864,7 @@ error.
 If the device does not support input class
 <function>Valuators</function>
 or if it is not capable of reporting the specified mode,
-the request will fail with a 
+the request will fail with a
 <function>BadMatch</function>
 error.
 </para>
@@ -5893,16 +5893,16 @@ errors.
 <!-- .XE -->
 <para>
 <!-- .LP -->
-Some devices that report absolute positional data can be initialized to a 
+Some devices that report absolute positional data can be initialized to a
 starting value.  Devices that are capable of reporting relative motion or
-absolute positional data may require that their valuators be initialized 
+absolute positional data may require that their valuators be initialized
 to a starting value after the mode of the device is changed to
 <function>Absolute .</function>
 <!-- .sp -->
 </para>
 <para>
 <!-- .LP -->
-To initialize the valuators on such a device, use 
+To initialize the valuators on such a device, use
 <function>XSetDeviceValuators .</function>
 <!-- .sM -->
 <funcsynopsis id='XSetDeviceValuators'>
@@ -5973,10 +5973,10 @@ Specifies the number of valuators to be set.
 <xref linkend='XSetDeviceValuators' xrefstyle='select: title'/>
 initializes the specified valuators on the specified extension
 input device.  Valuators are numbered beginning with zero.  Only the valuators
-in the range specified by first_valuator and num_valuators are set.  
+in the range specified by first_valuator and num_valuators are set.
 A
 <function>BadValue</function>
-error results if the number of valuators supported by the device 
+error results if the number of valuators supported by the device
 is less than the following expression:
 <literallayout class="monospaced">
 <!-- .TA .5i -->
@@ -6000,7 +6000,7 @@ can generate
 <function>BadDevice ,</function>
 <function>BadLength ,</function>
 <function>BadMatch ,</function>
-and 
+and
 <function>BadValue</function>
 errors.
 </para>
@@ -6016,7 +6016,7 @@ Some input devices support various configuration controls
 that can be queried or changed by clients.  The set of supported
 controls will vary from one input device to another.  Requests
 to manipulate these controls will fail if either the target
-X server or the target input device does not support the 
+X server or the target input device does not support the
 requested device control.
 </para>
 <para>
@@ -6088,7 +6088,7 @@ is returned.
 </para>
 <para>
 <!-- .LP -->
-If the request is successful, a pointer to a generic 
+If the request is successful, a pointer to a generic
 <function>XDeviceState</function>
 structure is returned.  The information returned varies according
 to the specified control and is mapped by a structure appropriate
@@ -6119,7 +6119,7 @@ Currently defined device controls include DEVICE_RESOLUTION.
 <para>
 <!-- .LP -->
 The information returned for the DEVICE_RESOLUTION control is
-defined in the 
+defined in the
 <function>XDeviceResolutionState</function>
 structure, which is defined as follows:
 </para>
@@ -6142,12 +6142,12 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-This device control returns a list of valuators and the range of 
-valid resolutions allowed for each.  Valuators are numbered 
-beginning with zero (0).  Resolutions for all valuators on the device are 
-returned.  For each valuator i on the device, resolutions[i] returns 
-the current setting of the resolution, min_resolutions[i] returns 
-the minimum valid setting, and max_resolutions[i] returns the 
+This device control returns a list of valuators and the range of
+valid resolutions allowed for each.  Valuators are numbered
+beginning with zero (0).  Resolutions for all valuators on the device are
+returned.  For each valuator i on the device, resolutions[i] returns
+the current setting of the resolution, min_resolutions[i] returns
+the minimum valid setting, and max_resolutions[i] returns the
 maximum valid setting.
 </para>
 <para>
@@ -6178,11 +6178,11 @@ errors.
 Some input devices support various configuration controls
 that can be changed by clients.  Typically, this would be
 done to initialize the device to a known state or configuration.
-The set of supported controls will vary from one input device 
-to another.  Requests to manipulate these controls will fail if 
-either the target X server or the target input device does not 
-support the requested device control.  Setting the device control 
-will also fail if the target input device is grabbed by another 
+The set of supported controls will vary from one input device
+to another.  Requests to manipulate these controls will fail if
+either the target X server or the target input device does not
+support the requested device control.  Setting the device control
+will also fail if the target input device is grabbed by another
 client or is open by another client and has been set to a conflicting
 state.
 </para>
@@ -6268,7 +6268,7 @@ error is returned.
 If another client has the target device grabbed, a status of
 <function>AlreadyGrabbed</function>
 is returned.
-If another client has the device open and has set it to a 
+If another client has the device open and has set it to a
 conflicting state, a status of
 <function>DeviceBusy</function>
 is returned.
@@ -6300,15 +6300,15 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-The control may be set using constants defined in the 
+The control may be set using constants defined in the
 <function>&lt; X11/extensions/XI.h &gt;</function>
 header file.
 Currently defined device controls include DEVICE_RESOLUTION.
 </para>
 <para>
 <!-- .LP -->
-The information that can be changed by the DEVICE_RESOLUTION 
-control is defined in the 
+The information that can be changed by the DEVICE_RESOLUTION
+control is defined in the
 <function>XDeviceResolutionControl</function>
 structure, which is defined as follows:
 </para>
@@ -6330,11 +6330,11 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-This device control changes the resolution of the specified 
-valuators on the specified extension input device.  Valuators 
-are numbered beginning with zero.  Only the valuators in the range 
-specified by first_valuator and num_valuators are set.  A value 
-of -1 in the resolutions list indicates that the resolution for 
+This device control changes the resolution of the specified
+valuators on the specified extension input device.  Valuators
+are numbered beginning with zero.  Only the valuators in the range
+specified by first_valuator and num_valuators are set.  A value
+of -1 in the resolutions list indicates that the resolution for
 this valuator is not to be changed.  The num_valuators member
 specifies the number of valuators in the resolutions list.
 </para>
@@ -6345,7 +6345,7 @@ When this control is specified,
 fails with a
 <function>BadMatch</function>
 error if the specified device has no valuators.
-If a resolution is specified that is not within the range of valid values 
+If a resolution is specified that is not within the range of valid values
 (as returned by
 <function>XGetDeviceControl ),</function>
 <xref linkend='XChangeDeviceControl' xrefstyle='select: title'/>
@@ -6354,7 +6354,7 @@ fails with a
 error.
 A
 <function>BadValue</function>
-error results if the number of valuators supported by the device 
+error results if the number of valuators supported by the device
 is less than the following expression:
 </para>
 <para>
@@ -6362,7 +6362,7 @@ is less than the following expression:
 <literallayout class="monospaced">
 <!-- .TA .5i -->
 <!-- .ta .5i -->
-     first_valuator + num_valuators, 
+     first_valuator + num_valuators,
 </literallayout>
 </para>
 <para>
@@ -6384,9 +6384,9 @@ errors.
 <!-- .LP -->
 To select device input events, use
 <function>XSelectExtensionEvent .</function>
-The parameters passed are a pointer to 
+The parameters passed are a pointer to
 a list of classes that define the desired event types and devices, a count
-of the number of elements in the list, and the ID of the window from which 
+of the number of elements in the list, and the ID of the window from which
 events are desired.
 <!-- .sM -->
 <funcsynopsis id='XSelectExtensionEvent'>
@@ -6448,8 +6448,8 @@ Specifies the number of elements in the event_list.
 <!-- .eM -->
 <xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 requests the server to send events that match the events and
-devices described by the event list and that come from the requested 
-window.  
+devices described by the event list and that come from the requested
+window.
 The elements of the
 <function>XEventClass</function>
 array are the event_class values
@@ -6473,7 +6473,7 @@ events from the specified device if it were invoked in the following form:
 </para>
 <para>
 <!-- .LP -->
-Macros are defined for the following event classes: 
+Macros are defined for the following event classes:
 <literallayout class="monospaced">
 <function>DeviceKeyPress</function>
 <function>DeviceKeyRelease</function>
@@ -6621,13 +6621,13 @@ selected by all clients.
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XGetSelectedExtensionEvents' xrefstyle='select: title'/>
-returns pointers to two event class arrays.  
+returns pointers to two event class arrays.
 One lists the extension events selected by this client from
 the specified window.  The other lists the extension events selected by
 all clients from the specified window.  This information is analogous
 to that returned in your_event_mask and all_event_masks of the
 <function>XWindowAttributes</function>
-structure when an 
+structure when an
 <olink targetdoc='libX11' targetptr='XGetWindowAttributes'><function>XGetWindowAttributes</function></olink>
 request is made.
 To free the two arrays returned by this function, use
@@ -6649,10 +6649,10 @@ errors.
 <para>
 <!-- .LP -->
 Extension events propagate up the window hierarchy in the same manner
-as core events.  If a window is not interested in an extension event, 
+as core events.  If a window is not interested in an extension event,
 it usually propagates to the closest ancestor that is interested,
 unless the dont_propagate list prohibits it.
-Grabs of extension devices may alter the set of windows that receive a 
+Grabs of extension devices may alter the set of windows that receive a
 particular extension event.
 </para>
 <para>
@@ -6737,7 +6737,7 @@ or
 <!-- .LP -->
 <!-- .eM -->
 <xref linkend='XChangeDeviceDontPropagateList' xrefstyle='select: title'/>
-adds an event to or deletes an event from the do_not_propagate list 
+adds an event to or deletes an event from the do_not_propagate list
 of extension events for the specified window.
 There is one list per window, and the list remains for the life of the window.
 The list is not altered if a client that changed the list terminates.
@@ -6894,7 +6894,7 @@ or
       <para>
 Specifies a boolean value that is either
 <function>True</function>
-or 
+or
 <function>False .</function>
       </para>
     </listitem>
@@ -6971,7 +6971,7 @@ the destination window is the focus window.
 </itemizedlist>
 <para>
 <!-- .LP -->
-To determine which clients should receive the specified events, 
+To determine which clients should receive the specified events,
 <xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 uses the propagate argument as follows:
 </para>
@@ -6990,12 +6990,12 @@ any of the events specified in the event_list array.
 If propagate is
 <function>True </function>
 and no clients have selected from the destination window
-any of the events specified in the event_list array, the destination is 
+any of the events specified in the event_list array, the destination is
 replaced with the closest ancestor of destination for which some client
 has selected one of the specified events and for which no intervening
 window has that event in its do_not_propagate mask.
 If no such window exists,
-or if the window is an ancestor of the focus window, and 
+or if the window is an ancestor of the focus window, and
 <function>InputFocus</function>
 was originally specified as the destination,
 the event is not sent to any clients.  Otherwise, the event is reported to every
@@ -7169,8 +7169,8 @@ The number of axes reported by the device is returned in the axis_count variable
 </para>
 <para>
 <!-- .LP -->
-The value of the data items depends on the mode of the device. 
-The mode is returned in the mode variable.  If the 
+The value of the data items depends on the mode of the device.
+The mode is returned in the mode variable.  If the
 mode is
 <function>Absolute ,</function>
 the data items are the raw values generated by the device.
@@ -7189,7 +7189,7 @@ If the mode is
 <function>Relative ,</function>
 the data items are the relative values generated by the device.
 The client program must choose an initial
-position for the device and maintain a current position by 
+position for the device and maintain a current position by
 accumulating these relative values.
 </para>
 <para>
@@ -7397,7 +7397,7 @@ and <function>&lt;X11/extensions/XI.h&gt;</function> header files:
  *
  */
 
-typedef struct 
+typedef struct
     {
     int            type;         /* of event */
     unsigned long  serial;       /* # of last request processed */
@@ -7462,7 +7462,7 @@ typedef XDeviceButtonEvent XDeviceButtonReleasedEvent;
  *
  */
 
-typedef struct 
+typedef struct
     {
     int           type;        /* of event */
     unsigned long serial;      /* # of last request processed by server */
@@ -7492,7 +7492,7 @@ typedef struct
  *
  */
 
-typedef struct 
+typedef struct
     {
     int           type;       /* of event */
     unsigned long serial;     /* # of last request processed by server */
@@ -7503,9 +7503,9 @@ typedef struct
     int           mode;       /* NotifyNormal, NotifyGrab, NotifyUngrab */
     int           detail;
      /*
-      * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+      * NotifyAncestor, NotifyVirtual, NotifyInferior,
       * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
-      * NotifyPointerRoot, NotifyDetailNone 
+      * NotifyPointerRoot, NotifyDetailNone
       */
     Time                time;
     } XDeviceFocusChangeEvent;
@@ -7520,21 +7520,21 @@ typedef XDeviceFocusChangeEvent XDeviceFocusOutEvent;
  *
  */
 
-typedef struct 
+typedef struct
     {
-    int             type;      /* ProximityIn or ProximityOut */        
+    int             type;      /* ProximityIn or ProximityOut */
     unsigned long   serial;    /* # of last request processed by server */
     Bool            send_event; /* true if this came from a SendEvent request */
     Display         *display;  /* Display the event was read from */
-    Window          window;      
+    Window          window;
     XID                 deviceid;
-    Window          root;            
-    Window          subwindow;      
-    Time            time;            
-    int             x, y;            
-    int             x_root, y_root;  
-    unsigned int    state;           
-    Bool            same_screen;     
+    Window          root;
+    Window          subwindow;
+    Time            time;
+    int             x, y;
+    int             x_root, y_root;
+    unsigned int    state;
+    Bool            same_screen;
     unsigned int    device_state; /* device key or button mask */
     unsigned char   axes_count;
     unsigned char   first_axis;
@@ -7545,7 +7545,7 @@ typedef XProximityNotifyEvent XProximityOutEvent;
 
 /*******************************************************************
  *
- * DeviceStateNotify events are generated on EnterWindow and FocusIn 
+ * DeviceStateNotify events are generated on EnterWindow and FocusIn
  * for those clients who have selected DeviceState.
  *
  */
@@ -7566,7 +7566,7 @@ typedef struct {
     Time          time;
     int           num_classes;
     char       data[64];
-} XDeviceStateNotifyEvent;     
+} XDeviceStateNotifyEvent;
 
 typedef struct {
     unsigned char     class;
@@ -7613,7 +7613,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * ChangeDeviceNotify event.  This event is sent when an 
+ * ChangeDeviceNotify event.  This event is sent when an
  * XChangeKeyboard or XChangePointer request is made.
  *
  */
@@ -7632,7 +7632,7 @@ typedef struct {
 /*******************************************************************
  *
  * Control structures for input devices that support input class
- * Feedback.  These are used by the XGetFeedbackControl and 
+ * Feedback.  These are used by the XGetFeedbackControl and
  * XChangeFeedbackControl functions.
  *
  */
@@ -7791,10 +7791,10 @@ typedef struct {
 
 /*******************************************************************
  *
- * An array of XDeviceList structures is returned by the 
+ * An array of XDeviceList structures is returned by the
  * XListInputDevices function.  Each entry contains information
- * about one input device.  Among that information is an array of 
- * pointers to structures that describe the characteristics of 
+ * about one input device.  Among that information is an array of
+ * pointers to structures that describe the characteristics of
  * the input device.
  *
  */
@@ -7810,7 +7810,7 @@ typedef struct _XDeviceInfo *XDeviceInfoPtr;
 
 typedef struct _XDeviceInfo
     {
-    XID                 id;        
+    XID                 id;
     Atom                type;
     char                *name;
     int                 num_classes;
@@ -7860,7 +7860,7 @@ typedef struct     _XValuatorInfo
 
 /*******************************************************************
  *
- * An XDevice structure is returned by the XOpenDevice function.  
+ * An XDevice structure is returned by the XOpenDevice function.
  * It contains an array of pointers to XInputClassInfo structures.
  * Each contains information about a class of input supported by the
  * device, including a pointer to an array of data for each type of event
@@ -7883,7 +7883,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * The following structure is used to return information for the 
+ * The following structure is used to return information for the
  * XGetSelectedExtensionEvents function.
  *
  */
@@ -7895,7 +7895,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * The following structure is used to return motion history data from 
+ * The following structure is used to return motion history data from
  * an input device that supports the input class Valuators.
  * This information is returned by the XGetDeviceMotionEvents function.
  *

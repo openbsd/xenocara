@@ -34,8 +34,9 @@
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-extern int copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses);
-extern int size_classes(xXIAnyInfo* from, int nclasses);
+extern int copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses,
+                        char *end);
+extern int size_classes(xXIAnyInfo* from, int nclasses, char *end);
 
 XIDeviceInfo*
 XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
@@ -88,9 +89,11 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
     for (i = 0; i < reply.num_devices; i++)
     {
         int             nclasses;
-        size_t          sz;
+        int             sz;
+        int             wire_len;
         XIDeviceInfo    *lib = &info[i];
         xXIDeviceInfo   *wire = (xXIDeviceInfo*)ptr;
+        size_t          name_bytes;
 
         if (ptr + sizeof(xXIDeviceInfo) > end)
             goto error_loop;
@@ -102,25 +105,39 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
         nclasses         = wire->num_classes;
 
         ptr += sizeof(xXIDeviceInfo);
+        name_bytes = ((size_t) wire->name_len + 3) / 4 * 4;
 
-        if (ptr + wire->name_len > end)
+        if (ptr + name_bytes > end)
             goto error_loop;
 
         lib->name = Xcalloc(wire->name_len + 1, 1);
         if (lib->name == NULL)
             goto error_loop;
+
         strncpy(lib->name, ptr, wire->name_len);
         lib->name[wire->name_len] = '\0';
-        ptr += ((wire->name_len + 3)/4) * 4;
+        ptr += name_bytes;
 
-        sz = size_classes((xXIAnyInfo*)ptr, nclasses);
+        sz = size_classes((xXIAnyInfo*)ptr, nclasses, end);
+        if (sz < 0)
+        {
+            Xfree(lib->name);
+            goto error_loop;
+        }
         lib->classes = Xmalloc(sz);
         if (lib->classes == NULL)
         {
             Xfree(lib->name);
             goto error_loop;
         }
-        ptr += copy_classes(lib, (xXIAnyInfo*)ptr, &nclasses);
+        wire_len = copy_classes(lib, (xXIAnyInfo*)ptr, &nclasses, end);
+        if (wire_len < 0 || ptr + wire_len > end)
+        {
+            Xfree(lib->name);
+            Xfree(lib->classes);
+            goto error_loop;
+        }
+        ptr += wire_len;
         /* We skip over unused classes */
         lib->num_classes = nclasses;
     }

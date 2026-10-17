@@ -18,7 +18,7 @@ SYNOPSIS
                                int event_count,
                                XEventClass *event_list,
                                XEvent *event_send);
-   
+
    display
           Specifies the connection to the X server.
 

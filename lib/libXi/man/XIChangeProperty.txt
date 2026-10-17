@@ -47,7 +47,7 @@ SYNOPSIS
 
    display
           Specifies the connection to the X server.
-    
+
    delete_property
           Specifies a Boolean value that determines whether the property
           is to be deleted.
@@ -61,13 +61,13 @@ SYNOPSIS
           16, and 32.  This information allows the X server to correctly
           perform byte-swap operations as necessary. If the
           format is 16-bit or 32-bit, you must explicitly cast your
-          data pointer to an (unsigned char *) in the call to 
+          data pointer to an (unsigned char *) in the call to
           XIChangeProperty.
 
    format_return
           Returns the actual format of the property.
 
-   length 
+   length
           Specifies the length in 32-bit multiples of the data to be
           retrieved.
 
@@ -100,7 +100,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The XIGetProperty function returns the actual type of the property; 
+The XIGetProperty function returns the actual type of the property;
 the actual format of the property; the number of 8-bit, 16-bit,
 or 32-bit items transferred; the number of bytes remaining to be read
 in the property; and a pointer to the data actually returned.
@@ -109,7 +109,7 @@ XIGetProperty sets the return arguments as follows:
    - If the specified property does not exist for the specified device,
    XIGetProperty returns None to actual_type_return and the
    value zero to actual_format_return and bytes_after_return.  The
-   nitems_return argument is empty.  In this case, the delete argument 
+   nitems_return argument is empty.  In this case, the delete argument
    is ignored.
 
    - If the specified property exists but its type does not match the
@@ -120,11 +120,11 @@ XIGetProperty sets the return arguments as follows:
    bytes_after_return.  It also ignores the delete argument.  The
    nitems_return argument is empty.
 
-   - If the specified property exists and either you assign 
+   - If the specified property exists and either you assign
    XIAnyPropertyType to the req_type argument or the specified type
-   matches the actual property type, XIGetProperty returns the 
-   actual property type to actual_type_return and the actual property 
-   format (never zero) to actual_format_return.  It also returns a value 
+   matches the actual property type, XIGetProperty returns the
+   actual property type to actual_type_return and the actual property
+   format (never zero) to actual_format_return.  It also returns a value
    to bytes_after_return and nitems_return, by defining the following
    values:
 
@@ -134,10 +134,10 @@ XIGetProperty sets the return arguments as follows:
    L = MINIMUM(T, 4 * length)
    A = N - (I + L)
 
-The returned value starts at byte index I in the property 
-(indexing from zero), and its length in bytes is L.  If the value 
+The returned value starts at byte index I in the property
+(indexing from zero), and its length in bytes is L.  If the value
 for long_offset causes L to be negative, a BadValue error results.
-The value of bytes_after_return is A, giving the number of trailing 
+The value of bytes_after_return is A, giving the number of trailing
 unread bytes in the stored property.
 
 If the returned format is 8, the returned data is represented as a char
@@ -179,11 +179,11 @@ If the specified format is 8, the property data must be a char array.
 If the specified format is 16, the property data must be a uint16_t array.
 If the specified format is 32, the property data must be a uint32_t array.
 
-The lifetime of a property is not tied to the storing client. 
-Properties remain until explicitly deleted, until the device is removed, 
-or until the server resets.  The maximum size of a property is server 
-dependent and can vary dynamically depending on the amount of memory 
-the server has available.  (If there is insufficient space, a BadAlloc 
+The lifetime of a property is not tied to the storing client.
+Properties remain until explicitly deleted, until the device is removed,
+or until the server resets.  The maximum size of a property is server
+dependent and can vary dynamically depending on the amount of memory
+the server has available.  (If there is insufficient space, a BadAlloc
 error results.)
 
 XIChangeProperty can generate BadAlloc, BadAtom, BadMatch, BadValue, and

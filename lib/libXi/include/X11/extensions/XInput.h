@@ -196,7 +196,7 @@ typedef struct _XAnyClassinfo *XAnyClassPtr;
  *
  */
 
-typedef struct 
+typedef struct
     {
     int            type;         /* of event */
     unsigned long  serial;       /* # of last request processed */
@@ -261,7 +261,7 @@ typedef XDeviceButtonEvent XDeviceButtonReleasedEvent;
  *
  */
 
-typedef struct 
+typedef struct
     {
     int           type;        /* of event */
     unsigned long serial;      /* # of last request processed by server */
@@ -291,7 +291,7 @@ typedef struct
  *
  */
 
-typedef struct 
+typedef struct
     {
     int           type;       /* of event */
     unsigned long serial;     /* # of last request processed by server */
@@ -302,9 +302,9 @@ typedef struct
     int           mode;       /* NotifyNormal, NotifyGrab, NotifyUngrab */
     int           detail;
 	/*
-	 * NotifyAncestor, NotifyVirtual, NotifyInferior, 
+	 * NotifyAncestor, NotifyVirtual, NotifyInferior,
 	 * NotifyNonLinear,NotifyNonLinearVirtual, NotifyPointer,
-	 * NotifyPointerRoot, NotifyDetailNone 
+	 * NotifyPointerRoot, NotifyDetailNone
 	 */
     Time                time;
     } XDeviceFocusChangeEvent;
@@ -319,21 +319,21 @@ typedef XDeviceFocusChangeEvent XDeviceFocusOutEvent;
  *
  */
 
-typedef struct 
+typedef struct
     {
-    int             type;      /* ProximityIn or ProximityOut */        
+    int             type;      /* ProximityIn or ProximityOut */
     unsigned long   serial;    /* # of last request processed by server */
     Bool            send_event; /* true if this came from a SendEvent request */
     Display         *display;  /* Display the event was read from */
-    Window          window;      
+    Window          window;
     XID	            deviceid;
-    Window          root;            
-    Window          subwindow;      
-    Time            time;            
-    int             x, y;            
-    int             x_root, y_root;  
-    unsigned int    state;           
-    Bool            same_screen;     
+    Window          root;
+    Window          subwindow;
+    Time            time;
+    int             x, y;
+    int             x_root, y_root;
+    unsigned int    state;
+    Bool            same_screen;
     unsigned int    device_state; /* device key or button mask */
     unsigned char   axes_count;
     unsigned char   first_axis;
@@ -344,7 +344,7 @@ typedef XProximityNotifyEvent XProximityOutEvent;
 
 /*******************************************************************
  *
- * DeviceStateNotify events are generated on EnterWindow and FocusIn 
+ * DeviceStateNotify events are generated on EnterWindow and FocusIn
  * for those clients who have selected DeviceState.
  *
  */
@@ -369,7 +369,7 @@ typedef struct {
     Time          time;
     int           num_classes;
     char	  data[64];
-} XDeviceStateNotifyEvent;	
+} XDeviceStateNotifyEvent;
 
 typedef struct {
 #if defined(__cplusplus) || defined(c_plusplus)
@@ -428,7 +428,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * ChangeDeviceNotify event.  This event is sent when an 
+ * ChangeDeviceNotify event.  This event is sent when an
  * XChangeKeyboard or XChangePointer request is made.
  *
  */
@@ -489,7 +489,7 @@ typedef struct {
 /*******************************************************************
  *
  * Control structures for input devices that support input class
- * Feedback.  These are used by the XGetFeedbackControl and 
+ * Feedback.  These are used by the XGetFeedbackControl and
  * XChangeFeedbackControl functions.
  *
  */
@@ -747,10 +747,10 @@ typedef struct {
 
 /*******************************************************************
  *
- * An array of XDeviceList structures is returned by the 
+ * An array of XDeviceList structures is returned by the
  * XListInputDevices function.  Each entry contains information
- * about one input device.  Among that information is an array of 
- * pointers to structures that describe the characteristics of 
+ * about one input device.  Among that information is an array of
+ * pointers to structures that describe the characteristics of
  * the input device.
  *
  */
@@ -768,7 +768,7 @@ typedef struct _XDeviceInfo *XDeviceInfoPtr;
 
 typedef struct _XDeviceInfo
     {
-    XID                 id;        
+    XID                 id;
     Atom                type;
     char                *name;
     int                 num_classes;
@@ -829,7 +829,7 @@ typedef struct	_XValuatorInfo
 
 /*******************************************************************
  *
- * An XDevice structure is returned by the XOpenDevice function.  
+ * An XDevice structure is returned by the XOpenDevice function.
  * It contains an array of pointers to XInputClassInfo structures.
  * Each contains information about a class of input supported by the
  * device, including a pointer to an array of data for each type of event
@@ -852,7 +852,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * The following structure is used to return information for the 
+ * The following structure is used to return information for the
  * XGetSelectedExtensionEvents function.
  *
  */
@@ -864,7 +864,7 @@ typedef struct {
 
 /*******************************************************************
  *
- * The following structure is used to return motion history data from 
+ * The following structure is used to return motion history data from
  * an input device that supports the input class Valuators.
  * This information is returned by the XGetDeviceMotionEvents function.
  *

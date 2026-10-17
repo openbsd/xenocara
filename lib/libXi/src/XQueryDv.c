@@ -108,20 +108,45 @@ XQueryDeviceState(
 
 	    switch (any->class) {
 	    case KeyClass:
+		if (any->length < sizeof(xKeyState) ||
+		    (char *)any + sizeof(xKeyState) > end)
+		    goto out;
 		size += sizeof(XKeyState);
 		break;
 	    case ButtonClass:
+		if (any->length < sizeof(xButtonState) ||
+		    (char *)any + sizeof(xButtonState) > end)
+		    goto out;
 		size += sizeof(XButtonState);
 		break;
 	    case ValuatorClass:
 	    {
 		xValuatorState *v = (xValuatorState *) any;
+		size_t nvals;
+		size_t needed;
+
+		if (any->length < sizeof(xValuatorState))
+		    goto out;
+
 		if ((char *)any + sizeof(xValuatorState) > end)
 		    goto out;
-		size += (sizeof(XValuatorState) +
-			 (v->num_valuators * sizeof(int)));
+
+		nvals = v->num_valuators;
+		/* valuators follow the header; must fit in class length */
+		if (nvals > (any->length - sizeof(xValuatorState)) / sizeof(CARD32))
+		    goto out;
+
+		needed = sizeof(xValuatorState) + nvals * sizeof(CARD32);
+		if ((char *)any + needed > end)
+		    goto out;
+
+		size += sizeof(XValuatorState) + nvals * sizeof(int);
 	    }
 		break;
+	    default:
+		/* Unknown classes are not represented in state->data; rejecting
+		 * keeps num_classes consistent with the populated entries. */
+		goto out;
 	    }
 	    any = (XInputClass *) ((char *)any + any->length);
 	}
@@ -165,30 +190,37 @@ XQueryDeviceState(
 		xValuatorState *v = (xValuatorState *) any;
 		XValuatorState *V = (XValuatorState *) Any;
 		CARD32 *valuators = (CARD32 *) (v + 1);
+		size_t nvals = v->num_valuators;
 
 		V->class = v->class;
-		V->length = sizeof(XValuatorState) +
-			    v->num_valuators * sizeof(int);
+		V->length = sizeof(XValuatorState) + nvals * sizeof(int);
 		V->num_valuators = v->num_valuators;
 		V->mode = v->mode;
 		Any = (XInputClass *) (V + 1);
 		V->valuators = (int *)Any;
-		for (j = 0; j < (int)V->num_valuators; j++)
+		for (j = 0; j < (int)nvals; j++)
 		    *(V->valuators + j) = *valuators++;
-		Any = (XInputClass *) ((char *)Any +
-				       V->num_valuators * sizeof(int));
+		Any = (XInputClass *) ((char *)Any + nvals * sizeof(int));
 	    }
 		break;
+	    default:
+		goto out;
 	    }
 	    any = (XInputClass *) ((char *)any + any->length);
 	}
     }
-out:
-    Xfree(data);
 
+    Xfree(data);
     UnlockDisplay(dpy);
     SyncHandle();
-    return (state);
+    return state;
+
+out:
+    Xfree(data);
+    Xfree(state);
+    UnlockDisplay(dpy);
+    SyncHandle();
+    return NULL;
 }
 
 void

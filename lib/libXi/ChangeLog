@@ -1,3 +1,413 @@
+commit 9ea632ab9dce9ad6630ef7db9d1850ea3d0a2419
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 16 12:36:21 2026 -0700
+
+    libXi 1.8.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c4dfb762b4a305a2f0f85b1af3fdca395c44359
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Oct 8 10:58:47 2026 +0200
+
+    XGetDeviceControl: set DEVICE_ENABLE length to the struct size
+    
+    sizeof(E) is the pointer width, not sizeof(XDeviceEnableState).
+    
+    Reported-by: Adam Bedard, Security Researcher.
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/26>
+
+commit 4eb9f70b67034ace1abdf785fd8dcba7b6dc739d
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Oct 8 10:58:33 2026 +0200
+
+    XGetDeviceControl: size DEVICE_ENABLE replies for XDeviceEnableState
+    
+    DEVICE_ENABLE had a fill path but no size arm, so allocation used the
+    wire length (8 bytes) while the fill wrote a full XDeviceEnableState.
+    
+    CVE-2026-109090
+    
+    Reported-by: Adam Bedard, Security Researcher.
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/26>
+
+commit f7836d0a0f45e9e6c2c147c5dea4b6bc08231f2e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Oct 1 15:01:03 2026 +0200
+
+    XGetDeviceControl: require reply control to match the request
+    
+    Size and fill both used to key off different values, so a hostile
+    server could answer DEVICE_RESOLUTION with a small fixed-size control
+    and still drive the unbounded valuator copy.
+    
+    CVE-2026-109089
+    
+    Reported-by: Adam Bedard, Security Researcher.
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/26>
+
+commit bd2a989f77ae9dd0869952ec458002514082c0fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 10 15:49:17 2026 -0700
+
+    Set num_classes to number of copied classes in copyDeviceChangedEvent
+    
+    Make sure caller knows how many classes we actually copied, instead of
+    just keeping the value copied from in->num_classes.
+    
+    Fixes: 9790baa ("Track unknown classes correctly during copyDeviceChangedEvent")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/25>
+
+commit 6e85cb6fbef9e86e6548c1b4919dd6928c05cfe5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 10 15:46:09 2026 -0700
+
+    Track XIValuatorClass correctly during copyDeviceChangedEvent
+    
+    Previous commit missed a spot when converting classes to use
+    `out_idx` instead of `i`
+    
+    Fixes: 9790baa ("Track unknown classes correctly during copyDeviceChangedEvent")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/25>
+
+commit 9790baaf0b683f95ae34e8d6510149aa32b8e05e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 16:47:09 2026 +1000
+
+    Track unknown classes correctly during copyDeviceChangedEvent
+    
+    Don't assume we have the same number of out classes to in classes, only
+    count the ones we know and can handle.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit 8010b5e5e62e4f6af66800cccdcd1a210befa873
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 15:34:19 2026 +1000
+
+    Add missing touch and gesture class handling to copyDeviceChangedEvent
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit 94d727dfe9dee8428a79ab00f8bfd803793ef93d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 29 14:49:08 2026 +1000
+
+    XListInputDevices: make sure we have enough bytes for the info
+    
+    rep.ndevices and rep.length are two independent server-controlled
+    values, and nothing required the reply to actually contain ndevices *
+    sizeof(xDeviceInfo) bytes of device records.
+    
+    With rep.ndevices = 255 and rep.length = 0 the reply buffer is a 1-byte
+    Xmalloc(0) block, the sizing loop reads list->num_classes for 255
+    records past its end, and
+    
+        any = (char *)list + ndevices * sizeof(xDeviceInfo)
+    
+    is past the end.
+    
+        SizeClassInfo(&any, end - (char *)any, ...)
+    
+    then converts a negative pointer difference to size_t.
+    
+    Assisted-by: Claude:claude-opus-5
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit ab4984e7f7362f36665b5f2e1069d8624c35b330
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 15:37:16 2026 +1000
+
+    Fix potential for class size mismatches
+    
+    Consistently use sizeDeviceClassType() for touch and gesture classes too
+    so our pointer advancement matches what size_classes() reserved and to
+    avoid misalignment (we need to get things aligned to 8 byte boundaries).
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit cf01d0dfa5855d7f639d905e125e7cd89a3ec567
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 2 15:30:51 2026 +1000
+
+    Actually copy the full keycodes in copy_classes
+    
+    XI2 keycodes are CARD32, we only copied num_keycodes bytes which left
+    the remainder of the array uninitialzied.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit 12953fd96dbdffd3f42f7845a9ba2501417345b2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 29 14:51:19 2026 +1000
+
+    wireToEnterLeave: validate the valuator count to avoid OOB writes
+    
+    XValuatorStatus holds a fixed 'int valuators[6]' (XInput.h). The
+    XI_DeviceStateNotify handler copied the wire count verbatim:
+    
+        vev->num_valuators = sev->num_valuators;
+    
+    In a follow-up XI_DeviceValuator event we used that num_valuator
+    as base index. So a server sending num_valuators N followed by a
+    valuator event will copy the (up to 3) valuators into
+    the valuators[6] array starting at index N.
+    
+    On top of this it would also increase num_valuators to a max of N + 3
+    which probably has some effects on other APIs.
+    
+    Clamp it to the three we write and if we get another three, update it
+    accordingly.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/24>
+
+commit 8caed97a3e356ff5827704f3c28aed0d50d9136d
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Sep 11 16:15:21 2026 +0200
+
+    wireToEnterLeave: validate buttons_len against the received event size
+    
+    wireToEnterLeave() trusts the wire-supplied buttons_len field and
+    copies buttons_len * 4 bytes from the event payload without checking
+    that many bytes were actually received.
+    
+    A malicious X server can send an XI2 Enter, Leave, FocusIn or FocusOut
+    event with a small ge.length but an oversized buttons_len, causing
+    memcpy() to read past the end of the event buffer.
+    
+    Pass the total event size into wireToEnterLeave() and reject events
+    where buttons_len * 4 exceeds the payload following the fixed-size
+    xXIEnterEvent header.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-15083
+    
+    CVE-2026-94282
+    
+    v2: Also bound-check wireToDeviceEvent, wireToHierarchyChangedEvent, and
+    wireToRawEvent against the received event size.
+    v3: Pass received event size into wireToDeviceChangedEvent.
+    v4: Reject undersized TouchOwnership, Barrier, and Gesture
+    Pinch/Swipe events when ge->length is too small for the header. (Peter
+    Hutterer)
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit 1d5813ba0431b7e9a324a412e8b8ef532f65c5be
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 10:32:20 2026 +0200
+
+    XListInputDevices: validate class lengths cumulatively in SizeClassInfo
+    
+    SizeClassInfo() checked each class record's length against the original
+    remaining buffer size, but never decremented it after advancing past
+    each record. A malicious server could supply class records whose
+    individual lengths each passed the check but whose cumulative size
+    exceeded the buffer, causing out-of-bounds reads in SizeClassInfo and
+    ParseClassInfo.
+    
+    This is fixed by:
+    
+    - Decrementing len after each class record in SizeClassInfo
+    - Validating minimum class-specific struct sizes before accessing fields
+    - Rejecting unknown class types
+    - Adding an end pointer and bounds checks to ParseClassInfo
+    - Checking ParseClassInfo return value at the call site
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-14718
+    
+    CVE-2026-94281
+    
+    v2: Free the partially initialized device list on ParseClassInfo failure
+    instead of returning it.
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit 2e5ecd1876a72e09aaeea87e1a8135ae764803d9
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 10:32:05 2026 +0200
+
+    XListInputDevices: validate device name lengths against reply buffer
+    
+    The name-parsing loops trusted the server-supplied length byte without
+    checking that the advertised name actually fits within the received
+    reply buffer.
+    
+    Additionally, the sizing loop used a wrong end pointer derived from
+    the already-incremented list pointer plus the full reply length,
+    which was too generous and could not catch overruns.
+    
+    A malicious server could return a ListInputDevices reply with a name
+    length byte exceeding the remaining reply bytes, causing memcpy() to
+    read past the buffer and crash the client.
+    
+    Check each name length against the actual reply buffer end (already
+    computed as "end") in both the sizing and copy loops before accessing
+    the name data.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-14711
+    
+    CVE-2026-93545
+    
+    v2: Avoid using a backward goto label. (Peter Hutterer)
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit e2ec4a1c8403c99f6c08621920b0efb0e0d6d533
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 31 16:27:02 2026 +0200
+
+    XIQueryDevice: keep padded name and class bytes within the reply
+    
+    Class parsing helpers already reject overlong or inconsistent XI2
+    class records against the reply end pointer. Also require the padded
+    device name and the bytes consumed by copy_classes() to stay inside
+    that bound before advancing to the next device.
+    
+    A malformed XIQueryDevice reply with an inflated name_len (within the
+    raw length check but exceeding the 4-byte-padded name field) could
+    otherwise leave the parser misaligned for subsequent class data.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-14043
+    
+    CVE-2026-93544
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit f885619bb67f1ddec5d4e40ff3eff1a3269a0069
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 31 16:20:56 2026 +0200
+
+    size_classes/copy_classes: enforce XI2 per-type class payload sizes
+    
+    Bounding any_wire->length against the reply/event end pointer is not
+    enough: a class length that fits in the buffer can still be shorter
+    than the type-specific wire struct, and button/key counts can claim
+    more bytes than that class contains. copy_classes() then reads past
+    the payload when converting XI_DeviceChanged events (and when parsing
+    XIQueryDevice replies).
+    
+    Validate per-type minimum sizes and that button/key payloads fit in
+    the declared class length, and reject DeviceChanged allocations that
+    would overflow size_t.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-13717
+    
+    CVE-2026-93543
+    
+    v2: Use size_t in size_classes and reject length overflow.
+    v3: XI2 keycodes are 4 bytes (Peter Hutterer)
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit 59f8dece822889f1db2b160775f9badbf810a734
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 31 16:04:12 2026 +0200
+
+    size_classes/copy_classes: bound XI2 class lengths to the received buffer
+    
+    Both size_classes() and copy_classes() walked server-provided class
+    records using any_wire->length without checking that each class fits
+    in the reply or event buffer. XIQueryDevice() had the reply end
+    pointer available but did not pass it down; the same helpers are
+    reused for XI_DeviceChanged conversion.
+    
+    A forged XIQueryDevice reply or truncated DeviceChanged event with an
+    overlong class length could therefore read past the allocated buffer
+    and crash the client.
+    
+    Pass an end pointer into size_classes and copy_classes, reject zero
+    or overlong wire lengths before advancing, and propagate parse
+    failures to the callers.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-13600
+    
+    CVE-2026-93542
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit 9a5f8636b9f3a2092ed845be6719abcf8f6bf383
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Jul 31 15:05:27 2026 +0200
+
+    XQueryDeviceState: check ValuatorClass num_valuators against class length
+    
+    The first pass only verified that the xValuatorState header fit in the
+    reply. num_valuators was then used to size the destination and to copy
+    valuator words from (v + 1) without ensuring those words fit in
+    any->length.
+    
+    A forged QueryDeviceState reply with length equal to the size of
+    xValuatorState and a large num_valuators could therefore read past
+    the allocated reply buffer (denial of service).
+    
+    Reject ValuatorClass entries whose valuator array does not fit in the
+    declared class length before sizing or copying.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-13253
+    
+    CVE-2026-93541
+    
+    v2: Also validate KeyClass/ButtonClass lengths, reject unknown classes,
+    and free partial state on error.
+    
+    Reported-by: Aisle Research
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/23>
+
+commit 3a0adabd16d8bf19c772061ad67f25c51281edf3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 13 12:49:33 2026 -0700
+
+    Strip trailing whitespace from source files
+    
+    Performed with: `git ls-files | xargs perl -i -p -e 's{[ \t]+$}{}'`
+    
+    `git diff -w` & `git diff -b` show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxi/-/merge_requests/22>
+
 commit f00f7e9140b4707775331950dd67851e55058c40
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon May 18 10:12:04 2026 +1000
@@ -1220,7 +1630,7 @@ Date:   Wed Dec 26 15:29:43 2012 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit af9f26510d87eee71f1cd688d7dcfbf173c13943
-Merge: 31c6cf9f6fbc 9e8a55dfcb3d
+Merge: 31c6cf9 9e8a55d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Dec 17 14:34:53 2012 +1000
 
@@ -1538,7 +1948,7 @@ Date:   Thu Dec 22 09:42:43 2011 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 47f3d887a7731f4ab68a69ed31dbe7acf6d13270
-Merge: 82a631263ef4 e73e2fe95dab
+Merge: 82a6312 e73e2fe
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Dec 21 15:40:37 2011 +1000
 
@@ -1743,7 +2153,7 @@ Date:   Sun Sep 18 00:53:56 2011 -0700
     Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 69f2580fd47cfe24105892e9ffb79cd046954b7d
-Merge: fc5d47895c13 3ed1b4632052
+Merge: fc5d478 3ed1b46
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Sat Sep 17 06:41:30 2011 +1000
 
@@ -3559,7 +3969,7 @@ Date:   Thu Jun 4 16:29:20 2009 +0200
     Fix building if asciidoc or xmlto is not installed.
 
 commit 5975cb9e6f89bf71b1740cee951fc583d7b7cfc1
-Merge: 8ea9ebcedcb9 279a8c3a6466
+Merge: 8ea9ebc 279a8c3
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Jun 4 15:49:07 2009 +1000
 
@@ -4376,7 +4786,7 @@ Date:   Thu May 22 12:58:55 2008 +0930
     Ansify the XI 2 functions.
 
 commit 50990b8deb8b8484e9e02e313387ea4d2ddbd242
-Merge: 26dde5aaf4bb 145947ed6032
+Merge: 26dde5a 145947e
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu May 22 12:48:40 2008 +0930
 
@@ -4424,7 +4834,7 @@ Date:   Wed Apr 30 10:35:12 2008 +0930
     Fix up AM_CFLAGS, pulled in the system-includes before the local ones.
 
 commit d68d321c0692848dd5eb67a3713676498c1c646b
-Merge: 7d0977bc02ce 3e99cc281509
+Merge: 7d0977b 3e99cc2
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Apr 28 14:35:11 2008 +0930
 
@@ -4964,14 +5374,14 @@ Date:   Sat Oct 14 23:56:20 2006 -0700
     Add *.o to .gitignore.
 
 commit 6e08a76fd8e356f98d2d6913f0c1b1401090768d
-Merge: ba84e84575b4 360ceacb2a3c
+Merge: ba84e84 360ceac
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Sep 24 20:02:24 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/lib/libXi
 
 commit ba84e84575b4167b0c6298e86a860b0741e2d2a3
-Merge: 93d3c2c45ccd 576c5794cf4b
+Merge: 93d3c2c 576c579
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Sep 24 19:58:56 2006 +0300
 

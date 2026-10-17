@@ -17,7 +17,7 @@ SYNOPSIS
                     Window focus,
                     int revert_to,
                     Time time);
-   
+
    XGetDeviceFocus( Display *display,
                     XDevice *device,
                     Window *focus_return,

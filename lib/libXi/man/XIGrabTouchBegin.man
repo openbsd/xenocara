@@ -1,1 +1,1 @@
-.so manlibmansuffix/XIGrabButton.libmansuffix
+.so XIGrabButton.libmansuffix

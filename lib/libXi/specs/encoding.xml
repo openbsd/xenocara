@@ -5,7 +5,7 @@
 </para>
 <para>
 <!-- .LP -->
-All numbers are in decimal, 
+All numbers are in decimal,
 unless prefixed with #x, in which case they are in hexadecimal (base 16).
 </para>
 <para>
@@ -41,7 +41,7 @@ the encode-form is:
 <!-- .ta 1i 1.5i 2.5i -->
 N	TYPE	name
 </literallayout>
-N is the number of bytes occupied in the data stream, 
+N is the number of bytes occupied in the data stream,
 and TYPE is the interpretation of those bytes.
 For example,
 </para>
@@ -71,7 +71,7 @@ For components with a static numeric value the encode-form is:
 N	value	name
 </literallayout>
 The value is always interpreted as an N-byte unsigned integer.
-For example, 
+For example,
 the first two bytes of a Window error are always zero (indicating an
 error in general) and three (indicating the Window error in particular):
 </para>
@@ -106,7 +106,7 @@ N		name
 	valueI NameI
 </literallayout>
 The value is always interpreted as an N-byte unsigned integer.
-Note that the size of N is sometimes larger than that strictly required 
+Note that the size of N is sometimes larger than that strictly required
 to encode the values.
 For example:
 </para>
@@ -153,7 +153,7 @@ N	TYPE			NAME
 	valueI	AlternativeI
 </literallayout>
 The alternative values are guaranteed not to conflict with the encoding
-of TYPE.  
+of TYPE.
 For example:
 </para>
 <para>
@@ -196,15 +196,15 @@ N	BITMASK			value-mask
 	...
 	maskI	mask-nameI
 </literallayout>
-The individual bits in the mask are specified and named, 
+The individual bits in the mask are specified and named,
 and N is 2 or 4.
 The most-significant bit in a BITMASK is reserved for use in defining
 chained (multiword) bitmasks, as extensions augment existing core requests.
-The precise interpretation of this bit is not yet defined here, 
-although a probable mechanism is that a 1-bit indicates that another N bytes 
-of bitmask follows, with bits within the overall mask still interpreted 
-from least-significant to most-significant with an N-byte unit, with N-byte units 
-interpreted in stream order, and with the overall mask being byte-swapped 
+The precise interpretation of this bit is not yet defined here,
+although a probable mechanism is that a 1-bit indicates that another N bytes
+of bitmask follows, with bits within the overall mask still interpreted
+from least-significant to most-significant with an N-byte unit, with N-byte units
+interpreted in stream order, and with the overall mask being byte-swapped
 in individual N-byte units.
 </para>
 <para>
@@ -223,9 +223,9 @@ VALUEs
 </literallayout>
 listing an encode-form for each VALUE.
 The NAME in each encode-form keys to the corresponding BITMASK bit.
-The encoding of a VALUE always occupies four bytes, 
+The encoding of a VALUE always occupies four bytes,
 but the number of bytes specified in the encoding-form indicates how
-many of the least-significant bytes are actually used; 
+many of the least-significant bytes are actually used;
 the remaining bytes are unused and their values do not matter.
 </para>
 <para>
@@ -234,9 +234,9 @@ In various cases, the number of bytes occupied by a component will be specified
 by a lowercase single-letter variable name instead of a specific numeric
 value, and often some other component will have its value specified as a
 simple numeric expression involving these variables.
-Components specified with such expressions are always interpreted 
+Components specified with such expressions are always interpreted
 as unsigned integers.
-The scope of such variables is always just the enclosing request, reply, 
+The scope of such variables is always just the enclosing request, reply,
 error, event, or compound type structure.
 For example:
 </para>
@@ -289,7 +289,7 @@ LISTofFOO
   <listitem>
     <para>
 In this document the LISTof notation strictly means some number of repetitions
-of the FOO encoding; 
+of the FOO encoding;
 the actual length of the list is encoded elsewhere.
     </para>
   </listitem>
@@ -659,7 +659,7 @@ KEYSYM values with the bit #x10000000 set are reserved as vendor-specific.
 </para>
 <para>
 <!-- .LP -->
-The names and encodings of the standard KEYSYM values are contained in 
+The names and encodings of the standard KEYSYM values are contained in
 <!-- .\"Appendix B, Keysym Encoding. -->
 appendix F.
 </para>
@@ -1338,7 +1338,7 @@ GetFeedbackControl
 <literallayout class="monospaced">
 <!-- .TA .2i .5i 1.5i 2.5i -->
 <!-- .ta .2i .5i 1.5i 2.5i -->
-  FEEDBACKSTATE	KBDFEEDBACKSTATE, PTRFEEDBACKSTATE, INTEGERFEEDBACKSTATE, 
+  FEEDBACKSTATE	KBDFEEDBACKSTATE, PTRFEEDBACKSTATE, INTEGERFEEDBACKSTATE,
   STRINGFEEDBACKSTATE, BELLFEEDBACKSTATE, or LEDFEEDBACKSTATE
 </literallayout>
 </para>
@@ -1471,8 +1471,8 @@ ChangeFeedbackControl
 <literallayout class="monospaced">
 <!-- .TA .2i .5i 1.5i 2.5i -->
 <!-- .ta .2i .5i 1.5i 2.5i -->
-  FEEDBACKCLASS	KBDFEEDBACKCTL, PTRFEEDBACKCTL, INTEGERFEEDBACKCTL, 
-  STRINGFEEDBACKCTL, BELLFEEDBACKCTL, or LEDFEEDBACKCTL 
+  FEEDBACKCLASS	KBDFEEDBACKCTL, PTRFEEDBACKCTL, INTEGERFEEDBACKCTL,
+  STRINGFEEDBACKCTL, BELLFEEDBACKCTL, or LEDFEEDBACKCTL
 </literallayout>
 </para>
 <para>
@@ -1956,8 +1956,8 @@ Events
 <para>
 <!-- .LP -->
 DeviceKeyPress, DeviceKeyRelease, DeviceButtonPress, DeviceButtonRelease,
-ProximityIn, ProximityOut, and DeviceStateNotify  events may be followed by 
-zero or more DeviceValuator events.  DeviceMotionNotify events will be 
+ProximityIn, ProximityOut, and DeviceStateNotify  events may be followed by
+zero or more DeviceValuator events.  DeviceMotionNotify events will be
 followed by one or more DeviceValuator events.
 </para>
 <para>

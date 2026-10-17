@@ -12,7 +12,7 @@ SYNOPSIS
 --------
 
    #include <X11/extensions/XInput.h>
- 
+
    int XGetDeviceProperty( Display *display,
                            XDevice *device,
                            Atom property,

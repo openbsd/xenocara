@@ -46,7 +46,7 @@ SOFTWARE.
 
 /***********************************************************************
  *
- * XListInputDevices - Request the server to return a list of 
+ * XListInputDevices - Request the server to return a list of
  *			 available input devices.
  *
  */
@@ -78,32 +78,47 @@ SizeClassInfo(xAnyClassPtr *any, size_t len, int num_classes, size_t *size)
 {
     int j;
     size_t sz = 0;
+    int clen;
 
     for (j = 0; j < num_classes; j++) {
+        if (len < sizeof(xAnyClassInfo))
+            return 1;
+        clen = (*any)->length;
+        if (clen < (int)sizeof(xAnyClassInfo) || (size_t)clen > len)
+            return 1;
+
         switch ((*any)->class) {
             case KeyClass:
+                if (clen < (int)sizeof(xKeyInfo))
+                    return 1;
                 sz += pad_to_xid(sizeof(XKeyInfo));
                 break;
             case ButtonClass:
+                if (clen < (int)sizeof(xButtonInfo))
+                    return 1;
                 sz += pad_to_xid(sizeof(XButtonInfo));
                 break;
             case ValuatorClass:
                 {
                     xValuatorInfoPtr v;
+                    size_t need;
 
-                    if (len < sizeof(v))
+                    if (clen < (int)sizeof(xValuatorInfo))
                         return 1;
                     v = (xValuatorInfoPtr) *any;
+                    need = sizeof(xValuatorInfo) +
+                        ((size_t)v->num_axes * sizeof(xAxisInfo));
+                    if (need > (size_t)clen)
+                        return 1;
                     sz += pad_to_xid(sizeof(XValuatorInfo) +
                         (v->num_axes * sizeof(XAxisInfo)));
                     break;
                 }
             default:
-                break;
+                return 1;
         }
-        if ((*any)->length > len)
-            return 1;
-        *any = (xAnyClassPtr) ((char *)(*any) + (*any)->length);
+        *any = (xAnyClassPtr) ((char *)(*any) + clen);
+        len -= (size_t)clen;
     }
 
     *size = sz;
@@ -111,12 +126,20 @@ SizeClassInfo(xAnyClassPtr *any, size_t len, int num_classes, size_t *size)
     return 0;
 }
 
-static void
-ParseClassInfo(xAnyClassPtr *any, XAnyClassPtr *Any, int num_classes)
+static int
+ParseClassInfo(xAnyClassPtr *any, XAnyClassPtr *Any, int num_classes,
+               char *end)
 {
     int j;
+    int clen;
 
     for (j = 0; j < num_classes; j++) {
+        if ((char *)(*any) + sizeof(xAnyClassInfo) > end)
+            return 1;
+        clen = (*any)->length;
+        if (clen < (int)sizeof(xAnyClassInfo) || (char *)(*any) + clen > end)
+            return 1;
+
         switch ((*any)->class) {
             case KeyClass:
                 {
@@ -165,11 +188,12 @@ ParseClassInfo(xAnyClassPtr *any, XAnyClassPtr *Any, int num_classes)
                     break;
                 }
             default:
-                break;
+                return 1;
         }
-        *any = (xAnyClassPtr) ((char *)(*any) + (*any)->length);
+        *any = (xAnyClassPtr) ((char *)(*any) + clen);
         *Any = (XAnyClassPtr) ((char *)(*Any) + (*Any)->length);
     }
+    return 0;
 }
 
 XDeviceInfo *
@@ -191,6 +215,7 @@ XListInputDevices(
     unsigned long rlen;
     XExtDisplayInfo *info = XInput_find_display(dpy);
     int ndevices;
+    Bool free_sclist = False;
 
     LockDisplay(dpy);
     if (_XiCheckExtInit(dpy, XInput_Initial_Release, info) == -1)
@@ -220,21 +245,28 @@ XListInputDevices(
 	}
 	_XRead(dpy, (char *)list, rlen);
 
+	if (rlen < (unsigned long)ndevices * sizeof(xDeviceInfo))
+	    goto out;
+
 	any = (xAnyClassPtr) ((char *)list + (ndevices * sizeof(xDeviceInfo)));
 	sav_any = any;
 	end = (char *)list + rlen;
 	for (i = 0; i < ndevices; i++, list++) {
-            if(SizeClassInfo(&any, end - (char *)any, (int)list->num_classes, &s))
-                goto out;
-            size += s;
+	    if (SizeClassInfo(&any, end - (char *)any, (int)list->num_classes, &s))
+		goto out;
+	    size += s;
 	}
 
-	Nptr = ((unsigned char *)list) + rlen;
 	for (i = 0, nptr = (unsigned char *)any; i < ndevices; i++) {
-	    if (nptr >= Nptr)
+	    size_t name_len;
+
+	    if (nptr >= (unsigned char *)end)
 		goto out;
-	    size += *nptr + 1;
-	    nptr += (*nptr + 1);
+	    name_len = *nptr;
+	    if (name_len > (size_t)((unsigned char *)end - nptr - 1))
+		goto out;
+	    size += name_len + 1;
+	    nptr += name_len + 1;
 	}
 
 	clist = (XDeviceInfoPtr) Xmalloc(size);
@@ -256,24 +288,42 @@ XListInputDevices(
 	    clist->num_classes = list->num_classes;
 	    clist->inputclassinfo = Any;
 
-            ParseClassInfo(&any, &Any, (int)list->num_classes);
+	    if (ParseClassInfo(&any, &Any, (int)list->num_classes, end)) {
+		free_sclist = True;
+		goto out;
+	    }
 	}
 
 	clist = sclist;
 	nptr = (unsigned char *)any;
 	Nptr = (unsigned char *)Any;
 	for (i = 0; i < ndevices; i++, clist++) {
+	    size_t name_len;
+
+	    if (nptr >= (unsigned char *)end) {
+		free_sclist = True;
+		goto out;
+	    }
+	    name_len = *nptr;
+	    if (name_len > (size_t)((unsigned char *)end - nptr - 1)) {
+		free_sclist = True;
+		goto out;
+	    }
 	    clist->name = (char *)Nptr;
-	    memcpy(Nptr, nptr + 1, *nptr);
-	    Nptr += (*nptr);
+	    memcpy(Nptr, nptr + 1, name_len);
+	    Nptr += name_len;
 	    *Nptr++ = '\0';
-	    nptr += (*nptr + 1);
+	    nptr += name_len + 1;
 	}
     }
 
     *ndevices_return = ndevices;
 
   out:
+    if (free_sclist) {
+	XFree((char *)sclist);
+	sclist = NULL;
+    }
     XFree((char *)slist);
     UnlockDisplay(dpy);
     SyncHandle();
