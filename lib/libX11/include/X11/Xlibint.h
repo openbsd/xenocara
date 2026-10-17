@@ -45,6 +45,9 @@ from The Open Group.
 
 #ifdef XTHREADS
 #include <X11/Xthreads.h>
+#ifdef _WIN32
+#undef CreateWindow
+#endif
 #endif
 
 /* The Xlib structs are full of implicit padding to properly align members.

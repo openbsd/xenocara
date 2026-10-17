@@ -31,6 +31,23 @@ For patch submission instructions, see:
 
   https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
+## Release 1.8.14
+
+ * ximcp: bound XIM_OPEN_REPLY attribute lengths (CVE-2026-94283) (!310)
+ * ximcp: bound XIM_REGISTER_TRIGGERKEYS keylist lengths (CVE-2026-94284) (!310)
+ * lcGenConv: bound byteM_parse_codeset() reads (CVE-2026-94285) (!310)
+ * xkb: Check the keysym range in _XkbReadKeyActions (CVE-2026-88806) (!309)
+ * OpenDisplay: avoid NULL dereference in out-of-memory error path (!307)
+ * XSetFontPath: zero-initialize packed font path buffer (#248, !306)
+ * _XSend: treat xcb_writev returning 0 as failure (!305)
+ * _XSend: discard the output buffer after an I/O error (!305)
+ * XkbSetIndicatorMap: avoid undefined behavior due to left shift (#246, !304)
+ * nls: Add ca_ES.UTF-8@valencia locale (#234, !303)
+ * Xutil.h: add include of Xresource.h (#242, !302)
+ * xkb: fix incorrect size check when growing doodads in a section (!300)
+ * XlibInt.c: use correct type for Win32 in SocketBytesReadable() (!299)
+ * XlibInt.h: prevent Win32 CreateWindow macro from leaking into our code (!299)
+
 ## Release 1.8.13
 
  * Ignore XkbMapNotify events that don't belong to the core keyboard (!293)

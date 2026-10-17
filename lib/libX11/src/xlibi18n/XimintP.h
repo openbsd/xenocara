@@ -115,7 +115,7 @@ typedef struct _XimProtoPrivateRec {
 
     Window			 im_window;
     XIMID			 imid;
-    CARD16			 unused;
+    CARD16			 open_attr_length;
     XIMStyles			*default_styles;
     CARD32			*im_onkeylist;
     CARD32			*im_offkeylist;

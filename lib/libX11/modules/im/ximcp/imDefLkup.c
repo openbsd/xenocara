@@ -498,10 +498,12 @@ _XimForwardEventCallback(
 static Bool
 _XimRegisterTriggerkey(
     Xim			 im,
-    XPointer		 buf)
+    XPointer		 buf,
+    size_t		 buf_len)
 {
     CARD32		*buf_l = (CARD32 *)buf;
-    CARD32		 len;
+    size_t		 len;
+    size_t		 remaining;
     CARD32 		*key;
 
     if (IS_DYNAMIC_EVENT_FLOW(im))	/* already Dynamic event flow mode */
@@ -510,9 +512,11 @@ _XimRegisterTriggerkey(
     /*
      *  register onkeylist
      */
-
-    len = buf_l[0];				/* length of on-keys */
-    len += sizeof(INT32);			/* sizeof length of on-keys */
+    if (buf_len < sizeof(CARD32))
+	return False;
+    if ((size_t)buf_l[0] > buf_len - sizeof(CARD32))
+	return False;
+    len = (size_t)buf_l[0] + sizeof(CARD32);
 
     if (!(key = Xmalloc(len))) {
 	_XimError(im, 0, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
@@ -526,10 +530,13 @@ _XimRegisterTriggerkey(
     /*
      *  register offkeylist
      */
-
+    remaining = buf_len - len;
+    if (remaining < sizeof(CARD32))
+	return False;
     buf_l = (CARD32 *)((char *)buf + len);
-    len = buf_l[0];				/* length of off-keys */
-    len += sizeof(INT32);			/* sizeof length of off-keys */
+    if ((size_t)buf_l[0] > remaining - sizeof(CARD32))
+	return False;
+    len = (size_t)buf_l[0] + sizeof(CARD32);
 
     if (!(key = Xmalloc(len))) {
 	_XimError(im, 0, XIM_BadAlloc, (INT16)0, (CARD16)0, (char *)NULL);
@@ -551,8 +558,12 @@ _XimRegisterTriggerKeysCallback(
 {
     CARD16	*buf_s = (CARD16 *)((CARD8 *)data + XIM_HEADER_SIZE);
     Xim		 im = (Xim)call_data;
+    size_t	 payload_len;
 
-    (void )_XimRegisterTriggerkey(im, (XPointer)&buf_s[2]);
+    if (len < (INT16)(XIM_HEADER_SIZE + 2 * sizeof(CARD16)))
+	return True;
+    payload_len = (size_t)len - XIM_HEADER_SIZE - 2 * sizeof(CARD16);
+    (void)_XimRegisterTriggerkey(im, (XPointer)&buf_s[2], payload_len);
     return True;
 }
 

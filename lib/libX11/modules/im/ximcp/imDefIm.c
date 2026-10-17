@@ -867,6 +867,15 @@ _XimOpen(
 
     im->private.proto.imid = buf_s[0];		/* imid */
 
+    if (len < (INT16)(XIM_HEADER_SIZE + sizeof(CARD16))) {
+	if (reply != preply)
+	    Xfree(preply);
+	return False;
+    }
+    /* remaining OPEN_REPLY bytes after imid; read by _XimGetAttributeID */
+    im->private.proto.open_attr_length =
+	(CARD16)((size_t)len - XIM_HEADER_SIZE - sizeof(CARD16));
+
     if (!(_XimGetAttributeID(im, &buf_s[1]))) {
 	if(reply != preply)
 	    Xfree(preply);

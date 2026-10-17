@@ -153,7 +153,7 @@ Bool
 XkbSetIndicatorMap(Display *dpy, unsigned long which, XkbDescPtr xkb)
 {
     register xkbSetIndicatorMapReq *req;
-    register int i, bit;
+    unsigned int i, bit;
     int nMaps;
     xkbIndicatorMapWireDesc *wire;
     XkbInfoPtr xkbi;

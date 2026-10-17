@@ -1,3 +1,316 @@
+commit b8d5a7046a98a244ee8ca3c9c07fd617c800dde2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 16 12:05:48 2026 -0700
+
+    libX11 1.8.14
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7924c23dcad8fa5e5c8c0974f1d9e05f34da4cd1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 11 15:51:42 2026 -0700
+
+    Revert "XGetSubImage: improve efficiency by reducing number of temporary allocations"
+    
+    This reverts commit b5e4ac5b78befbe6d992e7005b62a0b0f53149da.
+    Further review found multiple problems with the implementation.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/312>
+
+commit 797eaf0bd69524144e0df7af516b680f4b7694e9
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Sep 11 16:02:06 2026 +0200
+
+    lcGenConv: bound byteM_parse_codeset() reads to remaining input length
+    
+    byteM_parse_codeset() walks candidate byte-oriented codesets and
+    dereferences input bytes up to codeset->length, but it does not
+    receive the remaining input length and does not check whether enough
+    bytes are available before reading.
+    
+    When the last available byte is a valid lead byte for a multi-byte
+    codeset (e.g. GBK, Big5), the function reads one byte past the
+    caller-provided buffer while matching the second byte range.
+    
+    Pass the remaining byte count into byteM_parse_codeset() and skip
+    candidate codesets whose length exceeds the available input.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-16718
+    
+    CVE-2026-94285
+    
+    Reported-by: Aisle Research
+    Assisted-by: AI
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/310>
+
+commit 924fc91f08ece9cddc93609b4dc945a9cc90ea12
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Jul 30 16:32:10 2026 +0200
+
+    ximcp: bound XIM_REGISTER_TRIGGERKEYS keylist lengths to the packet
+    
+    _XimRegisterTriggerKeysCallback() receives the full packet length from
+    the transport but did not pass it to _XimRegisterTriggerkey(), which
+    trusted the wire CARD32 on-keys and off-keys length fields for Xmalloc
+    and memcpy.
+    
+    A malicious XIM_REGISTER_TRIGGERKEYS message with a valid outer frame
+    but oversized inner lengths can therefore cause an out-of-bounds read
+    and crash the client.
+    
+    Pass the remaining payload size into the static helper and reject
+    on-keys/off-keys lengths that do not fit before copying.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-16671
+    
+    CVE-2026-94284
+    
+    Reported-by: Aisle Research
+    Co-authored-by: AI
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/310>
+
+commit f263bbca24d04c766775e7af2e203ca41b4ece2e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Thu Jul 30 09:51:54 2026 +0200
+
+    ximcp: bound XIM_OPEN_REPLY attribute lengths to the received packet
+    
+    _XimGetAttributeID() trusted the wire-embedded nBytesIMATTR /
+    nBytesICATTR values and per-attribute lengths from a malicious or
+    malformed XIM_OPEN_REPLY without comparing them to the actual number
+    of bytes returned by _XimRead().
+    
+    That allows for potential out-of-bounds reads (and possible client
+    crashes) while parsing IM/IC attribute lists.
+    
+    Pass the remaining OPEN_REPLY payload length from _XimOpen() via an
+    unused private field (now "open_attr_length") so that we can reject
+    nested totals that exceed that size, and compute padded attribute entry
+    sizes in a wide type so CARD16 wraparound cannot defeat the checks.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-15963
+    
+    CVE-2026-94283
+    
+    Reported-by: Aisle Research
+    Co-authored-by: AI
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/310>
+
+commit 6d4432b13c0b3b6a644c13de9c793a14db48d545
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 16 15:27:33 2026 +1000
+
+    xkb: Check the keysym range in _XkbReadKeyActions (CVE-2026-88806)
+    
+    A malicious server could send a XkbGetMap reply with
+    firstKeyAct + nKeyActs exceeding max_keycode=+ 1. This would
+    cause an OOB write into info->map->key_sym_map[rep->firstKeyAct + i].
+    
+    This brings this function in line with the other functions in this file
+    which already have checks in place.
+    
+    This vulnerability was discovered by:
+    Adam Bedard working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-32061
+    
+    CVE-2026-88806
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/309>
+
+commit 13f9b8de400335f4b86bb0672da02f8166c0e796
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 15 19:05:51 2026 -0700
+
+    XOpenDisplay: avoid NULL dereference in out-of-memory error path
+    
+    In the highly unlikely event we are able to allocate memory for the
+    Display structure, but not the display_name, don't dereference the
+    not-yet-allocated xcb structure in the error handler.
+    
+    Reported by gcc 16.1 with -fanalyzer:
+    
+    OpenDis.c: In function ‘OutOfMemory’:
+    OpenDis.c:712:27: warning: dereference of NULL ‘0’ [CWE-476]
+     [-Wanalyzer-null-dereference]
+      712 |         xcb_connection_t *connection = dpy->xcb->connection;
+          |                           ^~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/307>
+
+commit 799e2da7709b3da1f87b502321c10eddefc0246c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 8 11:40:55 2026 -0700
+
+    XSetFontPath: zero-initialize packed font path buffer
+    
+    Avoids leaving uninitialized data in padding bytes.
+    
+    Closes: https://gitlab.freedesktop.org/xorg/lib/libx11/-/work_items/248
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/306>
+
+commit 80dbb7d029b2bbf58b96421e59c83e34f763ab70
+Author: Charles G Waldman <cgw@alum.mit.edu>
+Date:   Tue Jul 28 17:00:21 2026 -0500
+
+    _XSend: treat xcb_writev returning 0 as failure
+    
+    I/O errors from writes were not caught because _XSend was
+    checking for xcb_writev returning "< 0".  However xcb_writev
+    only returns 0 or 1, so the I/O error would only be caught
+    later in a read-side call.  Correct the check so that a failed
+    write raises _XIOError at write time, and discard the output
+    buffer in that case: nothing in it can be transmitted, and
+    if the application's I/O error exit handler returns, a full
+    buffer must not be left behind (see previous commit).
+    
+    Signed-off-by: Charles G Waldman <cgw@alum.mit.edu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/305>
+
+commit 572f5282d4f7311c83d7b6df1d1e190deefc3fd3
+Author: Charles G Waldman <cgw@alum.mit.edu>
+Date:   Tue Jul 28 16:57:49 2026 -0500
+
+    _XSend: discard the output buffer after an I/O error
+    
+    Since XSetIOErrorExitHandler (1.7.0), _XIOError can return and the
+    client survives with XlibDisplayIOError set.  _XSend's early return
+    on that flag left dpy->bufptr untouched, so the output buffer could
+    stay full forever: _XData32 and _XData16 then loop indefinitely
+    waiting for space, and _XGetRequest returns NULL to callers that do
+    not expect it.  Nothing in the buffer can ever be transmitted, so
+    reset bufptr when the flag is set.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libx11/-/work_items/247
+    
+    Signed-off-by: Charles G Waldman <cgw@alum.mit.edu>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/305>
+
+commit bb2fe763e11b71d83371305750e0865f19adcc6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 12 15:03:47 2026 -0700
+
+    XkbSetIndicatorMap: avoid undefined behavior due to left shift overflow
+    
+    Fix two left shift overflows reported by UBSan
+    
+    Closes: #246
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/304>
+
+commit 1529c98626dbd667fad853486a9fbeca19158a0c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 12 14:55:43 2026 -0700
+
+    nls: Add ca_ES.UTF-8@valencia locale
+    
+    Closes: #234
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/303>
+
+commit d5f334d280b6b11dc5e610b85a3d94bc0597d4fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 12 14:44:14 2026 -0700
+
+    Xutil.h: add include of Xresource.h
+    
+    Two macros in Xutil.h call functions defined in Xresource.h, which is
+    undefined behavior in the C standards when function declarations are
+    not included.
+    
+    Closes: #242
+    Reported-by: Sergey Bylokhov @mrserb
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/302>
+
+commit b5e4ac5b78befbe6d992e7005b62a0b0f53149da
+Author: qkot <catsarecool776@gmail.com>
+Date:   Tue Jan 16 18:10:52 2024 +1100
+
+    XGetSubImage: improve efficiency by reducing number of temporary allocations
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/239>
+
+commit b10abf6b99d5acf846c26f305f1a14a86360a96c
+Author: Mikhail Dmitrichenko <m.dmitrichenko222@gmail.com>
+Date:   Wed Apr 15 11:18:31 2026 +0300
+
+    xkb: fix incorrect size check when growing doodads in a section
+    
+    In XkbAddGeomDoodad(), when adding a doodad to a specific section
+    (section != NULL), there is a comparison between section->num_doodads
+    and geom->sz_doodads instead of the section's own section->sz_doodads.
+    
+    The else branch (global geometry doodads) was already correct.
+    
+    Compare section->num_doodads against section->sz_doodads to prevent
+    a potential out-of-bounds.
+    
+    Found by Linux Verification Center (linuxtesting.org) with SVACE.
+    
+    Signed-off-by: Mikhail Dmitrichenko <m.dmitrichenko222@gmail.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/300>
+
+commit 13fd1cbb6f5140fb620e7769def1dc02ab0e5391
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 15 14:52:08 2026 -0700
+
+    XlibInt.c: use correct type for Win32 in SocketBytesReadable()
+    
+    Fixes compiler error of:
+    
+    XlibInt.c: In function 'SocketBytesReadable':
+    XlibInt.c:1254:50: error: passing argument 3 of 'ioctlsocket' from
+     incompatible pointer type [-Wincompatible-pointer-types]
+     1254 |     ioctlsocket(ConnectionNumber(dpy), FIONREAD, &bytes);
+          |                                                  ^~~~~~
+          |                                                  |
+          |                                                  int *
+    In file included from /usr/share/mingw-w64/include/windows.h:92,
+                     from /usr/i686-w64-mingw32/include/X11/Xwindows.h:77,
+                     from /usr/i686-w64-mingw32/include/X11/Xthreads.h:98:
+    /usr/share/mingw-w64/include/winsock.h:281:76: note: expected 'u_long *' {aka 'long unsigned int *'} but argument is of type 'int *'
+      281 |   WINSOCK_API_LINKAGE int WSAAPI ioctlsocket(SOCKET s,__LONG32 cmd,u_long *argp);
+          |                                                                    ~~~~~~~~^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/299>
+
+commit 92d226e34a089adcd5bce0cc5f95bf8ea19ad8fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 15 14:31:37 2026 -0700
+
+    XlibInt.h: prevent Win32 CreateWindow macro from leaking into our code
+    
+    Prevents compiler errors such as:
+    
+    ../../include/X11/Xlibint.h:542:16: error: 'xCreateWindowAReq' undeclared
+     (first use in this function); did you mean 'xCreateWindowReq'?
+      542 |         req = (x##name##Req *) _XGetRequest(dpy, X_##name, sz)
+          |                ^
+    ../../include/X11/Xlibint.h:554:9: note: in expansion of macro 'GetReqSized'
+      554 |         GetReqSized(name, SIZEOF(x##name##Req), req)
+          |         ^~~~~~~~~~~
+    cmsCmap.c:159:17: note: in expansion of macro 'GetReq'
+      159 |                 GetReq(CreateWindow, req);
+          |                 ^~~~~~
+    
+    Fixes: eb1c272a ("Fix a9e845 and 797755 Allow X*IfEvent() to reenter libX11")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libx11/-/merge_requests/299>
+
 commit 6c75545a1deb51f5903992c52af6bc35cc9bc103
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 7 13:38:13 2026 -0800

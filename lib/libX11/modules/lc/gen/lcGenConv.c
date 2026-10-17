@@ -321,7 +321,8 @@ mb_parse_codeset(
 static CodeSet
 byteM_parse_codeset(
     XLCd lcd,
-    const char *inbufptr)
+    const char *inbufptr,
+    int remaining_bytes)
 {
     unsigned char ch;
     CodeSet codeset;
@@ -339,6 +340,8 @@ byteM_parse_codeset(
         codeset = codeset_list[i];
         byteM = codeset->byteM;
         if (codeset->side != XlcNONE || byteM == NULL)
+	    continue;
+        if (codeset->length > remaining_bytes)
 	    continue;
 
         for (j = 0; j < codeset->length; j++) {
@@ -800,7 +803,7 @@ mbstowcs_org(
         }
 
 	/* next mb char data for byteM ? */
-	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1))))
+	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1), (*from_left) + 1)))
 	    goto next_mb_char;
 
 	/* next mb char data for GL or GR side ? */
@@ -1691,7 +1694,7 @@ mbstostr(
         }
 
 	/* next char data : byteM ? */
-	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1))))
+	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1), (*from_left) + 1)))
 	    goto next_mb_char;
 
 	/* next char data : GL or GR side ? */
@@ -1802,7 +1805,7 @@ mbtocs(
         }
 
 	/* next mb char data for byteM ? */
-	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1))))
+	if ((codeset = byteM_parse_codeset(lcd, (inbufptr - 1), (*from_left) + 1)))
 	    goto next_mb_char;
 
 	/* next mb char data for GL or GR side ? */

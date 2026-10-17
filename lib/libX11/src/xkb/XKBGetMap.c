@@ -253,6 +253,9 @@ _XkbReadKeyActions(XkbReadBufferPtr buf, XkbDescPtr info, xkbGetMapReply *rep)
     if ((nKeyActs = rep->nKeyActs) > 0) {
         XkbSymMapPtr symMap;
 
+        if (((int) rep->firstKeyAct + rep->nKeyActs) > (info->max_key_code + 1))
+            return BadLength;
+
         if (nKeyActs < sizeof numDescBuf)
             numDesc = numDescBuf;
         else

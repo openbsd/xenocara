@@ -1399,6 +1399,7 @@ _XimCountNumberOfAttr(
     unsigned int *names_len)
 {
     unsigned int n;
+    unsigned int entry_size;
     CARD16	 len;
     CARD16	 min_len = sizeof(CARD16)	/* sizeof attribute ID */
 			 + sizeof(CARD16)	/* sizeof type of value */
@@ -1411,10 +1412,15 @@ _XimCountNumberOfAttr(
 	if (len > (total - min_len)) {
 	    return 0;
 	}
+	entry_size = (unsigned int)min_len + (unsigned int)len
+		   + (unsigned int)XIM_PAD(len + 2);
+
+	if (entry_size > total)
+	    return 0;
+
 	*names_len += (len + 1);
-	len += (min_len + XIM_PAD(len + 2));
-	total -= len;
-	attr = (CARD16 *)((char *)attr + len);
+	total -= entry_size;
+	attr = (CARD16 *)((char *)attr + entry_size);
 	n++;
     }
     return n;
@@ -1433,12 +1439,18 @@ _XimGetAttributeID(
     char		**values;
     register int	  i;
     CARD16		  len;
+    CARD16		 *buf_s = buf;
+    size_t		  remain = (size_t)im->private.proto.open_attr_length;
     CARD16		  min_len = sizeof(CARD16) /* sizeof attribute ID */
 				  + sizeof(CARD16) /* sizeof type of value */
 				  + sizeof(INT16); /* sizeof length of attr */
     /*
      * IM attribute ID
      */
+
+    if (remain < sizeof(CARD16) ||
+	(size_t)buf[0] > remain - sizeof(CARD16))
+	return False;
 
     if (!(n = _XimCountNumberOfAttr(buf[0], &buf[1], &names_len)))
 	return False;
@@ -1484,6 +1496,14 @@ _XimGetAttributeID(
     /*
      * IC attribute ID
      */
+    remain -= sizeof(CARD16) + (size_t)buf_s[0];
+    buf = (CARD16 *)((char *)(buf_s + 1) + buf_s[0]);
+
+    if (remain < (2 * sizeof(CARD16)))
+	return False;
+
+    if ((size_t)buf[0] > remain - (2 * sizeof(CARD16)))
+	return False;
 
     if (!(n = _XimCountNumberOfAttr(buf[0], &buf[2], &names_len)))
 	return False;

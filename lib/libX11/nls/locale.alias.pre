@@ -169,6 +169,7 @@ ca_ES.utf8:					ca_ES.UTF-8
 ca_ES.ISO-8859-15:				ca_ES.ISO8859-15
 ca_ES.ISO-8859-15@euro:				ca_ES.ISO8859-15
 ca_ES.UTF-8@euro:				ca_ES.UTF-8
+ca_ES.UTF-8@valencia:				ca_ES.UTF-8
 ca_FR:						ca_FR.ISO8859-1
 ca_FR@euro:					ca_FR.ISO8859-15
 ca_FR.iso88591:					ca_FR.ISO8859-1

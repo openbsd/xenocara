@@ -1248,17 +1248,19 @@ _XWireToEvent(
 static int
 SocketBytesReadable(Display *dpy)
 {
-    int bytes = 0, last_error;
 #ifdef WIN32
-    last_error = WSAGetLastError();
+    u_long bytes = 0;
+    int last_error = WSAGetLastError();
     ioctlsocket(ConnectionNumber(dpy), FIONREAD, &bytes);
     WSASetLastError(last_error);
+    return (int) bytes;
 #else
-    last_error = errno;
+    int bytes = 0;
+    int last_error = errno;
     ioctl(ConnectionNumber(dpy), FIONREAD, &bytes);
     errno = last_error;
-#endif
     return bytes;
+#endif
 }
 
 _X_NORETURN void _XDefaultIOErrorExit(
