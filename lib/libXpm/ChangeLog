@@ -1,3 +1,63 @@
+commit 34f15baa50a14e1bb8e33ed42d8f252a06446fd8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 16 12:55:31 2026 -0700
+
+    libXpm 3.5.20
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 58eb875b786e872012c17bb43796b0199f484941
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Sep 11 16:21:16 2026 +0200
+
+    ParsePixels: reject zero-dimension XPM images
+    
+    The existing dimension checks in ParsePixels() reject mismatched
+    zeros (width==0 with height!=0, or vice versa) but accept the case
+    where both width and height are zero.
+    
+    As a result, a 0x0 XPM can therefore pass parsing and reach the function
+    WritePixels(), which computes the row loop bound as "h = height - 1"
+    using unsigned arithmetic.
+    
+    With a zero height this underflows to UINT_MAX, causing a near-infinite
+    write loop.
+    
+    To avoid that issue, simply reject any image with a zero width or height
+    dimension as an invalid XPM file.
+    
+    Found by AISLE in partnership with Red Hat
+    
+    AISLE-Report-PSIRTSUPT-14424
+    
+    CVE-2026-94287
+    
+    Reported-by: Aisle Research
+    Assisted-by: AI
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Fixes: 6e42eb9e1 - ParsePixels: reject zero-dimension XPM images
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/33>
+
+commit 62e700908dd59eb70f967702368bc15087a8055e
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Wed Sep 30 10:22:53 2026 +0200
+
+    Revert "ParsePixels: reject zero-dimension XPM images"
+    
+    The commit message was lost when merging !32.
+    
+    Reapplying the same fix with the full commit next.
+    
+    This reverts commit 6e42eb9e105ae17318f3ba5656d94cd3f80eeaa3.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxpm/-/merge_requests/33>
+
+commit 6e42eb9e105ae17318f3ba5656d94cd3f80eeaa3
+Author: Olivier Fourdan <fourdan@gmail.com>
+Date:   Thu Sep 24 02:42:28 2026 +0200
+
+    ParsePixels: reject zero-dimension XPM images
+
 commit 9a05472d7ebcdf6deaa970515f3ddba2b0fc265e
 Author: Olivier Fourdan <ofourdan@redhat.com>
 Date:   Tue Apr 21 10:13:57 2026 +0200
@@ -2070,6 +2130,9 @@ Date:   Tue Sep 21 17:57:35 2004 +0000
     Added new libs to the bindist control files.
     Removed inclusion of unnecessary kernel header on Linux. This may fail in
         an -ansi environment.
+
+Notes:
+    Fixes CVE-2004-0687 (integer overflows) and CVE-2004-0688 (stack overflows)
 
 commit 2773a7214e282f6f673483f5233b880505947c3f
 Author: Egbert Eich <eich@suse.de>
