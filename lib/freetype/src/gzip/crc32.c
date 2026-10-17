@@ -7,7 +7,7 @@
  * Kadatch and Jenkins (2010). See doc/crc-doc.1.0.pdf in this distribution.
  */
 
-/* @(#) $Id: crc32.c,v 1.3 2025/03/09 15:12:55 matthieu Exp $ */
+/* @(#) $Id: crc32.c,v 1.4 2026/10/17 16:17:19 matthieu Exp $ */
 
 /*
   Note on the use of DYNAMIC_CRC_TABLE: there is no mutex or semaphore
@@ -1029,6 +1029,8 @@ unsigned long ZEXPORT crc32(unsigned long crc, const unsigned char FAR *buf,
 
 /* ========================================================================= */
 uLong ZEXPORT crc32_combine64(uLong crc1, uLong crc2, z_off64_t len2) {
+    if (len2 < 0)
+        return 0;
 #ifdef DYNAMIC_CRC_TABLE
     once(&made, make_crc_table);
 #endif /* DYNAMIC_CRC_TABLE */
@@ -1042,6 +1044,8 @@ uLong ZEXPORT crc32_combine(uLong crc1, uLong crc2, z_off_t len2) {
 
 /* ========================================================================= */
 uLong ZEXPORT crc32_combine_gen64(z_off64_t len2) {
+    if (len2 < 0)
+        return 0;
 #ifdef DYNAMIC_CRC_TABLE
     once(&made, make_crc_table);
 #endif /* DYNAMIC_CRC_TABLE */

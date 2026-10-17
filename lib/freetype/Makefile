@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.65 2026/05/16 13:59:45 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.66 2026/10/17 16:17:18 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 26.6.20
+FT_VERSION_INFO= 26.7.20
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -22,7 +22,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 	ftcid.c ftfstype.c ftgasp.c ftglyph.c ftgxval.c ftotval.c \
 	ftpatent.c ftinit.c ftlzw.c ftmm.c ftpfr.c ftstroke.c \
 	ftsynth.c ftsystem.c fttype1.c ftwinfnt.c autofit.c bdf.c \
-	cff.c ftgzip.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
+	cff.c ftgzip.c hvf.c pcf.c pfr.c psaux.c pshinter.c psnames.c \
 	raster.c sdf.c sfnt.c smooth.c svg.c truetype.c type1.c type1cid.c \
 	type42.c winfnt.c
 
@@ -96,6 +96,7 @@ NOPROFILE=
 .PATH:  ${FREETYPESRC}/cff
 .PATH:  ${FREETYPESRC}/cid
 .PATH:  ${FREETYPESRC}/gzip
+.PATH:	${FREETYPESRC}/hvf
 .PATH:	${FREETYPESRC}/lzw
 .PATH:  ${FREETYPESRC}/pcf
 .PATH:  ${FREETYPESRC}/pfr
