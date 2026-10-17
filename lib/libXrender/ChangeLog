@@ -1,3 +1,59 @@
+commit f30d654658ebf17d41141ed3ec2abf607d8a512e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 16 13:18:53 2026 -0700
+
+    libXrender 0.9.13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0564bce5446550c1b1681f3d8a933c20ea1455f7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 16 16:07:39 2026 +1000
+
+    Check numSubpixel against numScreens to avoid OOB writes (CVE-2026-88807)
+    
+    A malicious server could reply to XRenderQueryFormat with a numSubpixels
+    count greater than the number of screens, causing an OOB write into
+    screen->subpixel which was allocated using numScreens.
+    
+    This vulnerability was discovered by:
+    Adam Bedard working with TrendAI Zero Day Initiative
+    
+    ZDI-CAN-32093
+    
+    CVE-2026-88807
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/19>
+
+commit f32afe9f877ae032c6bc9c27b17b7978b1b4c856
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 11 11:20:41 2026 -0800
+
+    gitlab CI: drop the ci-fairy check-mr job
+    
+    The only thing this checked was the checkbox for allowing maintainers to
+    edit the MR. Changed permissions checks now fail this job but luckily
+    the setting it checked has been the default for years anyway so we can
+    drop it.
+    
+    https://gitlab.freedesktop.org/freedesktop/ci-templates/-/issues/81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/18>
+
+commit 01c4bb5b30bbb09921ca4042da369a60a73faefa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 16 14:32:47 2025 -0800
+
+    meson: Add option to build with meson
+    
+    Also updates the gitlab CI config to test both build types
+    and compare the generated output/installed files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxrender/-/merge_requests/17>
+
 commit 46e12ff9e8e4d3f0313a2f097df93dbfdc14f92f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Dec 13 13:02:31 2024 -0800

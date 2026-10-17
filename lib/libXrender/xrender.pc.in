@@ -1,12 +1,12 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=@libdir@
 includedir=@includedir@
+libdir=@libdir@
 
 Name: Xrender
 Description: X Render Library
+URL: https://gitlab.freedesktop.org/xorg/lib/libxrender/
 Version: @VERSION@
 Requires: xproto renderproto >= @RENDER_VERSION@ x11
-Requires.private: x11
-Cflags: -I${includedir}
 Libs: -L${libdir} -lXrender
+Cflags: -I${includedir}

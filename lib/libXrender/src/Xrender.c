@@ -478,6 +478,7 @@ XRenderQueryFormats (Display *dpy)
 	(rep.numDepths  < ((INT_MAX / 4) / sizeof (XRenderDepth))) &&
 	(rep.numVisuals < ((INT_MAX / 4) / sizeof (XRenderVisual))) &&
 	(rep.numSubpixel < ((INT_MAX / 4) / 4)) &&
+	(rep.numSubpixel <= rep.numScreens) &&
 	(rep.length < (INT_MAX >> 2)) ) {
         /* Zero-initialize so that pointers are NULL if there is a failure. */
 	xri = Xcalloc (1, sizeof (XRenderInfo));
