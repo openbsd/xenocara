@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.473 2026/10/18 07:36:44 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.474 2026/10/18 07:46:58 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.15.0
@@ -66,7 +66,7 @@ Current Vers:	2.47
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/-/tags
 
-Package:	ssh-ask-pass
+Package:	x11-ssh-askpass
 Version:	1.2.4.1
 Current Vers:	1.2.4.1
 Maintainer:	Jim Knoble / Darren Tucker
