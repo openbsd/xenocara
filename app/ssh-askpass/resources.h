@@ -9,7 +9,7 @@
  * implied warranty.
  */
 
-/* 1999-Nov-21 Modified by Jim Knoble <jmknoble@jmknoble.cx>.
+/* 1999-Nov-21 Modified by Jim Knoble <jmknoble@pobox.com>.
  * Modifications:
  * 
  *   - Made get_boolean_resource() accept a third parameter, default_value,

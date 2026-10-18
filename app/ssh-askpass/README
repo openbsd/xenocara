@@ -1,6 +1,6 @@
 # README: Notes about X11-based passphrase dialog for OpenSSH
 # created 1999-Nov-21 jmk
-# autodate: 2001-Feb-14 04:07
+# autodate: 2001-Sep-16 18:07
 
 +-------------+
 | Description |
@@ -16,9 +16,9 @@ The features of x11-ssh-askpass are as follows:
 
   - Configurable via the standard X resource mechanism
     (/usr/lib/X11/app-defaults, ~/.Xdefaults, xrdb, etc.).
-    
-  - Require only stock X11 libraries (libXt, libX11, libSM, libICE).
-  
+
+  - Requires only stock X11 libraries (libXt, libX11, libSM, libICE).
+
   - Can be configured to grab the keyboard and/or pointer (grabs the
     keyboard by default, not the pointer).
 
@@ -49,8 +49,15 @@ The following keystrokes work as expected:
 | Installing |
 +------------+
 
-x11-ssh-askpass currently uses imake and xmkmf to build.  Here's the
-procedure:
+Beginning with version 1.2.1, x11-ssh-askpass provides a 'configure'
+script to set locations to install files, etc.  It's relatively
+straightforward; use './configure --help' for a full list of options.
+Most folks will probably want the default settings:
+
+  ./configure
+
+After configuring, use xmkmf and make to build and install
+x11-ssh-askpass, as follows:
 
   xmkmf
   make includes
@@ -58,10 +65,15 @@ procedure:
   make install
   make install.man
 
-x11-ssh-askpass installs by default in /usr/local/libexec/openssh/.  To
-install it somewhere else (for example, /usr/libexec/openssh/) use:
+x11-ssh-askpass installs by default in /usr/local/libexec/; its manual
+page installs in /usr/local/man/man1/. To install them it somewhere
+else (for example, x11-ssh-askpass in /usr/libexec/openssh/ and the
+manual page in /usr/X11R6/man/man1/), use:
 
-  make install BINDIR=/usr/libexec/openssh
+  ./configure --libexecdir=/usr/libexec/openssh --mandir=/usr/X11R6/man/
+  xmkmf
+  make includes
+  [etc.]
 
 Several different app-defaults files accompany x11-ssh-askpass:
 
@@ -71,11 +83,21 @@ Several different app-defaults files accompany x11-ssh-askpass:
   SshAskpass-green.ad   - somewhat green
   SshAskpass-motif.ad   - a bit like the look of the Motif toolkit
 
-If you wish a look other than the default, perform the following
-commands before building (for example):
+You can select an app-defaults file other than the default; for
+example:
 
-  rm -f SshAskpass_ad.h
-  make includes APP_DEFAULTS=SshAskpass-NeXTish.ad
+  ./configure --with-app-defaults=SshAskpass-green.ad
+
+The app-defaults file installs into wherever your X11 configuration
+prefers app-defaults files to be (usually something like
+/usr/lib/X11/app-defaults/).  To install the app-defaults file
+somewhere else (for example, /usr/local/lib/X11/app-defaults/), use:
+
+  ./configure --with-app-defaults-dir=/usr/local/lib/X11/app-defaults
+
+You can also decide not to install any app-defaults file:
+
+  ./configure --disable-installing-app-defaults
 
 +-----------------+
 | Where To Get It |
@@ -83,7 +105,7 @@ commands before building (for example):
 
 x11-ssh-askpass is available at:
 
-  http://www.jmknoble.cx/software/x11-ssh-askpass/
+  https://github.com/openssh/x11-ssh-askpass
 
 +--------------------------+
 | Copyright, License, Etc. |
@@ -129,9 +151,9 @@ The portions derived from xscreensaver require the following notice:
 
 The remaining portions fall under the following copyright and license:
 
-  by Jim Knoble <jmknoble@jmknoble.cx>
+  by Jim Knoble <jmknoble@pobox.com>
   Copyright (C) 1999,2000,2001 Jim Knoble
-  
+
   Permission to use, copy, modify, distribute, and sell this software
   and its documentation for any purpose is hereby granted without fee,
   provided that the above copyright notice appear in all copies and

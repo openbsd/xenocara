@@ -1,37 +1,217 @@
-XCOMM $OpenBSD: Imakefile,v 1.2 2007/01/09 21:49:12 matthieu Exp $
+XCOMM Imakefile: How to build x11-ssh-askpass, using xmkmf and then make
+XCOMM 
+XCOMM by Jim Knoble <jmknoble@pobox.com>
+XCOMM Copyright (C) 1999,2000,2001 Jim Knoble
+XCOMM 
+XCOMM Disclaimer:
+XCOMM 
+XCOMM This software is provided "as is", without warranty of any kind,
+XCOMM express or implied, including but not limited to the warranties of
+XCOMM merchantability, fitness for a particular purpose and
+XCOMM noninfringement. In no event shall the author(s) be liable for any
+XCOMM claim, damages or other liability, whether in an action of
+XCOMM contract, tort or otherwise, arising from, out of or in connection
+XCOMM with the software or the use or other dealings in the software.
+XCOMM 
+XCOMM Permission to use, copy, modify, distribute, and sell this software
+XCOMM and its documentation for any purpose is hereby granted without
+XCOMM fee, provided that the above copyright notice appear in all copies
+XCOMM and that both that copyright notice and this permission notice
+XCOMM appear in supporting documentation.
 
-           SRCS = drawing.c dynlist.c resources.c x11-ssh-askpass.c
-           OBJS = drawing.o dynlist.o resources.o x11-ssh-askpass.o
-        DEPLIBS = $(DEPXTOOLLIB) $(DEPXLIB) $(DEPXINERAMALIB)
-LOCAL_LIBRARIES = $(XTOOLLIB) $(XLIB) $(XINERAMALIB)
+NAME		= x11-ssh-askpass
+CLASS		= SshAskpass
 
-           NAME = ssh-askpass
-          CLASS = SshAskpass
-        VERSION = 1.2.0
-           DATE = February 14, 2001
-   APP_DEFAULTS = $(CLASS)-default.ad
+XCOMM -------- configurable settings --------
+BINDIR		= /usr/local/libexec
+MANPATH		= /usr/local/man
+MANDIR		= $(MANPATH)/man1
+APPDEFDIR	= $(XAPPLOADDIR)
+APP_DEFAULTS	= SshAskpass-default.ad
 
-$(CLASS)_ad.h: $(CLASS).ad
-	cat $(CLASS).ad | grep -v '^[ 	]*$$' |\
-	  awk '/^[ 	]*!/ { sub("^[ 	]*![ ]?","", $$0); printf("/* %s */\n", $$0); next } ! /^[ 	]*!/ { printf("\"%s\",\n", $$0) }' \
-	  >$@
+XCOMM CC		=
+XCOMM CDEBUGFLAGS	=
+XCOMM LOCAL_LDFLAGS	=
+XCOMM -------- end configurable settings --------
+
+#ifndef CpCmd
+# define CpCmd cp
+#endif
+
+#ifndef GzipCmd
+# define GzipCmd gzip
+#endif
+
+#ifndef LnCmd
+# if HasSymLinks
+#  define LnCmd ln -s
+# else
+#  define LnCmd ln
+# endif
+#endif
+
+#ifndef MvCmd
+# define MvCmd mv -f
+#endif
+
+#ifndef RmCmd
+# define RmCmd rm -f
+#endif
+
+CAT		= cat
+CHMOD		= chmod
+CP		= CpCmd
+GREP		= grep
+GZIP		= GzipCmd
+LN		= LnCmd
+MKDIR		= MkdirHierCmd
+MV		= MvCmd
+RM		= RmCmd
+SED		= sed
+TAR		= tar
+
+MAKE_CHANGELOG	= cvs2cl
+
+VERSION		= 1.2.4.1
+DATE		= September 17, 2001
+PROJECT		= $(NAME)-$(VERSION)
+DIST_DIR	= $(PROJECT)
+DIST		= $(PROJECT).tar.gz
+
+HDRS = \@@\
+ drawing.h \@@\
+ dynlist.h \@@\
+ resources.h \@@\
+ x11-ssh-askpass.h
+
+SRCS = \@@\
+ drawing.c \@@\
+ dynlist.c \@@\
+ resources.c \@@\
+ x11-ssh-askpass.c
+
+OBJS = \@@\
+ drawing.o \@@\
+ dynlist.o \@@\
+ resources.o \@@\
+ x11-ssh-askpass.o
+
+MAN_OBJ		= $(NAME).man
+MAN_SRC		= $(MAN_OBJ).in
+MANS		= $(MAN_SRC)
+
+CHANGELOG	= ChangeLog
+
+CONFIGURE	= configure
+
+IMAKEFILE_OBJ	= Imakefile
+IMAKEFILE_SRC	= $(IMAKEFILE_OBJ).in
+IMAKEFILES	= $(IMAKEFILE_SRC)
+
+DOCS = \@@\
+ README \@@\
+ TODO
+
+APP_DEFAULTS_FILES = \@@\
+ $(CLASS)-1337.ad \@@\
+ $(CLASS)-NeXTish.ad \@@\
+ $(CLASS)-green.ad \@@\
+ $(CLASS)-motif.ad \@@\
+ $(CLASS)-default.ad \@@\
+
+DIST_FILES = \@@\
+ $(IMAKEFILES) \@@\
+ $(CONFIGURE) \@@\
+ $(DOCS) \@@\
+ $(APP_DEFAULTS_FILES) \@@\
+ $(MANS) \@@\
+ $(SRCS) \@@\
+ $(HDRS)
+
+DIST_EXTRAS = \@@\
+ $(CHANGELOG) \@@\
+ $(IMAKEFILE_OBJ)
+ 
+LOCAL_LIBRARIES	= -lXt -lX11 -lSM -lICE
+
+ComplexProgramTarget($(NAME))
+
+install:: install-app-defaults
+
+install-app-defaults: $(CLASS).ad
+	@if [ -d $(DESTDIR)$(APPDEFDIR) ]; then set +x; \@@\
+	else (set -x; $(MKDIRHIER) $(DESTDIR)$(APPDEFDIR)); fi
+	$(INSTALL) $(INSTALLFLAGS) $(INSTAPPFLAGS) $(CLASS).ad \@@\
+	  $(DESTDIR)$(APPDEFDIR)/$(CLASS)
+
+install::
+	@set -x; \@@\
+	if [ -f $(DESTDIR)$(BINDIR)/ssh-askpass ]; then \@@\
+	  $(MV) $(DESTDIR)$(BINDIR)/ssh-askpass \@@\
+	    $(DESTDIR)$(BINDIR)/ssh-askpass.old; \@@\
+	fi
+	$(LN) $(NAME) $(DESTDIR)$(BINDIR)/ssh-askpass
+
+install.man::
+	@set -x; \@@\
+	if [ -f $(DESTDIR)$(MANDIR)/ssh-askpass.$(MANSUFFIX) ]; then \@@\
+	  $(MV) $(DESTDIR)$(MANDIR)/ssh-askpass.$(MANSUFFIX) \@@\
+	    $(DESTDIR)$(MANDIR)/ssh-askpass.$(MANSUFFIX).old; \@@\
+	fi
+	$(LN) $(NAME).$(MANSUFFIX) $(DESTDIR)$(MANDIR)/ssh-askpass.$(MANSUFFIX)
+
+.PHONY: depends changelog realclean squeakyclean spotless tar dist
+
+all:: $(MAN_OBJ)
+
+$(MAN_OBJ): $(MAN_SRC) $(IMAKEFILE_SRC)
+	$(SED) \@@\
+	  -e 's#@NAME@#$(NAME)#g' \@@\
+	  -e 's#@VERSION@#$(VERSION)#g' \@@\
+	  -e 's#@DATE@#$(DATE)#g' \@@\
+	  <$(MAN_SRC) >$@.tmp
+	$(MV) $@.tmp $@
+
+depends: depend
+
+includes:: $(CLASS)_ad.h
 
 $(CLASS).ad:
 	$(LN) $(APP_DEFAULTS) $(CLASS).ad
 
-$(NAME).man: x11-ssh-askpass.man.in Imakefile
-	sed \@@\
-	  -e 's#@NAME@#$(NAME)#g' \@@\
-	  -e 's#@VERSION@#$(VERSION)#g' \@@\
-	  -e 's#@DATE@#$(DATE)#g' \@@\
-	  <x11-ssh-askpass.man.in >$@.tmp
+$(CLASS)_ad.h: $(CLASS).ad
+	$(SED) -n '/^[^!]/s/.*/"&",/p' <$(CLASS).ad >$@.tmp
 	$(MV) $@.tmp $@
 
-includes:: $(CLASS)_ad.h $(NAME).man
+changelog: $(CHANGELOG)
+$(CHANGELOG): $(DIST_FILES)
+	$(MAKE_CHANGELOG)
+
+$(IMAKEFILE_OBJ): $(IMAKEFILE_SRC)
+	./$(CONFIGURE) --defaults
 
 clean::
-	$(RM) -f $(CLASS)_ad.h $(CLASS).ad
-	$(RM) -f $(NAME).man
+	-$(RM) $(CLASS)_ad.h $(MAN_OBJ)
 
-ComplexProgramTarget($(NAME))
-InstallAppDefaults($(CLASS))
+realclean: clean
+	-$(RM) $(CLASS).ad
+	-$(RM) *.LOG *.log
+
+squeakyclean: realclean
+	-$(RM) Makefile Makefile.bak $(IMAKEFILE_OBJ) $(CHANGELOG)
+
+spotless: squeakyclean
+	-$(RM) $(DIST)
+
+tar: dist
+dist: $(DIST)
+$(DIST): $(DIST_EXTRAS) $(DIST_FILES)
+	-$(RM) -r $(DIST_DIR)
+	-$(RM) $@.tmp
+	$(MKDIR) $(DIST_DIR)
+	$(CP) $(DIST_EXTRAS) $(DIST_FILES) $(DIST_DIR)/
+	$(CHMOD) -R u+rwX,go+rX,go-w $(DIST_DIR)
+	$(TAR) -cvf - $(DIST_DIR) |$(GZIP) -9 -c >$@.tmp
+	$(MV) $@.tmp $@
+	-$(RM) -r $(DIST_DIR)
+

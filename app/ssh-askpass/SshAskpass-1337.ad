@@ -1,8 +1,8 @@
 ! SshAskpass.ad:  Default resources for the X11-based ssh-askpass for OpenSSH
-! created 1999-Nov-17 03:40 Jim Knoble <jmknoble@jmknoble.cx>
-! autodate: 2000-Nov-07 05:50
+! created 1999-Nov-17 03:40 Jim Knoble <jmknoble@pobox.com>
+! autodate: 2001-Sep-16 18:07
 ! 
-! by Jim Knoble <jmknoble@jmknoble.cx>
+! by Jim Knoble <jmknoble@pobox.com>
 ! Copyright (C) 1999,2000 Jim Knoble
 ! 
 ! Disclaimer:

@@ -9,7 +9,7 @@
  * implied warranty.
  */
 
-/* 1999-Nov-21 Modified by Jim Knoble <jmknoble@jmknoble.cx>
+/* 1999-Nov-21 Modified by Jim Knoble <jmknoble@pobox.com>
  * Modifications:
  *   - Extracted draw_shaded_rectangle() from xscreensaver source for use
  *     in a separate application.  Constructed separate header file.
