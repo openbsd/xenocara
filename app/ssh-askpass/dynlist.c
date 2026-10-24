@@ -27,32 +27,7 @@
 
 #include "dynlist.h"
 
-#define LIST_CHUNK_SIZE		512
 #define BUF_CHUNK_SIZE		512
-
-/* For lists of pointers cast to char *. */
-int append_to_list(char ***list_ptr, int *list_len, int *i, char *item)
-{
-   char **tmp_ptr;
-   
-   if (*i >= *list_len)
-    {
-       *list_len += LIST_CHUNK_SIZE;
-       tmp_ptr = realloc(*list_ptr, (sizeof(**list_ptr) * *list_len));
-       if (NULL == tmp_ptr)
-	{
-	   free(*list_ptr);
-	   *list_ptr = NULL;
-	   return(APPEND_FAILURE);
-	} else {
-	   *list_ptr = tmp_ptr;
-	}
-       *list_ptr = tmp_ptr;
-    }
-   (*list_ptr)[*i] = item;
-   (*i)++;
-   return(APPEND_SUCCESS);
-}
 
 /* For single-dimensional buffers. */
 int append_to_buf(char **buf, int *buflen, int *i, int c)

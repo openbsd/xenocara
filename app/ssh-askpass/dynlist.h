@@ -28,7 +28,6 @@
 #define APPEND_SUCCESS	1
 #define APPEND_FAILURE	0
 
-int append_to_list(char ***list_ptr, int *list_len, int *i, char *item);
 int append_to_buf(char **buf, int *buflen, int *i, int c);
 
 #endif /* H_DYNLIST */
