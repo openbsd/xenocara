@@ -713,14 +713,12 @@ void destroyLabel(AppInfo *app, LabelInfo *label)
 {
    TextObject *thisTextObject;
    TextObject *nextTextObject;
-   
-   thisTextObject = label->multiText;
-   nextTextObject = thisTextObject->next;
-   freeIf(thisTextObject);
-   while (NULL != nextTextObject) {
-      thisTextObject = nextTextObject;
-      nextTextObject = thisTextObject->next;
-      freeIf(thisTextObject);
+
+  thisTextObject = label->multiText;
+  while (NULL != thisTextObject) {
+     nextTextObject = thisTextObject->next;
+     freeIf(thisTextObject);
+     thisTextObject = nextTextObject;
    }
    freeIf(label->fullText);
    freeFontIf(app, label->font);
