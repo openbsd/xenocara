@@ -110,8 +110,8 @@ XFontStruct *getFontResource(AppInfo *app, char *instanceName, char *className)
    return(f);
 }
 
-char *getStringResourceWithDefault(char *instanceName, char *className,
-				   char *defaultText)
+char *getStringResourceWithDefault(AppInfo *app, char *instanceName,
+				   char *className, char *defaultText)
 {
    char *s = get_string_resource(instanceName, className);
    if (!s) {
@@ -121,6 +121,8 @@ char *getStringResourceWithDefault(char *instanceName, char *className,
 	 s = strdup(defaultText);
       }
    }
+   if (NULL == s)
+      outOfMemory(app, __LINE__);
    return(s);
 }
 
@@ -182,7 +184,7 @@ long getResolutionResource(AppInfo *app, char *instanceName, char *className,
    unsigned int i;
    
    memset(units, 0, sizeof(units));
-   s = getStringResourceWithDefault(instanceName, className,
+   s = getStringResourceWithDefault(app, instanceName, className,
 				    defaultResolutionSpec);
    /* NOTE: The width of the %s format must be one less than
     * the length of the units[] array above!
@@ -356,7 +358,8 @@ void createLabel(AppInfo *app, char *text, LabelInfo *label)
    if ((!app) || (!text)) {
       return;
    }
-   label->fullText = strdup(text);
+   if ((label->fullText = strdup(text)) == NULL)
+      outOfMemory(app, __LINE__);
    label->multiText = createTextObject(app, label->fullText);
    t = label->multiText;
    substring = strchr(label->fullText, '\n');
@@ -409,7 +412,7 @@ void createDialog(AppInfo *app)
       getResolutionResource(app, "yResolutionFuzz", "YResolutionFuzz", "20/in");
    
    d->title =
-      getStringResourceWithDefault("dialog.title", "Dialog.Title",
+      getStringResourceWithDefault(app, "dialog.title", "Dialog.Title",
 				   "OpenSSH Authentication Passphrase Request");
    d->w3.w.foreground =
       get_pixel_resource("foreground", "Foreground",
@@ -437,10 +440,11 @@ void createDialog(AppInfo *app)
       get_integer_resource("verticalSpacing", "Spacing", 6));
    
    if (2 == app->argc) {
-      labelText = strdup(app->argv[1]);
+      if ((labelText = strdup(app->argv[1])) == NULL)
+	  outOfMemory(app, __LINE__);
    } else {
       labelText =
-	 getStringResourceWithDefault("dialog.label", "Dialog.Label",
+	 getStringResourceWithDefault(app, "dialog.label", "Dialog.Label",
 				      "Please enter your authentication passphrase:");
    }
    createLabel(app, labelText, &(d->label));
@@ -478,7 +482,7 @@ void createDialog(AppInfo *app)
    d->okButton.w3.verticalSpacing = scaleYDimension(app,
       get_integer_resource("okButton.verticalSpacing", "Button.Spacing", 2));
    labelText =
-      getStringResourceWithDefault("okButton.label", "Button.Label", "OK");
+      getStringResourceWithDefault(app, "okButton.label", "Button.Label", "OK");
    createLabel(app, labelText, &(d->okButton.label));
    freeIf(labelText);
    d->okButton.label.font =
@@ -517,7 +521,7 @@ void createDialog(AppInfo *app)
       get_integer_resource("cancelButton.verticalSpacing", "Button.Spacing",
 			   2));
    labelText =
-      getStringResourceWithDefault("cancelButton.label", "Button.Label",
+      getStringResourceWithDefault(app, "cancelButton.label", "Button.Label",
 				   "Cancel");
    createLabel(app, labelText, &(d->cancelButton.label));
    freeIf(labelText);

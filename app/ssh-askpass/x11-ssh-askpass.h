@@ -210,8 +210,8 @@ void freeIf(void *p);
 void freeFontIf(AppInfo *app, XFontStruct *f);
 
 XFontStruct *getFontResource(AppInfo *app, char *instanceName, char *className);
-char *getStringResourceWithDefault(char *instanceName, char *className,
-				   char *defaultText);
+char *getStringResourceWithDefault(AppInfo *app, char *instanceName,
+				   char *className, char *defaultText);
 unsigned int getUnsignedIntegerResource(AppInfo *app, char *instanceName,
 					char *className,
 					unsigned int defaultValue);
