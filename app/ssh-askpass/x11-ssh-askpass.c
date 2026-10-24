@@ -1216,7 +1216,7 @@ void cleanUp(AppInfo *app)
    destroyGCs(app);
    destroyDialog(app);
    if (app->buf) {
-      memset(app->buf, 0, app->bufSize);
+      explicit_bzero(app->buf, app->bufSize);
    }
    freeIf(app->buf);
    ungrabPointer(app);
@@ -1255,6 +1255,7 @@ void backspacePassphrase(AppInfo *app)
       return;
    }
    (app->bufIndex)--;
+   explicit_bzero(app->buf + app->bufIndex, 1);
    updateIndicators(app, -1);
 }
 
@@ -1265,6 +1266,7 @@ void erasePassphrase(AppInfo *app)
       return;
    }
    updateIndicators(app, 0);
+   explicit_bzero(app->buf, app->bufSize);
    app->bufIndex = 0;
 }
 
