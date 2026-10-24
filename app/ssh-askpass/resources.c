@@ -82,27 +82,28 @@ get_string_resource (char *res_name, char *res_class)
 Bool 
 get_boolean_resource (char *res_name, char *res_class, Bool default_value)
 {
-  char *tmp, buf [100];
-  char *s = get_string_resource (res_name, res_class);
-  char *os = s;
-  if (! s) return default_value;
-  for (tmp = buf; *s; s++)
-    *tmp++ = isupper (*s) ? _tolower (*s) : *s;
-  *tmp = 0;
-  free (os);
+  char *buf = get_string_resource (res_name, res_class);
+  Bool ret = default_value;
+
+  if (buf == NULL)
+	return ret;
 
   while (*buf &&
 	 (buf[strlen(buf)-1] == ' ' ||
 	  buf[strlen(buf)-1] == '\t'))
     buf[strlen(buf)-1] = 0;
 
-  if (!strcmp (buf, "on") || !strcmp (buf, "true") || !strcmp (buf, "yes"))
-    return 1;
-  if (!strcmp (buf,"off") || !strcmp (buf, "false") || !strcmp (buf,"no"))
-    return 0;
-  fprintf (stderr, "%s: %s must be boolean, not %s.\n",
+  if (strcasecmp(buf, "on") == 0 || strcasecmp(buf, "true") == 0 ||
+    strcasecmp(buf, "yes") == 0)
+	ret = True;
+  else if (strcasecmp(buf, "off") == 0 || strcasecmp(buf, "false") == 0 ||
+   strcasecmp(buf, "no") == 0)
+	ret = False;
+  else
+	fprintf (stderr, "%s: %s must be boolean, not %s.\n",
 	   progname, res_name, buf);
-  return default_value;
+  free(buf);
+  return ret;
 }
 
 int 
