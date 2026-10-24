@@ -1562,6 +1562,7 @@ int main(int argc, char **argv)
 	 break;
        case MotionNotify:
 	 handlePointerMotion(&app, &event);
+	 break;
        case KeyPress:
 	 handleKeyPress(&app, &event);
 	 break;
