@@ -269,7 +269,7 @@ add_blanks(marqueestruct * mp)
 	mp->x -= 2 * char_width[(int) (' ')];
 	if (mp->x <= -char_width[(int) (unsigned char) mp->modwords[0]]) {
 		mp->x += char_width[(int) (unsigned char) mp->modwords[0]];
-		(void) memcpy(mp->modwords, &(mp->modwords[1]), mp->nonblanks);
+		(void) memmove(mp->modwords, &(mp->modwords[1]), mp->nonblanks);
 		mp->nonblanks--;
 	}
 	return (mp->nonblanks < 0);
@@ -287,7 +287,7 @@ add_letter(marqueestruct * mp, char letter)
 	mp->x -= char_width[(int) letter];
 	if (mp->x <= -char_width[(int) (unsigned char) mp->modwords[0]]) {
 		mp->x += char_width[(int) (unsigned char) mp->modwords[0]];
-		(void) memcpy(mp->modwords, &(mp->modwords[1]), mp->t);
+		(void) memmove(mp->modwords, &(mp->modwords[1]), mp->t);
 		mp->modwords[mp->t] = ' ';
 		mp->t--;
 	} else
