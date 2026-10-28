@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.474 2026/10/18 07:46:58 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.475 2026/10/28 21:23:31 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.15.0
@@ -15,7 +15,7 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		25.0.7
-Current Vers:	26.2.5
+Current Vers:	26.2.6
 Maintainer:	Brian Paul
 Archive Site:	https://archive.mesa3d.org/
 
@@ -62,7 +62,7 @@ Archive Site:	http://sillycycle.com/xlock/
 
 Package:	xkeyboard-config
 Version:	2.20
-Current Vers:	2.47
+Current Vers:	2.49
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	https://gitlab.freedesktop.org/xkeyboard-config/xkeyboard-config/-/tags
 
