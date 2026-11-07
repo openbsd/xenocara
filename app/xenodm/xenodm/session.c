@@ -185,12 +185,6 @@ ManageSession (struct display *d)
 	  LogError ("session start failed\n");
 	}
     }
-    /*
-     * run system-wide reset file
-     */
-    if (d->consolePath != NULL) {
-        login_fbtab(d->consolePath, 0, 0);
-    }
     Debug ("Source reset program %s\n", d->reset);
     source (verify.systemEnviron, d->reset);
     SessionExit (d, OBEYSESS_DISPLAY, true);
@@ -330,12 +324,9 @@ StartClient (
 	 */
 	pwd = getpwnam(name);
 	if (pwd) {
-	    if (d->consolePath != NULL)  {
-	        Debug("login_fbtab %s %d\n", d->consolePath, geteuid());
-	        login_fbtab(d->consolePath, pwd->pw_uid, pwd->pw_gid);
-	    }
 	    if (setusercontext(NULL, pwd, pwd->pw_uid,
-	        LOGIN_SETALL|LOGIN_SETXDGENV) == -1) {
+	        LOGIN_SETALL|LOGIN_SETXDGENV|
+	        (login_wscons(d->consolePath) ? LOGIN_SETWSCONSGROUP : 0)) == -1) {
 		LogError ("setusercontext for \"%s\" failed: %s\n",
 			  name, _SysErrorMsg (errno));
 		return (0);

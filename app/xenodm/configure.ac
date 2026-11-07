@@ -53,7 +53,7 @@ AC_FUNC_FORK
 AC_CHECK_FUNCS([sigaction setproctitle setusercontext \
                 mkstemp getifaddrs])
 AC_CHECK_LIB([bsd], [arc4random_buf])
-AC_CHECK_LIB([util], [login_fbtab])
+AC_CHECK_LIB([util], [login_wscons])
 
 XENODM_CFLAGS="$XENODM_CFLAGS"
 GREETER_CFLAGS="$GREETER_CFLAGS"
