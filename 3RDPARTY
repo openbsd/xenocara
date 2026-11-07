@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.475 2026/10/28 21:23:31 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.476 2026/11/07 12:03:46 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.15.0
@@ -11,7 +11,7 @@ Package:	xterm
 Version:	412
 Current Vers:	412
 Maintainer:	Thomas E. Dickey
-Archive Site:	http://invisible-island.net/xterm/xterm.html
+Archive Site:	https://xterm.dev
 
 Package:	Mesa
 Version		25.0.7
