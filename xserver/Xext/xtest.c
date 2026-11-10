@@ -257,6 +257,12 @@ ProcXTestFakeInput(ClientPtr client)
                 client->errorValue = dv->first_valuator;
                 return BadValue;
             }
+            if (!dv->num_valuators || dv->num_valuators > 6 ||
+                base + dv->num_valuators > dev->valuator->numAxes ||
+                base + dv->num_valuators > MAX_VALUATORS) {
+                client->errorValue = dv->num_valuators;
+                return BadValue;
+            }
             switch (dv->num_valuators) {
             case 6:
                 valuators[base + 5] = dv->valuator5;
@@ -283,11 +289,6 @@ ProcXTestFakeInput(ClientPtr client)
 
             base += dv->num_valuators;
             numValuators += dv->num_valuators;
-
-            if (firstValuator + numValuators > dev->valuator->numAxes) {
-                client->errorValue = dv->num_valuators;
-                return BadValue;
-            }
         }
         type = type - XI_DeviceKeyPress + KeyPress;
 
