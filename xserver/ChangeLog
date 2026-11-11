@@ -1,3 +1,324 @@
+commit 7dbd8d0dd1929c2011009fd1770c8aa470df97fb
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Nov 10 14:10:53 2026 +0100
+
+    xserver 21.1.26
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit a11d070e4ea78c6c97a7e88c57277d766cd9050b
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 15:58:58 2026 +0200
+
+    Xv: reject negative image size in QueryImageAttributes
+    
+    When ddQueryImageAttributes() overflows and returns a negative size,
+    QueryImageAttributes would still reply with that value cast to CARD32,
+    reporting a bogus data_size to the client.
+    
+    Reject negative sizes with BadValue.
+    
+    CVE-2026-109903
+    
+    Reported-by: Tristan Madani <tristan@talencesecurity.com>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit bddd1a6ad91cacc34af773c8c913f205c3917847)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit 1376ac1f0edad6bd44dc6db3b4e49370a60d8e2f
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 15:58:45 2026 +0200
+
+    Xv: reject negative image size in PutImage
+    
+    ddQueryImageAttributes() can return a negative size when the
+    adaptor overflows during size calculation. Adding that value to
+    the request header size can make the length check accept a request
+    that does not contain the claimed image data.
+    
+    Reject negative sizes before validating the request length.
+    
+    CVE-2026-109096
+    
+    Reported-by: Tristan Madani <tristan@talencesecurity.com>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit 59bef99381b33c3a3d21fe6835d2aaf28d1597b0)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit 99e647e914d947a791e92253a071955a9703647a
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 15:58:36 2026 +0200
+
+    glamor: prevent overflow in Xv image size calculation
+    
+    glamor_xv_query_image_attributes() computed image sizes with 32-bit
+    signed ints. Large CARD16 width/height values (especially for NV12
+    and YV12/I420) wrap the result, so protocol length checks can accept
+    requests that lack the required image payload.
+    
+    Compute sizes with 64-bit arithmetic and return -1 when the result
+    does not fit in int, so callers can reject the request.
+    
+    CVE-2026-109095
+    
+    Reported-by: Tristan Madani <tristan@talencesecurity.com>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit 1a84c543e70d4e3482875a234a9cb53d63339606)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit a59678e491a762e504829cac069cf37f4ccafe0d
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 15:42:42 2026 +0200
+
+    XRes: prevent overflow in resource bytes swap path
+    
+    SProcXResQueryResourceBytes multiplied numSpecs by the spec size
+    before REQUEST_FIXED_SIZE without an overflow check.
+    
+    On 32-bit servers, a large numSpecs can wrap, pass length validation,
+    and walk the swap loop past the request buffer.
+    
+    Reject numSpecs values that would cause an overflow before validating
+    or swapping the array, matching ProcXResQueryResourceBytes.
+    
+    CVE-2026-109094
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit a77de3094e9e29661efff00876b06f2f97e0bf3f)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit a3899d75e180d73f2971af2a402e6fdf19c0339c
+Author: Acts1631 <acts1631kjv@proton.me>
+Date:   Tue Jul 21 12:13:56 2026 -0400
+
+    XRes: prevent overflow in client ID request size
+    
+    On 32-bit servers, a QueryClientIds request can overflow
+    numSpecs * sizeof(xXResClientIdSpec) before REQUEST_FIXED_SIZE
+    checks it. A small request with a large numSpecs can therefore
+    pass validation and drive the normal or swapped handler past
+    the request buffer.
+    
+    Reject numSpecs values that cannot be represented in the
+    request-size calculation before validating or accessing the array.
+    
+    CVE-2026-109904
+    
+    (cherry picked from commit f7b5749315445334029a3e0dc953bd2646ee694b)
+    (cherry picked from commit 6330d2f8effe9a63d354879b332340730765b7d5)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit 99ce069ae814b39048543062e073320f14723ee0
+Author: Acts1631 <acts1631kjv@proton.me>
+Date:   Tue Jul 21 11:32:24 2026 -0400
+
+    XTest: validate valuator range before writing
+    
+    XTestFakeInput copied device valuators into a fixed stack array before
+    checking whether the record fit in the target device axis range. A
+    high-axis device and crafted request could write past the array.
+    
+    Validate the count and range before indexing the stack array.
+    
+    CVE-2026-109093
+    
+    (cherry picked from commit 43b4064af332fdd8cfc52709b7b584724a68401d)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit a4d7800f0f56469a082e3755bfa6b148c707075c
+Author: Acts1631 <acts1631kjv@proton.me>
+Date:   Tue Jul 21 10:57:50 2026 -0400
+
+    Xv: prevent overflow in shared-memory bounds check
+    
+    A crafted XvShmPutImage offset could wrap the image-size addition
+    before range validation and pass an invalid source pointer to the DDX.
+    
+    Reject negative image sizes and validate the offset and required range
+    with subtraction before deriving the source pointer.
+    
+    CVE-2026-109092
+    
+    (cherry picked from commit 71cba5e407b22241b9078b61350a5f6631d2c59b)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit 56e4ab6e8d94222480c8d7a28f530334059e3ab7
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Oct 6 12:01:45 2026 +0200
+
+    test: cover EDID DS_RANGES overflow of hsync/vrefresh arrays
+    
+    Drive xf86EdidMonitorSet() with a crafted EDID that has more Display-Range
+    descriptors than MAX_HSYNC/MAX_VREFRESH. Extra ranges must be dropped
+    instead of overflowing MonRec.
+    
+    Related to CVE-2026-109091
+    
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit 4aba5440efcfe36175fa7b944281135f275f7cf7)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit d88f0f7fdb2834c24feca63c0af5f46a57f4a04c
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Fri Oct 2 15:02:54 2026 +0200
+
+    xfree86: bound EDID DS_RANGES against hsync/vrefresh array size
+    
+    handle_detailed_monset() records Display-Range (DS_RANGES) descriptors
+    from EDID into the fixed-size MonRec hsync[] and vrefresh[] arrays
+    without checking nHsync / nVrefresh against MAX_HSYNC / MAX_VREFRESH.
+    
+    A malicious EDID with more DS_RANGES descriptors than the array
+    capacity (base block plus CEA extension detailed slots) overruns those
+    arrays and clobbers adjacent MonRec members such as Modes, Last, and
+    DDC, leading to an out-of-bounds write and subsequent crash.
+    
+    Clamp each store the same way the xorg.conf path already does, and
+    drop extra descriptors while still applying maxPixClock.
+    
+    CVE-2026-109091
+    
+    Reported-by: Eun0us / Espilon <eun0us@espilon.net>
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+    Assisted-by: AI
+    
+    (cherry picked from commit 95cf222d43c9d58ae84ace27651eb60809594898)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2390>
+
+commit 0fb6041ca1e887d91a79ea9641b8838dfbf7ab06
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Oct 21 21:00:21 2026 -0400
+
+    meson: use the right cpu family name for 32-bit x86 in int10
+    
+    Meson calls 32-bit x86 'x86', not 'i386', so since 71c7824e8 ("meson:
+    check cpu_family() instead of cpu()") int10 is built without -D_PC on
+    32-bit x86, and x86emu there runs without the real interrupt vectors
+    or system BIOS. Before that, cpu() returned values like 'i686' on most
+    systems, so the check rarely matched either.
+    
+    Fixes: 71c7824e8 ("meson: check cpu_family() instead of cpu()")
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+    (cherry picked from commit ecdaca33a7fd435e6fef14e14e9d01ccabdeea10)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2378>
+
+commit 74314086fe538531b53ceb04c024d1e083b6a9ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 17 14:31:30 2026 -0700
+
+    xkb: fix typo in sizeof expression
+    
+    XkbExtensionDeviceNotify is an int (#define'd to 11)
+    xkbExtensionDeviceNotify is a typedef for a struct, and is used
+    in sizeof in all the other memset calls in this file.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 0c69071611585ccd04d226143b81a3065a497633)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2378>
+
+commit 8ffcbd09cd2605ef514b9eead28b03dea9626ff4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 8 17:53:59 2026 -0700
+
+    Xi: fix event_id & time delta in generated barrier events
+    
+    The fix for CVE-2026-93519 moved the updates of pbd->last_timestamp
+    and pbd->barrier_event_id from after they were used to generate the
+    data in events to before, causing the event_id to be one too high,
+    and the time delta (ms - pbd->last_timestamp) to always be zero.
+    
+    This fix moves them back to being after they are used to generate
+    the event data.
+    
+    Fixes: 1f42cc1f ("Xi: add bounds check for barrier events in input_constrain_cursor")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 98aed9ddba7b42d2a46fcc1f343f4b392967b838)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2378>
+
+commit 4a1a50b532cbcd742dd0228e51c74dc38bd239b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 8 17:17:20 2026 -0700
+
+    Xi: avoid memory leak when hitting bounds check for barrier events
+    
+    The fix for CVE-2026-93519 added a bounds check for barrier events in
+    CreatePointerBarrierClient() and if it's hit immediately returns
+    BadAlloc.  Unfortunately it was added after `ret` was already allocated
+    and before *client_out is set to `ret`, so `ret` leaks.
+    
+    This fix changes it to jump to the same cleanup code to free(ret)
+    that the rest of the function already uses.
+    
+    Fixes: 1f42cc1f0 ("Xi: add bounds check for barrier events in input_constrain_cursor")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 8e901e6013803a94b25020bde384dd17966564eb)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2378>
+
+commit 59d09692e508d95012547376784e522519716502
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Oct 21 20:44:00 2026 -0400
+
+    meson: don't build the int10 helpers for the stub backend
+    
+    With int10=stub, meson builds helper_exec.c, helper_mem.c and
+    xf86int10.c alongside stub.c; autotools built only stub.c and
+    xf86int10module.c. Linking fails because stub.c and helper_exec.c
+    both define xf86InitInt10(), and on non-x86 Linux the helpers fail
+    to compile first, since int10Defines.h includes <asm/vm86.h> when
+    _VM86_LINUX is defined. Drop that define for stub too; nothing in
+    the stub build uses it any more.
+    
+    This went unnoticed until 71c7824e8 ("meson: check cpu_family()
+    instead of cpu()") made int10=auto pick stub on 32-bit arm. Native
+    arm builds report cpu() as armv7l or similar, so the old check
+    never matched.
+    
+    Fixes: 1549e3037 ("Add a Meson build system alongside autotools.")
+    Closes: https://gitlab.freedesktop.org/xorg/xserver/-/issues/1929
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+    (cherry picked from commit eae2c2107746648d0919204d82015c38a83ae313)
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2375>
+
+commit a10192e7c3237a707e9bb712a566e2f14415dddd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 10 12:53:56 2026 -0700
+
+    Revert "damage: Unlink a damage from the list it was actually inserted on"
+    
+    This reverts commit 0fb16f3da03c077f5821f0eeb745384f5472faa5.
+    
+    I missed that it broke driver ABI when I cherry-picked it from main to the
+    server-21.1-branch.   Apologies.
+    
+    Closes: #1930
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/2355>
+
 commit edc1b378f804ef5bf286318057e0b935f91f22b7
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Oct 7 11:19:46 2026 +1000
@@ -20215,7 +20536,7 @@ Date:   Thu Jul 28 14:26:38 2016 +0100
     Also add similar to meson.build
 
 commit 29a8baa031a87ef44d1e5320ecec5015d26fd385
-Merge: 2aec5c3c812f 56c0a71fdd94
+Merge: 2aec5c3c8 56c0a71fd
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri May 17 08:39:50 2019 -0700
 
@@ -38266,7 +38587,7 @@ Date:   Fri Oct 28 09:28:32 2016 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 356db2340f5b473a7191c7969586ca5b0396c48f
-Merge: 9ed5b263542e 03d99ef72917
+Merge: 9ed5b2635 03d99ef72
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 28 09:05:54 2016 -0700
 
@@ -40207,7 +40528,7 @@ Date:   Sun Sep 11 03:07:44 2016 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 265c4e66533243b60d92cffc7769ecadb0292c8d
-Merge: 3caf671ed2a8 f5f4d32ac7c2
+Merge: 3caf671ed f5f4d32ac
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Sep 15 21:32:46 2016 -0700
 
@@ -41392,7 +41713,7 @@ Date:   Fri Jul 29 17:45:45 2016 -0700
     Reviewed-and-Tested-by: Michel Dänzer <michel.daenzer@amd.com>
 
 commit 387d6b5df3e11de5cb88db8a559128fcb62e4e5a
-Merge: d2558f063a03 8bb9d460fbc8
+Merge: d2558f063 8bb9d460f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Aug 13 09:12:19 2016 -0700
 
@@ -43591,7 +43912,7 @@ Date:   Tue May 10 00:29:58 2016 +0000
     Signed-off-by: Guilherme Quentel Melo <gqmelo@gmail.com>
 
 commit 266cf39a8f108e2f365a9772f4ee4d9fca88eb36
-Merge: fa7b70a9b895 848089e0dde3
+Merge: fa7b70a9b 848089e0d
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon Jun 20 11:21:40 2016 -0400
 
@@ -44234,7 +44555,7 @@ Date:   Wed Mar 9 10:31:13 2016 +0100
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 3735ab965a4642273d070840bda4e827991e5219
-Merge: 7c77c42fe873 43dbc556f3a4
+Merge: 7c77c42fe 43dbc556f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 2 07:47:16 2016 -0700
 
@@ -49999,7 +50320,7 @@ Date:   Mon Sep 21 07:16:12 2015 +0100
     Reviewed-by: Adam Jackson <ajax@redhat.com>
 
 commit 5b582a4a0350c253d729efb31b710851ae9a958e
-Merge: 1d4aa672424d 27ad21254f25
+Merge: 1d4aa6724 27ad21254
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon Oct 19 12:23:22 2015 -0400
 
@@ -50610,7 +50931,7 @@ Date:   Fri Sep 25 14:04:34 2015 +0100
     Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
 
 commit dca5770af9e20bb1148374ebfd60931a81b148a2
-Merge: a31bbc450a08 21f384b7b8b5
+Merge: a31bbc450 21f384b7b
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Fri Sep 25 10:23:28 2015 -0400
 
@@ -51244,7 +51565,7 @@ Date:   Mon Sep 21 15:23:23 2015 -0400
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit b25f7d0c165c4d32c73fbdf9080012503d319ba1
-Merge: db1089eafc1c 1ba4fde1015f
+Merge: db1089eaf 1ba4fde10
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon Sep 21 17:34:48 2015 -0400
 
@@ -51867,7 +52188,7 @@ Date:   Tue Jul 7 18:19:50 2015 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7ecdfbf0af3547295b245efa754123db65cabb43
-Merge: bca4f4b56c76 a0b4f30b1f58
+Merge: bca4f4b56 a0b4f30b1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 17 18:53:25 2015 -0700
 
@@ -52114,7 +52435,7 @@ Date:   Thu Jul 16 15:12:52 2015 -0700
     Signed-off-by: Eric Anholt <eric@anholt.net>
 
 commit 2fcfa532532fbe4a7f668556808e6245ff4e36bc
-Merge: cb695b0f3b8d 7b0f940625a0
+Merge: cb695b0f3 7b0f94062
 Author: Eric Anholt <eric@anholt.net>
 Date:   Fri Jul 17 10:15:01 2015 -0700
 
@@ -52721,7 +53042,7 @@ Date:   Tue Jun 30 14:54:42 2015 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 991712f1e8deeb6289ee0abd9910e279d6396246
-Merge: 0cd228073ad3 3c859112d388
+Merge: 0cd228073 3c859112d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jul 8 10:43:31 2015 -0700
 
@@ -53273,28 +53594,28 @@ Date:   Tue May 12 14:19:15 2015 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 8a8d51358cea782147bb9b5b2e0902b1e47fcf4a
-Merge: b22534d8e653 13c7d53df8da
+Merge: b22534d8e 13c7d53df
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 29 21:04:53 2015 -0700
 
     Merge remote-tracking branch 'airlied/for-keithp'
 
 commit b22534d8e653575196180970292eaade33c090a8
-Merge: 0a625adeec46 780a69aff0ff
+Merge: 0a625adee 780a69aff
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 29 21:04:11 2015 -0700
 
     Merge remote-tracking branch 'jwrdecoede/for-keith'
 
 commit 0a625adeec465d6c7dcdb8622c53157b4e932bb0
-Merge: 84128c10bb6d 790311cec30a
+Merge: 84128c10b 790311cec
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 29 21:01:34 2015 -0700
 
     Merge remote-tracking branch 'anholt/glamor-next'
 
 commit 84128c10bb6d34f78f7a4148b3c640748efe58e1
-Merge: 9003a3e5c559 8c86dd516064
+Merge: 9003a3e5c 8c86dd516
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 29 20:59:31 2015 -0700
 
@@ -54318,14 +54639,14 @@ Date:   Tue Mar 17 10:21:12 2015 +0900
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0409b6e6d63e9cfb5dc71bb27de4b1ed0152dd9b
-Merge: c39c3a97508d 23702dd2689e
+Merge: c39c3a975 23702dd26
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 11 16:50:43 2015 -0700
 
     Merge remote-tracking branch 'evelikov/master'
 
 commit c39c3a97508dc384c0757a0990c07b5d7b2fe97a
-Merge: 6b65e961894b 7470578520e9
+Merge: 6b65e9618 747057852
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 11 16:34:48 2015 -0700
 
@@ -54344,7 +54665,7 @@ Date:   Wed May 6 15:07:21 2015 +1200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d7091a21d90cf463ae39ec5e8741123218ec5686
-Merge: c3ce9d8fd404 8fb8bbb3062f
+Merge: c3ce9d8fd 8fb8bbb30
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 11 15:49:34 2015 -0700
 
@@ -54412,7 +54733,7 @@ Date:   Sat Apr 25 21:19:25 2015 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 26e50e8b2cbd01d050b5ecc02d47488b53ecc08b
-Merge: 28ff661e73f4 c7b49bdbb932
+Merge: 28ff661e7 c7b49bdbb
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 11 15:36:53 2015 -0700
 
@@ -55076,7 +55397,7 @@ Date:   Tue Dec 30 09:13:15 2014 -0800
     Acked-by: Alex Deucher <alexander.deucher@amd.com>
 
 commit e608f3521eaaab972a3eea62aa04a65958351c1c
-Merge: d3b9c47c849d 5de13830709a
+Merge: d3b9c47c8 5de138307
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Mar 31 09:06:08 2015 -0700
 
@@ -55148,7 +55469,7 @@ Date:   Tue Mar 31 11:18:44 2015 +1000
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 7088816fee0ca7d609c7bca41ef8c3fc938556f5
-Merge: 95e83ff87ab0 e977b404d7d1
+Merge: 95e83ff87 e977b404d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Mar 27 06:45:56 2015 -0700
 
@@ -56637,7 +56958,7 @@ Date:   Thu Jan 15 22:03:18 2015 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 5f2e8ac51ccbf7c02f25c8cb7617df0238418cd1
-Merge: 4e12d7b6f448 43014795087a
+Merge: 4e12d7b6f 430147950
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Jan 10 14:51:57 2015 +1300
 
@@ -56721,7 +57042,7 @@ Date:   Sun Jan 4 19:13:35 2015 -0800
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 1c01633877caa4239f901f02fbe113926318d030
-Merge: 357385551455 e774663fa520
+Merge: 357385551 e774663fa
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Jan 4 17:02:25 2015 -0800
 
@@ -57464,7 +57785,7 @@ Date:   Mon Dec 1 16:06:17 2014 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6704bb0ed7a10dabe8ef3bb3adf8b8a7f29a78f0
-Merge: 8aa23f27c7e2 1559a9439525
+Merge: 8aa23f27c 1559a9439
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 9 11:47:11 2014 -0800
 
@@ -58062,14 +58383,14 @@ Date:   Fri Jan 17 18:54:03 2014 -0800
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 3e7218a6c23354d66f508b18164cac98a346b3ee
-Merge: 6f4c398a0e63 bc71081f0e3d
+Merge: 6f4c398a0 bc71081f0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 8 18:07:55 2014 -0800
 
     Merge remote-tracking branch 'jturney/indirect-glx-fixes'
 
 commit 6f4c398a0e632b0c92e3cb8ee03ca7f5b5cc018e
-Merge: aae6460694ac 5920433c3a30
+Merge: aae646069 5920433c3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 8 18:04:08 2014 -0800
 
@@ -58387,7 +58708,7 @@ Date:   Tue Nov 11 12:30:07 2014 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ec0ac8970b508adcbc3d104b14a127118e4979d0
-Merge: 65cc0982afb1 0f88d4e79371
+Merge: 65cc0982a 0f88d4e79
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 24 15:39:51 2014 -0800
 
@@ -58933,7 +59254,7 @@ Date:   Tue Oct 21 15:03:55 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 3a123fbdda56b24dc01a2308137144dc960e0d61
-Merge: 9b29fa957a39 7ea4a21feed5
+Merge: 9b29fa957 7ea4a21fe
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 27 15:39:26 2014 -0700
 
@@ -58976,7 +59297,7 @@ Date:   Mon Oct 27 15:28:14 2014 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 59b12c454d9c4b5a26c6ad87c53abc671b15ce37
-Merge: 5574a0a07e83 cac4b064f9f6
+Merge: 5574a0a07 cac4b064f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 27 14:48:55 2014 -0700
 
@@ -59454,7 +59775,7 @@ Date:   Thu Oct 9 09:58:06 2014 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit de55aafa8f6a9e0dec364bec920d6f91ef2b39f0
-Merge: 462bf87c4d1c c79f824bf661
+Merge: 462bf87c4 c79f824bf
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 23 17:28:24 2014 -0700
 
@@ -59693,21 +60014,21 @@ Date:   Thu Oct 9 15:17:17 2014 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d634ecdf82f244ff8ce75d351fc175792d254e5c
-Merge: 6622f0cb1761 7ebf480f5eb7
+Merge: 6622f0cb1 7ebf480f5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 9 15:08:31 2014 +0200
 
     Merge remote-tracking branch 'ajax/dead-code'
 
 commit 6622f0cb1761501f3287ffa8d3cbca3fd30f9f0c
-Merge: f12e7f498041 5ecd7866f758
+Merge: f12e7f498 5ecd7866f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 9 15:05:26 2014 +0200
 
     Merge remote-tracking branch 'ajax/mi-cleanup'
 
 commit f12e7f4980416b74988052a04d0f2487b2c4a7e9
-Merge: da887726eeae aaf5e2d643af
+Merge: da887726e aaf5e2d64
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 9 14:21:19 2014 +0200
 
@@ -60085,7 +60406,7 @@ Date:   Thu Oct 2 10:26:53 2014 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit e9651e3dbc32650fcaf90888b4cbef81da77cfcd
-Merge: 9bc01dfc7070 4433bc6d53e6
+Merge: 9bc01dfc7 4433bc6d5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 2 10:24:33 2014 -0700
 
@@ -60157,7 +60478,7 @@ Date:   Thu Sep 25 15:27:22 2014 +0900
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 78c27d12e1f4857bfcfc92afbb69d5dd989232b9
-Merge: 6e50bfa706cd 1d6334dd0ca9
+Merge: 6e50bfa70 1d6334dd0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Sep 29 13:04:49 2014 -0700
 
@@ -60614,7 +60935,7 @@ Date:   Wed Sep 17 07:41:27 2014 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit eaee6572beefca240c42791f9a3a6e547bedd410
-Merge: e3aa13b8d63e b84d25fd53e9
+Merge: e3aa13b8d b84d25fd5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 17 15:49:24 2014 -0700
 
@@ -61301,7 +61622,7 @@ Date:   Wed Sep 10 16:20:45 2014 +0900
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 54a1d4db825be90fb7be138e3267a15922d62f03
-Merge: 8f8dcfee2085 f92df22a037c
+Merge: 8f8dcfee2 f92df22a0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Sep 11 18:27:41 2014 -0700
 
@@ -61600,7 +61921,7 @@ Date:   Fri Jun 13 16:16:51 2014 +0100
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit 35dc7c75150733dbcef8a18b6796f49a7c48ebee
-Merge: 3a51418b2db3 5f3485b06e18
+Merge: 3a51418b2 5f3485b06
 Author: Eric Anholt <eric@anholt.net>
 Date:   Mon Aug 25 15:52:58 2014 -0700
 
@@ -61811,7 +62132,7 @@ Date:   Mon Aug 11 15:23:02 2014 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d09c9ddb866dea31e2adf82be329d5d3489718f5
-Merge: 606b701c563c ab32ee35890b
+Merge: 606b701c5 ab32ee358
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Aug 12 16:34:24 2014 -0700
 
@@ -62818,7 +63139,7 @@ Date:   Tue Jul 22 17:55:25 2014 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 556cdf8fe870bc23e0393c0eed15c86f49a0b9f8
-Merge: 83701c4ee8f7 1faa76670572
+Merge: 83701c4ee 1faa76670
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 24 16:51:00 2014 -0700
 
@@ -63049,14 +63370,14 @@ Date:   Fri Jul 18 09:13:54 2014 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 5c2e9fa3d6c4bdf626fededce866056ba8eca502
-Merge: e678b4971b66 6d4954884908
+Merge: e678b4971 6d4954884
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 17 20:06:21 2014 -0700
 
     Merge remote-tracking branch 'anholt/glamor-next'
 
 commit 6d4954884908ea9894fcfe9836db1ba7bb45be61
-Merge: 9ddcb20f47b5 55f5bfb578e9
+Merge: 9ddcb20f4 55f5bfb57
 Author: Eric Anholt <eric@anholt.net>
 Date:   Thu Jul 17 18:00:44 2014 -0700
 
@@ -63588,7 +63909,7 @@ Date:   Mon Jul 7 08:27:44 2014 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 9de3cc8daa4c6e877d30a0e8ccfe0cc159f1dbe3
-Merge: 9308eafb7d30 a5499870e2f8
+Merge: 9308eafb7 a5499870e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jul 7 16:53:07 2014 -0700
 
@@ -63839,7 +64160,7 @@ Date:   Mon Jun 16 08:06:53 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 736bed2aaf4bb672b6c7b33146fe84700baf22bd
-Merge: ce581ac3fa80 d90b5f830102
+Merge: ce581ac3f d90b5f830
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 23 14:18:03 2014 -0700
 
@@ -63878,7 +64199,7 @@ Date:   Mon Feb 24 11:36:54 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ea47341792cf06eda5bbdf0aca48aacc024a5be0
-Merge: 334faabe682a a11bbd875f3f
+Merge: 334faabe6 a11bbd875
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 23 13:50:54 2014 -0700
 
@@ -64609,7 +64930,7 @@ Date:   Wed May 28 08:13:59 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b5526141f78df15bc5df2497bc4b4a17f1a6368d
-Merge: dc8d06884716 a205ec3ab77c
+Merge: dc8d06884 a205ec3ab
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 2 13:08:23 2014 -0700
 
@@ -64626,7 +64947,7 @@ Date:   Mon Jun 2 01:17:31 2014 +0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit a6ffdc69c4ac45bc39924159c7fab5f02f720f1f
-Merge: 63c48de63bec 1c10b37380d2
+Merge: 63c48de63 1c10b3738
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 2 11:30:24 2014 -0700
 
@@ -64651,7 +64972,7 @@ Date:   Fri May 30 16:50:35 2014 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ab47ec9636b21a7f542d2e8612834915e7c8cc64
-Merge: 0df871cf34ee cfaf2abbac3f
+Merge: 0df871cf3 cfaf2abba
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jun 2 11:22:48 2014 -0700
 
@@ -65031,7 +65352,7 @@ Date:   Wed Apr 30 10:55:26 2014 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit d60724b752613ce2ad11c6ae102bf4513f9768ff
-Merge: a5b9757142a2 15460eaed28b
+Merge: a5b975714 15460eaed
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 8 12:58:41 2014 -0700
 
@@ -65243,7 +65564,7 @@ Date:   Thu Apr 24 13:38:28 2014 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6bd7ad914470322ddd02b50078e159234ebec643
-Merge: b92a9289fef4 e06fbe4dc811
+Merge: b92a9289f e06fbe4dc
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Apr 29 09:37:37 2014 -0700
 
@@ -66026,7 +66347,7 @@ Date:   Mon Apr 21 16:30:49 2014 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ba5c2b6c876a15fe18bc1ff1ab4e773c46bc9009
-Merge: 9c86d5f4f6f5 66b602474047
+Merge: 9c86d5f4f 66b602474
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Apr 21 14:59:51 2014 -0700
 
@@ -66446,7 +66767,7 @@ Date:   Tue Apr 8 01:01:28 2014 -0700
     Reviewed-by: Eric Anholt <eric@anholt.net>
 
 commit 3028ae6c9aa37168e249e0d847b29f8e3efb05b2
-Merge: bd3de10f86a5 ec6007e6f777
+Merge: bd3de10f8 ec6007e6f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 9 21:59:17 2014 -0700
 
@@ -66540,7 +66861,7 @@ Date:   Thu Apr 3 18:22:50 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b4d0bec22c15930abf13a7fb9d684208ccd56b1d
-Merge: 3c34dd360398 6e539d8817f7
+Merge: 3c34dd360 6e539d881
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Apr 3 15:35:01 2014 -0700
 
@@ -66809,7 +67130,7 @@ Date:   Fri Mar 21 13:13:27 2014 -0700
     Reviewed-by: Julien Cristau <jcristau@debian.org>
 
 commit 84f977467b514af88019ab2791bf7a74530b54df
-Merge: 9d20d18fb9dc 98924719d524
+Merge: 9d20d18fb 98924719d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Apr 3 10:44:28 2014 -0700
 
@@ -66970,7 +67291,7 @@ Date:   Wed Mar 26 12:24:49 2014 +0100
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 9d20d18fb9dcc74bfa5392a2da40fd41b3e640d3
-Merge: 8468e2443098 bc348bd2c42f
+Merge: 8468e2443 bc348bd2c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 31 23:24:56 2014 -0700
 
@@ -67493,7 +67814,7 @@ Date:   Tue Mar 25 13:48:52 2014 -0400
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit bda6fdc71c25b0c3f3747f445103a1995a5713f4
-Merge: e46820fb8976 78167a98a863
+Merge: e46820fb8 78167a98a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Mar 25 16:06:03 2014 -0700
 
@@ -67612,7 +67933,7 @@ Date:   Sat Mar 22 14:30:04 2014 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d9fdae5f4a648a10653e18dbc602646f3e22e522
-Merge: 99bee6c0549b 0e5d2996ac87
+Merge: 99bee6c05 0e5d2996a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Mar 22 14:09:00 2014 -0700
 
@@ -67646,7 +67967,7 @@ Date:   Fri Jan 17 09:54:01 2014 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 1782316744866a181ed92486bb4dca6ac46d40bd
-Merge: 4fb31e4824d4 2b77b208daf9
+Merge: 4fb31e482 2b77b208d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Mar 22 13:46:15 2014 -0700
 
@@ -67880,7 +68201,7 @@ Date:   Wed Mar 19 10:27:39 2014 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 4fb31e4824d46edc80bb49b4065152899faa5ac6
-Merge: d18d3f6d18aa 0e531fbb9786
+Merge: d18d3f6d1 0e531fbb9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Mar 19 06:43:14 2014 -0700
 
@@ -67896,7 +68217,7 @@ Date:   Wed Mar 12 16:31:25 2014 +1000
     Reviewed-by: Kristian Høgsberg <krh@bitplanet.net>
 
 commit d18d3f6d18aa7827748f7ba14efd405b525883d0
-Merge: 81a4952d3dca 6649d0059e1b
+Merge: 81a4952d3 6649d0059
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 17 17:29:56 2014 -0700
 
@@ -68555,7 +68876,7 @@ Date:   Fri Mar 7 14:32:28 2014 -0800
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 81a4952d3dcab9ca3a1ee399c773f5ac352036c4
-Merge: 96a28e9c914d 795066477ee8
+Merge: 96a28e9c9 795066477
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Mar 11 22:04:36 2014 -0700
 
@@ -68915,7 +69236,7 @@ Date:   Mon Mar 10 08:58:37 2014 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 1c61d38528a573caadee2468ee59ea558c822e09
-Merge: 5350ae1d38f3 bf3543739db1
+Merge: 5350ae1d3 bf3543739
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Mar 7 22:07:19 2014 -0800
 
@@ -69454,7 +69775,7 @@ Date:   Sun Feb 9 11:20:59 2014 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 1940508a4af33d44a7a8ef24bbdcd1e31e228dab
-Merge: c85ea92af145 ddeca927498c
+Merge: c85ea92af ddeca9274
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Feb 24 16:27:52 2014 -0800
 
@@ -69469,7 +69790,7 @@ Date:   Mon Feb 24 09:51:39 2014 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0840a303c47b9b10ba8e24e62956da0f1675e963
-Merge: 0f10cfd4b903 3d71df48e708
+Merge: 0f10cfd4b 3d71df48e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Feb 24 09:40:23 2014 -0800
 
@@ -69835,7 +70156,7 @@ Date:   Sun Feb 9 16:56:40 2014 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 5300212ce8e9364ba26497605f3edc089af20130
-Merge: ae796d43c934 0b193b3ac94e
+Merge: ae796d43c 0b193b3ac
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Feb 9 16:05:42 2014 -0800
 
@@ -70398,14 +70719,14 @@ Date:   Tue Jan 28 20:27:49 2014 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit da1660deeb9032ecca61f4bcdc9fc2eec2ada445
-Merge: 0fbb3d711efe 9fc19168e7ca
+Merge: 0fbb3d711 9fc19168e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 27 19:02:15 2014 -0800
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 0fbb3d711efec5222a57b45a70d28fc98380f3a1
-Merge: 7ddef4f7033c b98e49379c8d
+Merge: 7ddef4f70 b98e49379
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 27 14:11:09 2014 -0800
 
@@ -70893,14 +71214,14 @@ Date:   Wed Dec 11 11:55:37 2013 -0800
     Reviewed-by: Eric Anholt <eric@anholt.net>
 
 commit 25ebb9dbc9df659dec2bf6c27654a5bad2d11f94
-Merge: 409e8e29fbe1 71baa466b1f6
+Merge: 409e8e29f 71baa466b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 22 11:33:53 2014 -0800
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 409e8e29fbe16122ba5a4249256fc56e2e68ea93
-Merge: 457bc83549e5 d6c8d7509727
+Merge: 457bc8354 d6c8d7509
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 22 11:32:35 2014 -0800
 
@@ -70928,21 +71249,21 @@ Date:   Sat Jan 4 00:09:45 2014 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 044a6ef2ff5f2c83a80b11e747f62f48830b526b
-Merge: 0b932cf47a4d 77df653ae3d8
+Merge: 0b932cf47 77df653ae
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 22 11:28:54 2014 -0800
 
     Merge remote-tracking branch 'jeremyhu/master'
 
 commit 0b932cf47a4df8ea0f7488e285d218fe7c10dd77
-Merge: 1d76b02fac79 295d41fa2aa9
+Merge: 1d76b02fa 295d41fa2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 22 11:27:36 2014 -0800
 
     Merge remote-tracking branch 'anholt/xserver-unifdef'
 
 commit 1d76b02fac79c0360ae201e4d1a8ba0e9a00e810
-Merge: 771f390efdf4 4dd62d7807b4
+Merge: 771f390ef 4dd62d780
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 22 11:22:35 2014 -0800
 
@@ -71877,7 +72198,7 @@ Date:   Thu Dec 19 14:31:07 2013 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 4b1ead9d3400acc3402c2480d7cc0527750c32f0
-Merge: 4d6264614271 929795d50d78
+Merge: 4d6264614 929795d50
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Dec 19 14:14:59 2013 -0800
 
@@ -75152,7 +75473,7 @@ Date:   Wed Nov 2 13:44:50 2011 +0800
     Signed-off-by: Zhigang Gong <zhigang.gong@linux.intel.com>
 
 commit 2dbbe2565052cc024ce0e98918ed34c1239b780a
-Merge: 4d6264614271 7982eca622bb
+Merge: 4d6264614 7982eca62
 Author: Eric Anholt <eric@anholt.net>
 Date:   Wed Dec 18 11:21:07 2013 -0800
 
@@ -75170,7 +75491,7 @@ Date:   Wed Dec 18 11:16:15 2013 -0800
     support code outside of glamor for now.
 
 commit 4d62646142718024b0981eb4f1fd0131e829161f
-Merge: f4bfb14f53a9 81ba89d6703a
+Merge: f4bfb14f5 81ba89d67
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 16 09:27:57 2013 -0800
 
@@ -76237,7 +76558,7 @@ Date:   Fri Nov 15 13:26:36 2013 +0900
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 29240e5cbf6e7f875b128fc7bfc4d56b2350835a
-Merge: 0492deb8f823 8ff7e32c3ef7
+Merge: 0492deb8f 8ff7e32c3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Nov 14 17:02:04 2013 +0900
 
@@ -76501,7 +76822,7 @@ Date:   Thu Nov 7 15:18:28 2013 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit a239e6faf3fce848ac0d10c48f8e817db68a493c
-Merge: 43e5a43fa899 f70a8bf3714d
+Merge: 43e5a43fa f70a8bf37
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 11 15:26:12 2013 -0800
 
@@ -76738,7 +77059,7 @@ Date:   Fri Nov 1 01:43:59 2013 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 977e2644b1d9e13b44debcb9a372bbc832ee32a3
-Merge: 66c5ee0ff469 f36f5a65f639
+Merge: 66c5ee0ff f36f5a65f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Nov 1 00:34:18 2013 -0700
 
@@ -76937,7 +77258,7 @@ Date:   Tue Oct 8 17:45:40 2013 -0400
     Reviewed-by: Adam Jackson <ajax@redhat.com>
 
 commit 95bf478b78e466002c382bcde7d4d62591e9215d
-Merge: abf5d5ac1243 bb745f2b4576
+Merge: abf5d5ac1 bb745f2b4
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 31 18:18:19 2013 -0700
 
@@ -76959,7 +77280,7 @@ Date:   Thu Oct 31 08:57:56 2013 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit e4636072949a76477fe7c9d54662a0b3536b1372
-Merge: 17ed7ac1fe74 5c5c1b77982a
+Merge: 17ed7ac1f 5c5c1b779
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 31 17:05:48 2013 -0700
 
@@ -77223,7 +77544,7 @@ Date:   Wed Oct 30 13:33:49 2013 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 1470c0a132806fb2ce817515ad4ddfe66eb7c98f
-Merge: 04ab07ca1923 9f4afe7e835c
+Merge: 04ab07ca1 9f4afe7e8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 29 21:00:13 2013 -0700
 
@@ -77271,7 +77592,7 @@ Date:   Thu Oct 17 18:26:28 2013 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b32a4c91ccd479638c2bd2c0143b6ea170c717d1
-Merge: be6680967a47 c671e935e7c4
+Merge: be6680967 c671e935e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 29 09:37:30 2013 -0700
 
@@ -77545,7 +77866,7 @@ Date:   Fri Oct 18 17:31:01 2013 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit e3220d7bae4548bf64e5879c981ad070ac1f78f7
-Merge: 73b2660d7273 2523a445a09a
+Merge: 73b2660d7 2523a445a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 18 17:22:52 2013 -0700
 
@@ -77555,7 +77876,7 @@ Date:   Fri Oct 18 17:22:52 2013 -0700
     also merging in the spurious merge at the top of that branch.
 
 commit f8662a133690773692dfa392ecfa3b8b56af8fa9
-Merge: 7cf1b595c8c8 2523a445a09a
+Merge: 7cf1b595c 2523a445a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Oct 18 16:50:12 2013 +1000
 
@@ -77938,7 +78259,7 @@ Date:   Sun Oct 6 16:45:52 2013 +0100
     Reviewed-by: Adam Jackson <ajax@redhat.com>
 
 commit 6a9bd103cb993e873cb82664b677ceed73c0bd85
-Merge: ea3b7db4b747 8aae28e3cbdd
+Merge: ea3b7db4b 8aae28e3c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 7 17:29:38 2013 -0700
 
@@ -78127,7 +78448,7 @@ Date:   Sat Sep 28 15:26:33 2013 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f3b529bf25db2700addbafc7aa4fc5b126ba9929
-Merge: 4399bd38326b abc2bfca16ad
+Merge: 4399bd383 abc2bfca1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 4 14:04:48 2013 -0700
 
@@ -78144,14 +78465,14 @@ Date:   Mon Sep 30 13:30:46 2013 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 9ccb4a63982942fdce19609d2cadbd8e51708462
-Merge: 5d2ec6933f6b da5e20127a5b
+Merge: 5d2ec6933 da5e20127
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 4 13:54:55 2013 -0700
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 5d2ec6933f6bb5116666ca1bfb07f0f20bf2a0b5
-Merge: 7d3d4ae55dd6 6ee4d9f94ae2
+Merge: 7d3d4ae55 6ee4d9f94
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 4 13:50:04 2013 -0700
 
@@ -78809,7 +79130,7 @@ Date:   Wed Aug 21 14:12:52 2013 -0400
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit 47ff382d1fce25a8b097d45b79489e891f1f1228
-Merge: 6f89ae3e64c4 3752a8158006
+Merge: 6f89ae3e6 3752a8158
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Sep 9 15:13:42 2013 -0700
 
@@ -79740,7 +80061,7 @@ Date:   Sat Aug 17 12:17:36 2013 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f67d022523c59a27f3bf8791aa9ca6624318b1fd
-Merge: 5a36cdd91530 9680f6a12d64
+Merge: 5a36cdd91 9680f6a12
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Aug 6 07:12:12 2013 +0200
 
@@ -79865,7 +80186,7 @@ Date:   Wed Jul 31 11:24:48 2013 +1000
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit ff38bbe81ace85bf675bbaa0a9ca5f3b32ede449
-Merge: bdd1e22cbde9 4360514d1cc8
+Merge: bdd1e22cb 4360514d1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 25 22:50:27 2013 -0700
 
@@ -80168,7 +80489,7 @@ Date:   Mon Sep 3 15:19:43 2012 +0100
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit d5ebe20f9ba9569351c4a41449866679fd60ba45
-Merge: 21ea7ebb6a1a 33f7e60785f1
+Merge: 21ea7ebb6 33f7e6078
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jul 22 20:34:41 2013 -0700
 
@@ -80517,7 +80838,7 @@ Date:   Mon Jun 17 15:51:19 2013 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 227015d6544115258b74c31b700f9bd163540e24
-Merge: d9005d58c041 80054fcafb09
+Merge: d9005d58c 80054fcaf
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jun 18 10:53:08 2013 -0700
 
@@ -80692,21 +81013,21 @@ Date:   Mon May 27 13:46:49 2013 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit cb3018d8a15add48efb3335e1f79b66378166008
-Merge: c76a1b343d6a 6589f3b55e33
+Merge: c76a1b343 6589f3b55
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 23 19:58:46 2013 -0600
 
     Merge remote-tracking branch 'whot/unreviewed'
 
 commit c76a1b343d6a56aa9529e87f0eda8d61355d562b
-Merge: 891123ce9dac 9a5ad6533069
+Merge: 891123ce9 9a5ad6533
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 23 19:58:36 2013 -0600
 
     Merge remote-tracking branch 'whot/touch-grab-race-condition-56578-v3'
 
 commit 891123ce9dac5e52685b9a921b33d8279ba52956
-Merge: 7e97166c4fc3 49521edaf893
+Merge: 7e97166c4 49521edaf
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 23 10:30:15 2013 -0600
 
@@ -81479,14 +81800,14 @@ Date:   Fri Feb 15 11:19:10 2013 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 2746c681639f9512e6e45fb8d0151b996b6aff7f
-Merge: 1e6cf8ec20d0 9878e097a7de
+Merge: 1e6cf8ec2 9878e097a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 6 10:52:40 2013 -0700
 
     Merge remote-tracking branch 'alanc/master'
 
 commit 1e6cf8ec20d07b73a11116564aba71b4e4291dcd
-Merge: dbfeaf70623a 5860408a19d9
+Merge: dbfeaf706 5860408a1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 6 10:20:21 2013 -0700
 
@@ -81853,21 +82174,21 @@ Date:   Sun Feb 10 10:24:59 2013 -0800
     Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
 
 commit 7ab98bafc9a3426fd40f8ae693430491333ba4fc
-Merge: 53da26afb76b 5ab260317ad3
+Merge: 53da26afb 5ab260317
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 24 14:14:45 2013 -0700
 
     Merge remote-tracking branch 'geertu/master'
 
 commit 53da26afb76bcce70b91c5df23d25e7e85c010cf
-Merge: 5ece86e921a1 d8d3c78b6ebd
+Merge: 5ece86e92 d8d3c78b6
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 24 10:27:19 2013 -0700
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 5ece86e921a1df457a9baab6a2357ccda4ad6957
-Merge: ef0a726bc8d5 22cab8a28a43
+Merge: ef0a726bc 22cab8a28
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 24 10:23:51 2013 -0700
 
@@ -82587,7 +82908,7 @@ Date:   Sat Feb 23 13:14:45 2013 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit c2ede8f92f0d6f15b1b2a04889cb54cd1728780b
-Merge: 190b0321510b 7050aae69c2a
+Merge: 190b03215 7050aae69
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 18 11:26:24 2013 -0700
 
@@ -82611,7 +82932,7 @@ Date:   Thu Feb 14 15:06:57 2013 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 116f020102fd6c2a603069a639b113dfa31b48b7
-Merge: cf89aa53748b 0f537da72d41
+Merge: cf89aa537 0f537da72
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 18 11:18:58 2013 -0700
 
@@ -82880,7 +83201,7 @@ Date:   Tue Mar 5 10:14:29 2013 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 604169af8b67afc74a292cdb9070a3a1f2d7c536
-Merge: 8f4640bdb9d3 6ea59dc2d888
+Merge: 8f4640bdb 6ea59dc2d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 4 21:09:59 2013 -0800
 
@@ -83079,7 +83400,7 @@ Date:   Mon Feb 27 16:43:10 2012 +1000
     Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
 
 commit 88517ced1fa2e621be2d05a319b522b3111da516
-Merge: 82425c66e7a8 73974dd7ea9c
+Merge: 82425c66e 73974dd7e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Feb 15 11:58:52 2013 +1000
 
@@ -83202,7 +83523,7 @@ Date:   Thu Feb 14 10:02:02 2013 +1000
     Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
 
 commit 90642948cc78834d95f7a3bddaac7ff77b68ed7e
-Merge: 9a35d4240e2a eda7dbff5a9f
+Merge: 9a35d4240 eda7dbff5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Feb 14 11:05:48 2013 -0800
 
@@ -83438,7 +83759,7 @@ Date:   Fri Jan 25 11:47:32 2013 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 0d5bb882600ee7734af034fbea935a79d21d1e70
-Merge: b33fcb149710 61a99aff9d33
+Merge: b33fcb149 61a99aff9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Feb 8 14:10:52 2013 +1000
 
@@ -83870,14 +84191,14 @@ Date:   Tue Jan 22 07:39:53 2013 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 069d8ed3eb659c48dd2b0f8b7b8c11f092fdb362
-Merge: 591c06277bb1 d6dcde7a03bb
+Merge: 591c06277 d6dcde7a0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Jan 20 15:58:38 2013 -0800
 
     Merge remote-tracking branch 'jturney/xserver-next'
 
 commit 591c06277bb120ab9615633f2d28addbd3a2aa5f
-Merge: 6703a7c7cf1a fa6ab7d9b2d7
+Merge: 6703a7c7c fa6ab7d9b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Jan 20 15:52:26 2013 -0800
 
@@ -84060,7 +84381,7 @@ Date:   Wed Oct 26 17:03:25 2011 -0500
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit fa6ab7d9b2d7fd8184f1e068360607845f5c33ab
-Merge: adde4e644803 0e1ab433f404
+Merge: adde4e644 0e1ab433f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jan 11 14:58:17 2013 +1000
 
@@ -84477,14 +84798,14 @@ Date:   Wed Dec 19 12:47:35 2012 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 2a0b544f5c09f79e4ab04ea8103a5ecf59ee2e7b
-Merge: 0eb1559eb29d ba4bb3bc1b87
+Merge: 0eb1559eb ba4bb3bc1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 19 12:26:00 2012 -0800
 
     Merge remote-tracking branch 'jeremyhu/master'
 
 commit 0eb1559eb29d11e63c2b33e317590a88d86fe313
-Merge: 386e4d76baaf ea1d76d1b68c
+Merge: 386e4d76b ea1d76d1b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 19 12:21:31 2012 -0800
 
@@ -84494,14 +84815,14 @@ Date:   Wed Dec 19 12:21:31 2012 -0800
     whitespace.
 
 commit 386e4d76baaffe226d2d561ff936509454eb0ac2
-Merge: 014a5c8a9d86 9ff2e8315178
+Merge: 014a5c8a9 9ff2e8315
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 19 12:17:59 2012 -0800
 
     Merge remote-tracking branch 'alanc/master'
 
 commit 014a5c8a9d86f2f992183bff9106354fac2c3b0e
-Merge: f793b5fd3eb1 2eefa5d6e870
+Merge: f793b5fd3 2eefa5d6e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 19 12:09:31 2012 -0800
 
@@ -84663,7 +84984,7 @@ Date:   Wed Dec 12 11:02:19 2012 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6d508b81857edaed03c7ee06410434ea56d9b701
-Merge: d982d8774363 bb6f3514ca17
+Merge: d982d8774 bb6f3514c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 17 11:45:45 2012 -0800
 
@@ -84673,7 +84994,7 @@ Date:   Mon Dec 17 11:45:45 2012 -0800
     reviewed them...
 
 commit d982d877436377597b8ed04bca1438d2edaf53ee
-Merge: da3eaf6bdbd7 6b4aa8a35982
+Merge: da3eaf6bd 6b4aa8a35
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 17 10:56:12 2012 -0800
 
@@ -85023,14 +85344,14 @@ Date:   Thu Nov 1 14:14:13 2012 -0400
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit bb6f3514ca17d993c1af380e8d4480d61e5bbcae
-Merge: f961c3a3b9df 08da994a08bb
+Merge: f961c3a3b 08da994a0
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Dec 12 17:25:28 2012 +1000
 
     Merge branch 'stack-smash-on-touchpoint' into for-keith
 
 commit f961c3a3b9dfbe1201da317c24797ba7f979731e
-Merge: 36740d02b9ca 39f19b3f3b8c
+Merge: 36740d02b 39f19b3f3
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Dec 12 17:25:23 2012 +1000
 
@@ -85231,7 +85552,7 @@ Date:   Tue Dec 4 15:03:37 2012 +1000
     Tested-by: Frank Roscher <Frank-Roscher@gmx.net>
 
 commit b51a1bd2766e7dc975ca8f1cacc3f8bd0e1a68a3
-Merge: e9ea96d6a88f ce6b6529290f
+Merge: e9ea96d6a ce6b65292
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Nov 30 09:31:46 2012 -0800
 
@@ -85253,7 +85574,7 @@ Date:   Fri Nov 30 20:54:38 2012 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ce6b6529290f7d42717aad3fd8a83aaaaf8962de
-Merge: 6e18599d6910 3b9f1c701787
+Merge: 6e18599d6 3b9f1c701
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 29 14:49:22 2012 +1000
 
@@ -85366,7 +85687,7 @@ Date:   Thu Nov 8 14:28:09 2012 +0100
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 1712a45422a63f11b2146541279616fcfda09ec6
-Merge: e54f71a2c7a1 338bec30054b
+Merge: e54f71a2c 338bec300
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 28 07:54:13 2012 -0800
 
@@ -85499,7 +85820,7 @@ Date:   Wed Oct 17 12:06:47 2012 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d50a94568e06a06df682a0028579d37a7b209d15
-Merge: 87b60efb859d cf05db8ddec9
+Merge: 87b60efb8 cf05db8dd
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Nov 27 15:14:26 2012 -0800
 
@@ -85904,7 +86225,7 @@ Date:   Sat Oct 13 22:43:26 2012 -0400
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 6a6c3afe71ac82a93d9fd0034dd5bbdcf0eae1ea
-Merge: 14c9e245bae2 6f145084d5b9
+Merge: 14c9e245b 6f145084d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Nov 18 21:50:20 2012 -0800
 
@@ -86014,7 +86335,7 @@ Date:   Sat Nov 17 11:52:10 2012 -0500
     Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
 
 commit 011f8458805e443ac9130865d2840a929a00cabf
-Merge: 54ba26cb1f9c b4e44b285ed0
+Merge: 54ba26cb1 b4e44b285
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 5 17:16:07 2012 -0800
 
@@ -86341,7 +86662,7 @@ Date:   Wed Oct 24 23:57:11 2012 -0500
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 04f980ead5e9af066143a921e0a0e98f26f28ee5
-Merge: a194630f7f7b a4941ce4961f
+Merge: a194630f7 a4941ce49
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 5 08:45:21 2012 -0800
 
@@ -86391,7 +86712,7 @@ Date:   Tue Sep 4 17:28:16 2012 +0100
     Reviewed-by:  Colin Harrison <colin.harrison@virgin.net>
 
 commit a194630f7f7b287cb4ea4a459df0745f4c0d4c1a
-Merge: 74a3130426d7 d511a3016a79
+Merge: 74a313042 d511a3016
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Nov 1 13:38:54 2012 -0700
 
@@ -86426,7 +86747,7 @@ Date:   Thu Oct 25 15:03:50 2012 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 74a3130426d7e1b456e45daa517769cd3e4b58c0
-Merge: 1ca096d5e072 f32ad6dd314a
+Merge: 1ca096d5e f32ad6dd3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 29 09:09:16 2012 -0700
 
@@ -86580,14 +86901,14 @@ Date:   Sun Oct 14 23:38:20 2012 -0500
     Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
 
 commit 53830281b4da096f9c13107d73ec9c76ff1d14cc
-Merge: abc2ef590c7c 9cbcb5bd6a53
+Merge: abc2ef590 9cbcb5bd6
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 26 18:04:34 2012 -0700
 
     Merge remote-tracking branch 'sandmann/for-keithp'
 
 commit abc2ef590c7cb33ebe21726f83b7347406975f95
-Merge: 0e85e5e62819 c5396ec05a5c
+Merge: 0e85e5e62 c5396ec05
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Oct 26 17:11:58 2012 -0700
 
@@ -87398,7 +87719,7 @@ Date:   Thu Oct 4 14:42:37 2012 -0700
     Reviewed-by: Julien Cristau <jcristau@debian.org>
 
 commit 8367dd9736d74eca971da345c2bf559ce5bbf649
-Merge: 36c18bb81be6 7998e2615989
+Merge: 36c18bb81 7998e2615
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 4 13:08:35 2012 -0700
 
@@ -87462,7 +87783,7 @@ Date:   Thu Oct 4 11:42:22 2012 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f179b13b91c8891254d31345ee04e773839e6b87
-Merge: 4dd5989d1546 3d2b768efae9
+Merge: 4dd5989d1 3d2b768ef
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Oct 4 11:39:46 2012 -0700
 
@@ -87614,7 +87935,7 @@ Date:   Fri Sep 7 18:10:35 2012 +0100
     Reviewed-by: Ian Romanick <ian.d.romanick@intel.com>
 
 commit 4dd5989d15465f3f3480b521d4e36673972fa24a
-Merge: 0b02150c27e9 506e3437c73e
+Merge: 0b02150c2 506e3437c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Sep 24 11:43:01 2012 -0700
 
@@ -87650,7 +87971,7 @@ Date:   Mon Sep 24 14:03:31 2012 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7722bcbab2507d263c7685b15cccbfdd52fc3a24
-Merge: 4dc2a76740d9 f54987de9772
+Merge: 4dc2a7674 f54987de9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Sep 23 16:04:13 2012 -0700
 
@@ -87896,7 +88217,7 @@ Date:   Thu Jun 16 17:40:24 2011 -0400
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit d01921ec18c21f21d377b60626cc2d3418b84a7c
-Merge: 70e5766874a9 245e7e0361b1
+Merge: 70e576687 245e7e036
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Sep 20 17:26:48 2012 +0200
 
@@ -88083,7 +88404,7 @@ Date:   Wed Sep 5 14:45:08 2012 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 856f80c8d7f22b979c72d9c70b70187df6004a03
-Merge: 0db936a5b712 b8ab93dfbc7f
+Merge: 0db936a5b b8ab93dfb
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 5 11:02:58 2012 -0700
 
@@ -88228,7 +88549,7 @@ Date:   Mon Aug 27 17:15:19 2012 -0700
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit a557edca6152ad09c685a00e01534c35a1f00f2e
-Merge: 6619f5c0e108 24ffcfcded6b
+Merge: 6619f5c0e 24ffcfcde
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 27 08:06:09 2012 -0700
 
@@ -88420,7 +88741,7 @@ Date:   Thu Jul 19 22:15:10 2012 +0000
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit ad5fe2d9614959b68bf71e23abf7e5abac9c2734
-Merge: 16d8da5ca992 99b94af1ffbe
+Merge: 16d8da5ca 99b94af1f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Aug 15 13:29:17 2012 -0700
 
@@ -88561,21 +88882,21 @@ Date:   Sat Jul 14 16:07:51 2012 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 02f94b2d446f6700f791f318c551ac835af8445a
-Merge: 360fa7736b21 7f09126e0680
+Merge: 360fa7736 7f09126e0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 16:52:12 2012 -0700
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 360fa7736b214cae3ccd39feb4dc87b9e7e9734c
-Merge: 2100e72388a3 ac09a4a091a4
+Merge: 2100e7238 ac09a4a09
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 16:42:34 2012 -0700
 
     Merge remote-tracking branch 'airlied/for-keithp'
 
 commit 2100e72388a3dc174093d80c9723f021b4614d17
-Merge: 4a6f42dda00b c37c65052f67
+Merge: 4a6f42dda c37c65052
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 16:40:54 2012 -0700
 
@@ -88791,21 +89112,21 @@ Date:   Tue Jul 10 23:29:53 2012 -0700
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 94b514d5e4b376d05e106eb3853da511256e8545
-Merge: 7d87545ba739 7328900042b9
+Merge: 7d87545ba 732890004
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 15:13:17 2012 -0700
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 7d87545ba7395ade507cca7bdca7052b26ed18d8
-Merge: ad707a7dcc65 988d7ace19a0
+Merge: ad707a7dc 988d7ace1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 15:11:13 2012 -0700
 
     Merge remote-tracking branch 'jturney/master'
 
 commit ad707a7dcc65c30e030c7600b54f734090e56a91
-Merge: 5a51cb86f39a 884f51e9770c
+Merge: 5a51cb86f 884f51e97
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Aug 6 15:08:01 2012 -0700
 
@@ -89276,7 +89597,7 @@ Date:   Thu Jul 19 15:00:03 2012 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 20b4d90f32b3ca5def5be2fdf04a91ae6c47f125
-Merge: 83df169538bd fd228d318428
+Merge: 83df16953 fd228d318
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jul 25 13:52:35 2012 -0700
 
@@ -89371,14 +89692,14 @@ Date:   Tue Jul 17 15:47:39 2012 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit beeea70495a8d5c4afc1b1eb2cc06a24ab1a986d
-Merge: 6e438a0e183f 6910280297ab
+Merge: 6e438a0e1 691028029
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jul 17 12:17:39 2012 -0700
 
     Merge remote-tracking branch 'alanc/master'
 
 commit 6e438a0e183f5a6c22070746c038af53d5b935ca
-Merge: 5884e7dedecd 75966a418695
+Merge: 5884e7ded 75966a418
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jul 17 12:12:53 2012 -0700
 
@@ -89743,7 +90064,7 @@ Date:   Fri Jul 13 00:47:24 2012 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 746193a7f10f11cccae05c98b933aadf58fc7375
-Merge: a2d082953124 2b74949ad02b
+Merge: a2d082953 2b74949ad
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 12 15:10:51 2012 -0700
 
@@ -89795,7 +90116,7 @@ Date:   Thu Jul 12 00:36:43 2012 +0100
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit 656e5fea6c9ca15f932889edcc590dd01c881945
-Merge: 8b820f221ad5 1720cd9badf2
+Merge: 8b820f221 1720cd9ba
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 12 08:26:35 2012 -0700
 
@@ -89997,7 +90318,7 @@ Date:   Tue Jul 10 01:14:13 2012 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6e12cb147da58bd12a158807b2cd5afac32ae70f
-Merge: 532fbc29c900 023127915e69
+Merge: 532fbc29c 023127915
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jul 10 00:52:11 2012 -0700
 
@@ -91680,7 +92001,7 @@ Date:   Thu Jul 5 21:11:16 2012 +0100
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 4d24192bd24fb20d16d0054d77bffda883faeb79
-Merge: 7c9d8cbd368c 74b786f7cee5
+Merge: 7c9d8cbd3 74b786f7c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Jul 6 12:17:17 2012 -0700
 
@@ -92212,7 +92533,7 @@ Date:   Thu Jun 28 17:17:12 2012 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit d84f0f823eeeecdf0498aadd3fbb1d11dabc0837
-Merge: 12bfb4cf1beb d04dfe3f754a
+Merge: 12bfb4cf1 d04dfe3f7
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jul 4 21:23:48 2012 +1000
 
@@ -92330,7 +92651,7 @@ Date:   Fri Jun 22 13:02:40 2012 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 24525d96a3b9dba67eb75042500b2f208a2cc246
-Merge: 4cd91bd4c632 35e3d2291503
+Merge: 4cd91bd4c 35e3d2291
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jul 2 22:35:39 2012 -0700
 
@@ -92650,14 +92971,14 @@ Date:   Thu Jun 28 12:07:11 2012 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 8b4f0a4fdd6c15f49458bc3a8c3135b8c389240d
-Merge: 59294a2179bd d642e7128790
+Merge: 59294a217 d642e7128
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 28 10:38:26 2012 -0700
 
     Merge remote-tracking branch 'jturney/master'
 
 commit 59294a2179bd5bb996693af004b470932df00ac6
-Merge: 855003c333a0 191b630656ba
+Merge: 855003c33 191b63065
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 28 10:11:44 2012 -0700
 
@@ -92889,7 +93210,7 @@ Date:   Fri Jun 24 13:32:10 2011 +0100
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit 3ef3ce069d52dcfa932c90ccd30854a8d9daa15a
-Merge: a0c8716cdca1 ff541e0a1f84
+Merge: a0c8716cd ff541e0a1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 21 08:52:34 2012 -0700
 
@@ -93028,14 +93349,14 @@ Date:   Thu Jun 7 16:52:20 2012 +1000
     Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
 
 commit 8dc70acbf3d82611ac9ec1ec2a52edcc01934850
-Merge: ffb47a123ddd b59adc9c2427
+Merge: ffb47a123 b59adc9c2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 14 13:04:29 2012 -0700
 
     Merge remote-tracking branch 'alanc/master'
 
 commit ffb47a123ddd1233fb4229cf23483652065c5e82
-Merge: db9d2b8a508a b840ba5f54de
+Merge: db9d2b8a5 b840ba5f5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 14 13:01:17 2012 -0700
 
@@ -93054,7 +93375,7 @@ Date:   Thu Jun 7 15:01:59 2012 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6d86b64dbaef5a16712fd1fdc3157f716d238877
-Merge: 812786f4d430 4c68f5d395c6
+Merge: 812786f4d 4c68f5d39
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 14 11:05:22 2012 -0700
 
@@ -93691,7 +94012,7 @@ Date:   Fri Apr 6 12:44:07 2012 -0700
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 3476eb38063473a7a5fcd78e2095e284118de839
-Merge: 78f0d9cdc441 42ae2e8199fe
+Merge: 78f0d9cdc 42ae2e819
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Jun 3 20:24:24 2012 -0700
 
@@ -94002,7 +94323,7 @@ Date:   Tue May 22 21:19:40 2012 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 457fc77691b2df66f6dd3ba10ce7c1b61b9b42a3
-Merge: 2e237c838fe1 5a3a98fcb799
+Merge: 2e237c838 5a3a98fcb
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue May 22 10:32:29 2012 -0700
 
@@ -94222,7 +94543,7 @@ Date:   Thu Jan 26 15:44:40 2012 -0800
     Reviewed-by: Dave Airlie <airlied@redhat.com>
 
 commit ba883a0f3435d5da82a8134e696c4905eea70f23
-Merge: ae1c48ebc8a3 acdc4f54ee57
+Merge: ae1c48ebc acdc4f54e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 17 16:49:19 2012 -0700
 
@@ -94577,7 +94898,7 @@ Date:   Tue Apr 24 18:11:16 2012 +0200
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 3a94b338aaa48b656aae1bb3a5a9d64300c0a093
-Merge: afc153a5b4fc c91d00e0f330
+Merge: afc153a5b c91d00e0f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 9 21:17:16 2012 -0700
 
@@ -94760,7 +95081,7 @@ Date:   Wed Apr 18 17:51:50 2012 +0800
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 97041364a6acb2b66b5cfd06757c90a006ad50e9
-Merge: 19082726cb2c ee542b855908
+Merge: 19082726c ee542b855
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 2 20:47:25 2012 -0700
 
@@ -95152,7 +95473,7 @@ Date:   Thu Apr 19 16:51:46 2012 -0700
     Tested-By: Michal Suchanek <hramrach@gmail.com>
 
 commit d77eb7ee49ef19c2c4c7381d56e9d0f9c3fbc890
-Merge: 31e3c0ff7f5f c7b162555849
+Merge: 31e3c0ff7 c7b162555
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Apr 19 15:48:34 2012 -0500
 
@@ -95171,7 +95492,7 @@ Date:   Thu Apr 19 15:25:41 2012 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit e6308e32fe2b5f74133d4d238ffa512257f6327c
-Merge: 3720aa33ee50 51a8d8dd19d7
+Merge: 3720aa33e 51a8d8dd1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Apr 19 10:45:07 2012 -0500
 
@@ -95180,7 +95501,7 @@ Date:   Thu Apr 19 10:45:07 2012 -0500
     Touch input changes from Chase
 
 commit 51a8d8dd19d7496fe84b37a1f0a7a03658120539
-Merge: ebf214876a48 00cf1c40b284
+Merge: ebf214876 00cf1c40b
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Apr 19 17:03:54 2012 +1000
 
@@ -95588,7 +95909,7 @@ Date:   Tue Apr 17 11:48:03 2012 +0100
     cursor: hide cursors on LeaveVT
 
 commit 80fefc42f5e67e6b4a4b440d8991bee7e5f38359
-Merge: 9779b904c7c0 12188c8a8a53
+Merge: 9779b904c 12188c8a8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Apr 15 21:05:30 2012 -0700
 
@@ -95957,7 +96278,7 @@ Date:   Fri Mar 23 08:20:22 2012 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 7f3997b01a8813c1d7055317eb06111aed8572c9
-Merge: 92d50c38b2bf 31646d8fa952
+Merge: 92d50c38b 31646d8fa
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 26 16:41:52 2012 -0700
 
@@ -96376,7 +96697,7 @@ Date:   Fri Mar 23 14:54:05 2012 +0000
     modesetting: fix build against older Xext
 
 commit a7eac500e652f30deffd9dc5e623fab701077738
-Merge: bf876c87a909 d645edd11e74
+Merge: bf876c87a d645edd11
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Mar 22 13:13:07 2012 +1000
 
@@ -96510,7 +96831,7 @@ Date:   Wed Mar 14 17:22:18 2012 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit bf876c87a9099fdfa63ed599f8ed9a954dd023d9
-Merge: 908ab3d58018 c0b0a9bce923
+Merge: 908ab3d58 c0b0a9bce
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Mar 22 11:34:43 2012 +1000
 
@@ -97142,7 +97463,7 @@ Date:   Sun Feb 19 08:34:25 2012 -0500
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 71594746c7da32e1c7986341a0da30f241a7a2be
-Merge: d53235af85d5 eaba06a27c55
+Merge: d53235af8 eaba06a27
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 22 18:07:20 2012 +1300
 
@@ -97387,7 +97708,7 @@ Date:   Sat Feb 11 16:13:44 2012 +1300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 42b6756463ee0476340656707f1088dc6c2fd220
-Merge: 7674d00b04da ca64912c02bd
+Merge: 7674d00b0 ca64912c0
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Feb 11 15:36:43 2012 +1300
 
@@ -98166,14 +98487,14 @@ Date:   Thu Jan 12 12:09:34 2012 -0800
     ABI change pended for 1.13
 
 commit e722ad6c3efa57b806ca0f2dc13114bd3619a88c
-Merge: e476af417d83 4e44580efd45
+Merge: e476af417 4e44580ef
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 9 13:22:28 2012 -0800
 
     Merge remote-tracking branch 'jturney/rpavlik-xwin-fixes'
 
 commit e476af417d83730b11054f4e5b127ab5540bb332
-Merge: f4956faab9cc 146008358e9d
+Merge: f4956faab 146008358
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 9 13:17:37 2012 -0800
 
@@ -98308,21 +98629,21 @@ Date:   Fri Jan 6 07:21:37 2012 +0000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0b113f7cdf5228dccd51a749a339c8669e3f20ff
-Merge: 0b2c6491c5e5 777bf90abeac
+Merge: 0b2c6491c 777bf90ab
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 9 13:07:25 2012 -0800
 
     Merge commit '777bf90abeac37087a3d0538b847742523d5acf2'
 
 commit 0b2c6491c5e5e1c9ba067299f3de61f5acee263b
-Merge: 1f5587e14406 6b194365364c
+Merge: 1f5587e14 6b1943653
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 9 11:40:23 2012 -0800
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 1f5587e14406c083687203030db6a11691ac9d9f
-Merge: a97252db2466 6269977c9107
+Merge: a97252db2 6269977c9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Jan 9 11:37:59 2012 -0800
 
@@ -98827,7 +99148,7 @@ Date:   Tue Dec 27 14:02:01 2011 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 8dedf9831bd80514d800f0085213296a3726dba7
-Merge: cfc4c3d7fa8b cf96183122a8
+Merge: cfc4c3d7f cf9618312
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 27 13:13:48 2011 -0800
 
@@ -98926,7 +99247,7 @@ Date:   Thu Dec 22 10:00:15 2011 +1000
     Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
 
 commit e395efc25f9fd60377f32c2bf1a9153d70908236
-Merge: 2bb282cd45cb fcda98c48610
+Merge: 2bb282cd4 fcda98c48
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Dec 22 09:29:59 2011 +1000
 
@@ -99364,14 +99685,14 @@ Date:   Mon Dec 19 14:52:41 2011 +1000
     Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
 
 commit 2d34b34ed7547b829979756ccfb2cff79368d0a4
-Merge: e4b4d83fad37 1deede3c48d5
+Merge: e4b4d83fa 1deede3c4
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 20 00:23:33 2011 -0800
 
     Merge remote-tracking branch 'jeremyhu/master'
 
 commit e4b4d83fad37bb737e25f7226dbcd15b892f9528
-Merge: 4df65d247b56 d26cb70272a1
+Merge: 4df65d247 d26cb7027
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 19 22:36:31 2011 -0800
 
@@ -99885,7 +100206,7 @@ Date:   Wed Dec 14 10:34:19 2011 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7da7aa96a0acb895e1fe57a9d3f2d093479cf2a2
-Merge: b79de3f42ff8 7528a6b88eb3
+Merge: b79de3f42 7528a6b88
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 14 11:40:10 2011 -0800
 
@@ -99903,7 +100224,7 @@ Date:   Wed Dec 14 10:31:23 2011 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 7528a6b88eb32098af4369a8bd9d70a808fa6f1c
-Merge: f0de5e3990b7 898d97672907
+Merge: f0de5e399 898d97672
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Dec 13 14:19:54 2011 +1000
 
@@ -100783,7 +101104,7 @@ Date:   Thu Dec 8 21:52:07 2011 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 522f8bcc0360d6a117e929a004bc956ab92037e9
-Merge: 6369b5966861 2abe83df686e
+Merge: 6369b5966 2abe83df6
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Dec 8 20:57:26 2011 -0800
 
@@ -100984,14 +101305,14 @@ Date:   Thu Dec 1 16:24:32 2011 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 3ab8ee32470f7cf1223e04238bb8c5f74ed52fc3
-Merge: 22a666f9952f 98c4a888a442
+Merge: 22a666f99 98c4a888a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 7 12:42:17 2011 -0800
 
     Merge remote-tracking branch 'airlied/reviewed-fixes'
 
 commit 22a666f9952feb7248e9bb2faf777edaaac8175f
-Merge: 3824f558cc2e e89b0324da89
+Merge: 3824f558c e89b0324d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 7 12:27:23 2011 -0800
 
@@ -101405,14 +101726,14 @@ Date:   Tue Nov 8 10:13:15 2011 -0800
     Reviewed-by: Jamey Sharp <jamey@minilop.net>
 
 commit 05f09354a30a4f5edd421220e1aa97be754c71bb
-Merge: 3197b773c81e 08ec4da6a761
+Merge: 3197b773c 08ec4da6a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Dec 1 14:44:52 2011 +0000
 
     Merge remote-tracking branch 'jcristau/for-keith'
 
 commit 3197b773c81e58cd4aa412eccaee49526012ed6f
-Merge: 2dc5ba4a1b12 dfcec1d3f9d7
+Merge: 2dc5ba4a1 dfcec1d3f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Dec 1 14:36:58 2011 +0000
 
@@ -102288,7 +102609,7 @@ Date:   Fri Nov 4 23:26:25 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit bfa2a1857a1efda7f171f10e855d200ca0dbcc1a
-Merge: f0d50cc6651d e7cb8f802adf
+Merge: f0d50cc66 e7cb8f802
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 14 09:07:06 2011 -0800
 
@@ -102451,7 +102772,7 @@ Date:   Thu Nov 3 13:18:46 2011 +0000
     Not needed in here
 
 commit 548c6fe044068ffba9b5306dc6b11f2ba22782a4
-Merge: 3881b0bf1ce1 ffe8ec86db26
+Merge: 3881b0bf1 ffe8ec86d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 2 21:35:31 2011 -0700
 
@@ -102470,14 +102791,14 @@ Date:   Tue Nov 1 07:17:07 2011 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d91aa0e6601bdf3e2cfa57b3412ab14ac486edc4
-Merge: 8df3a9ca5abb 401150d7dcad
+Merge: 8df3a9ca5 401150d7d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 2 21:20:07 2011 -0700
 
     Merge remote-tracking branch 'whot/two-screen-coordinates'
 
 commit 8df3a9ca5abbd56eb2013fa65250d21a8f18865b
-Merge: 8329afa59dd5 ef895484c8a4
+Merge: 8329afa59 ef895484c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 2 21:18:16 2011 -0700
 
@@ -102632,7 +102953,7 @@ Date:   Mon Oct 31 15:01:12 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 132545ff576cc69ed63f5a08127151fe550de4c3
-Merge: d0c6732a99c9 d7c44a7c9760
+Merge: d0c6732a9 d7c44a7c9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Oct 30 16:57:58 2011 -0700
 
@@ -102858,7 +103179,7 @@ Date:   Tue Oct 25 23:48:16 2011 -0700
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 5701ab4a441eb113abd0851b0d71b82d12112854
-Merge: 7d50211ab57a a41214bc9a0f
+Merge: 7d50211ab a41214bc9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 24 22:09:00 2011 -0700
 
@@ -103083,7 +103404,7 @@ Date:   Mon Oct 24 18:47:06 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d9d3a01ffca5e2de650d098231e16205781804c5
-Merge: 17416e88dcfc fb55f8f790f6
+Merge: 17416e88d fb55f8f79
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 24 18:12:23 2011 -0700
 
@@ -103260,21 +103581,21 @@ Date:   Thu Oct 20 14:28:56 2011 -0700
     Reviewed-by: Julien Cristau <jcristau@debian.org>
 
 commit ff61592441916b83aeb778c74352bb5b26247f84
-Merge: af3f64fb77c1 525d4172b246
+Merge: af3f64fb7 525d4172b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Oct 19 19:14:32 2011 -0700
 
     Merge remote-tracking branch 'aplattner/for-master'
 
 commit af3f64fb77c13180e513ee99d1fd9a1b624fd8ea
-Merge: 15bbdc103b34 df0dd36deea0
+Merge: 15bbdc103 df0dd36de
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Oct 19 17:33:07 2011 -0700
 
     Merge remote-tracking branch 'hramrach/pull'
 
 commit 15bbdc103b34b6b374815698946e6c409421a644
-Merge: a5266dcb3a60 323869f3298c
+Merge: a5266dcb3 323869f32
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Oct 19 17:26:50 2011 -0700
 
@@ -103381,7 +103702,7 @@ Date:   Tue Aug 23 15:19:59 2011 -0700
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit c8413362049cee8c30e0a9d67f78f9ebefe8e71f
-Merge: 64d2d1bef14c b67581cf8259
+Merge: 64d2d1bef b67581cf8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 18 07:45:24 2011 -0700
 
@@ -103528,14 +103849,14 @@ Date:   Fri Sep 30 10:59:47 2011 +1000
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
 
 commit 64d2d1bef14c7ec7156bb3aae64eff69f9f7be54
-Merge: fb84be47db7c 679c84bce9b0
+Merge: fb84be47d 679c84bce
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 17 14:36:34 2011 -0700
 
     Merge remote-tracking branch 'jeremyhu/master'
 
 commit fb84be47db7cdaff406792c08e34670e8e0cbda9
-Merge: fae7ed62ad47 32b289e46cc2
+Merge: fae7ed62a 32b289e46
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 17 13:50:25 2011 -0700
 
@@ -104297,14 +104618,14 @@ Date:   Tue Aug 30 13:37:31 2011 +1000
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
 
 commit 6378d0233d21088b6429755627b4253859892c72
-Merge: 6e965d8a1850 98b230669f59
+Merge: 6e965d8a1 98b230669
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 3 13:56:06 2011 -0700
 
     Merge remote-tracking branch 'herrb/master'
 
 commit 6e965d8a185087a55b2100b817e18f05b3ce5a00
-Merge: 466e4b3f174b ac5881d6d0bc
+Merge: 466e4b3f1 ac5881d6d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 3 13:47:49 2011 -0700
 
@@ -104440,14 +104761,14 @@ Date:   Mon Sep 26 22:38:44 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 9a55b3661b4172f9a32cd6fefb254e06edb1a88a
-Merge: cf11ca360c2d 84bb0207f6db
+Merge: cf11ca360 84bb0207f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 3 11:49:23 2011 -0700
 
     Merge remote-tracking branch 'alanc/master'
 
 commit cf11ca360c2ded5ca309faa9d039160947387bb8
-Merge: 463dd87062ed 6eae9fa28445
+Merge: 463dd8706 6eae9fa28
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 3 11:44:59 2011 -0700
 
@@ -104470,7 +104791,7 @@ Date:   Thu Sep 22 18:38:53 2011 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f5d50b46ddeb039ab6564141f61261e94ee67637
-Merge: 57cd32e93425 524e5445c0b6
+Merge: 57cd32e93 524e5445c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 3 11:36:28 2011 -0700
 
@@ -104606,7 +104927,7 @@ Date:   Sun Sep 25 20:44:26 2011 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 4c6bc0e76599dbe5ede2e1f48c9936a0e996b638
-Merge: 057cc92ebfee 3304bbff9b4e
+Merge: 057cc92eb 3304bbff9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Sep 30 09:24:56 2011 +1000
 
@@ -104815,7 +105136,7 @@ Date:   Thu Sep 29 11:49:26 2011 +0100
     server recycling.
 
 commit 057cc92ebfeebe81b7d01ff2c6aa2c066c8d1a64
-Merge: afb1fe695d19 52c9b59a9fed
+Merge: afb1fe695 52c9b59a9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Sep 29 14:18:35 2011 +1000
 
@@ -105330,7 +105651,7 @@ Date:   Thu Sep 22 18:55:19 2011 -0700
     Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit afb1fe695d197187a301c19863a128a65389b15c
-Merge: 7fb4bef0394a c7163fdd302f
+Merge: 7fb4bef03 c7163fdd3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Sep 26 20:24:15 2011 -0700
 
@@ -107649,21 +107970,21 @@ Date:   Thu Sep 1 16:48:37 2011 -0700
     Reviewed-by: Matt Dew <marcoz@osource.org>
 
 commit 7fb4bef0394a5d09680985d34bce8252b61493cb
-Merge: 98f4940093dc c90903b4f7a8
+Merge: 98f494009 c90903b4f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 21 14:34:27 2011 -0700
 
     Merge remote-tracking branch 'mattst88/for-keith'
 
 commit 98f4940093dc90c3366d3e4d3ddceacbaee299dc
-Merge: b018b815333b c8eacae4f833
+Merge: b018b8153 c8eacae4f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 21 14:30:19 2011 -0700
 
     Merge remote-tracking branch 'alanc/master'
 
 commit b018b815333b256b5e06dd6251b2e539f09f89fa
-Merge: 03d032991da2 0f380a5005f8
+Merge: 03d032991 0f380a500
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 21 14:17:14 2011 -0700
 
@@ -107993,7 +108314,7 @@ Date:   Wed Sep 7 17:47:56 2011 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit c92c83523ede8bc361526ac93d09d089fbbdae08
-Merge: 4ad271d06c5a 24b2b43e85c1
+Merge: 4ad271d06 24b2b43e8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Sep 21 13:32:06 2011 -0700
 
@@ -109043,7 +109364,7 @@ Date:   Fri Jul 29 16:12:06 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b8f61c11c94708d4f17720a55945dee4621315a4
-Merge: 5596f10cce58 f51e42f58307
+Merge: 5596f10cc f51e42f58
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Jul 29 14:58:58 2011 -0700
 
@@ -109359,7 +109680,7 @@ Date:   Wed Jul 13 12:08:03 2011 +0100
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 01dbf2514aa0cc8c40a876a24e3cb0737c41da19
-Merge: 5a801af689fc af0fbc37e35d
+Merge: 5a801af68 af0fbc37e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jul 13 11:44:15 2011 -0700
 
@@ -109525,7 +109846,7 @@ Date:   Mon Oct 11 16:21:40 2010 +0100
     Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
 
 commit d4096abb591353405417e53816e5c46e904e7b25
-Merge: 61f87a75f2bc 87d4f90bfcb5
+Merge: 61f87a75f 87d4f90bf
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Jul 1 15:45:45 2011 -0700
 
@@ -109763,14 +110084,14 @@ Date:   Tue Jun 7 21:22:15 2011 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 61f87a75f2bcda939a1778d39be8cfa5c886e6d8
-Merge: 0d2153a46cc7 72d914335c9a
+Merge: 0d2153a46 72d914335
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jun 29 20:14:51 2011 -0700
 
     Merge remote-tracking branch 'jturney/master'
 
 commit 0d2153a46cc72d5f2e6a9081a3cf153aa3eb7787
-Merge: b631c39a21c8 932513e23b5f
+Merge: b631c39a2 932513e23
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jun 29 20:08:32 2011 -0700
 
@@ -109791,7 +110112,7 @@ Date:   Thu Jun 23 13:37:45 2011 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d5ca33ca2dd08e8436439da926d2dedaabc268fa
-Merge: 38d55f06cfbf 4edf49d03202
+Merge: 38d55f06c 4edf49d03
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jun 29 18:54:33 2011 -0700
 
@@ -109954,7 +110275,7 @@ Date:   Tue Jun 28 09:33:25 2011 -0700
     after 'make clean' causing 'make distcheck' to fail.
 
 commit f968f4ace9410d827fb6b68c4e38ea9516641309
-Merge: 4dbed2625431 163441fe531a
+Merge: 4dbed2625 163441fe5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jun 28 09:10:14 2011 -0700
 
@@ -110029,7 +110350,7 @@ Date:   Tue Jun 14 17:21:48 2011 -0700
     Tested-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 8ac651552bb70ba36238f430adab2f7a7f24db6e
-Merge: 945b2ff8141c 47b6ba3204d6
+Merge: 945b2ff81 47b6ba320
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jun 22 11:03:37 2011 -0700
 
@@ -110604,14 +110925,14 @@ Date:   Fri May 27 11:40:56 2011 +1000
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
 
 commit 02d11af01211da55e9d93fe0e1851a0c6fe57472
-Merge: bf9fd0a83eef ab0df72cd33f
+Merge: bf9fd0a83 ab0df72cd
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jun 7 12:31:15 2011 -0700
 
     Merge remote-tracking branch 'kibi/master'
 
 commit bf9fd0a83eef771ee018438f05e2d9f20b43539b
-Merge: 21eec367d0d9 0d140567ba2b
+Merge: 21eec367d 0d140567b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jun 7 07:45:22 2011 -0700
 
@@ -110961,14 +111282,14 @@ Date:   Wed Jun 1 11:20:10 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0643c056512d10be8db223d18d6563292d57e916
-Merge: a2e6cfc18aec d45f5b2493bc
+Merge: a2e6cfc18 d45f5b249
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue May 31 23:45:07 2011 -0700
 
     Merge remote-tracking branch 'ajax/xserver-next'
 
 commit a2e6cfc18aec1c0027b51572b03ec9f2ab074b56
-Merge: bc04065b5ce2 8d84fd2566f8
+Merge: bc04065b5 8d84fd256
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue May 31 23:42:52 2011 -0700
 
@@ -111104,7 +111425,7 @@ Date:   Tue May 24 16:02:42 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 4725d6b0dbb6371af4a1b2fbef851dcfe155514a
-Merge: 1b2d17748f01 b5d828789c09
+Merge: 1b2d17748 b5d828789
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 25 09:40:51 2011 -0600
 
@@ -111546,21 +111867,21 @@ Date:   Fri May 6 18:18:15 2011 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ba5540221f2a46133371b4ff0d527b1a0a1443b1
-Merge: 6347a0b80281 728d0bf20ed8
+Merge: 6347a0b80 728d0bf20
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri May 13 13:59:36 2011 -0700
 
     Merge remote-tracking branch 'whot/for-keith'
 
 commit 6347a0b802812bb185ada1bf0951add306935184
-Merge: 4d02c5397114 f144fb771f2e
+Merge: 4d02c5397 f144fb771
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri May 13 13:54:29 2011 -0700
 
     Merge remote-tracking branch 'jeremyhu/master'
 
 commit 4d02c5397114ac4d15e794908f0708427e258261
-Merge: 043c17586522 eac37f32b85b
+Merge: 043c17586 eac37f32b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri May 13 13:52:18 2011 -0700
 
@@ -112262,7 +112583,7 @@ Date:   Sat Apr 23 18:09:11 2011 -0700
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 5cb31cd0cbf83fff5f17a475e7b0e45246b19bf3
-Merge: 0f284f0f42f2 4d8735d388c3
+Merge: 0f284f0f4 4d8735d38
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 29 09:59:49 2011 -0700
 
@@ -112317,14 +112638,14 @@ Date:   Wed Apr 27 22:12:59 2011 -0700
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit f6d4e75ec55ac6812f9dead42ecdffb9614578c7
-Merge: ec9ea4017885 4318e6a147e7
+Merge: ec9ea4017 4318e6a14
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 27 12:08:51 2011 -0700
 
     Merge remote-tracking branch 'jturney/master'
 
 commit ec9ea4017885cefe5519a4e890b0ff1a5518235a
-Merge: c6cb70be1ed7 6f29dbf5e36b
+Merge: c6cb70be1 6f29dbf5e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 27 12:01:56 2011 -0700
 
@@ -113038,7 +113359,7 @@ Date:   Mon Mar 28 11:38:11 2011 -0400
     Signed-off-by: Søren Sandmann <ssp@redhat.com>
 
 commit 918a9c99cf2ebc73acb34b95f597904b93c690d9
-Merge: 88c4622b594a 5f496bc91941
+Merge: 88c4622b5 5f496bc91
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 22 11:20:16 2011 -0700
 
@@ -113068,7 +113389,7 @@ Date:   Mon Apr 18 08:23:48 2011 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 302bdc3c9678c028bed71dbe9c5ba04997626b6b
-Merge: 001b6b8b7073 6f97fe5df16f
+Merge: 001b6b8b7 6f97fe5df
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 22 10:48:37 2011 -0700
 
@@ -113798,14 +114119,14 @@ Date:   Wed Apr 6 14:51:45 2011 -0400
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 3085b178626c957854385c7a88a05ec3c7eb74f3
-Merge: c9d89cec1407 3c45b59e675b
+Merge: c9d89cec1 3c45b59e6
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 6 08:34:10 2011 -0700
 
     Merge remote-tracking branch 'jturney/master'
 
 commit c9d89cec1407550cb2568f4cef146c93607bbae6
-Merge: a52049de2f84 bc61787a20e7
+Merge: a52049de2 bc61787a2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Apr 4 11:57:39 2011 -0700
 
@@ -114052,7 +114373,7 @@ Date:   Wed Mar 23 18:06:51 2011 +0200
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit a52049de2f846fe984d4db5ac8d2c1826c7b2d0b
-Merge: d044d3675635 266ea63bc3e0
+Merge: d044d3675 266ea63bc
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Apr 4 09:58:53 2011 +1000
 
@@ -114228,7 +114549,7 @@ Date:   Tue Mar 29 14:27:41 2011 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit e0a2ad51dfb7373aa602335490d9666d6101b5ea
-Merge: 327e1d880121 3d688316af0e
+Merge: 327e1d880 3d688316a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Mar 30 10:51:27 2011 -0700
 
@@ -114457,14 +114778,14 @@ Date:   Mon Mar 28 17:18:39 2011 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit a095a6d4e8f5090907e8d3d66018636216300846
-Merge: a22486f84801 ef9d04f8ad42
+Merge: a22486f84 ef9d04f8a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Mar 27 20:06:29 2011 -0700
 
     Merge remote-tracking branch 'airlied/pwin-cleanup'
 
 commit a22486f848014000dc13dda470f77d4d8ea9e9f6
-Merge: 2ef4ff45ef1f 633b81e8ba09
+Merge: 2ef4ff45e 633b81e8b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Mar 27 18:27:10 2011 -0700
 
@@ -114672,7 +114993,7 @@ Date:   Tue Mar 22 19:01:48 2011 -0700
     Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
 
 commit 03f45df93469f6aef391e97007b9614e0770cc4c
-Merge: efcb7275ce5d 5fb329a04a18
+Merge: efcb7275c 5fb329a04
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Mar 23 13:38:37 2011 +0900
 
@@ -114861,7 +115182,7 @@ Date:   Sun Mar 13 20:01:30 2011 +0000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0ac4931753a5d5925fc844c8cbec08585aea57a7
-Merge: a8146f6becc4 d7f8011418f9
+Merge: a8146f6be d7f801141
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 14 13:06:41 2011 -0700
 
@@ -115181,7 +115502,7 @@ Date:   Wed Mar 9 15:11:42 2011 +1000
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit c3c0e2fdd326214e271ce144e8fc2725cbd738ef
-Merge: a19771e4337d 73555555a440
+Merge: a19771e43 73555555a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Mar 9 14:25:54 2011 -0800
 
@@ -115550,28 +115871,28 @@ Date:   Fri Mar 4 01:12:01 2011 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6c90e839d9872a37d371578c9c423e8213922044
-Merge: 0bc95d5b06dc edcceedbd35d
+Merge: 0bc95d5b0 edcceedbd
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Mar 3 14:41:44 2011 -0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 0bc95d5b06dcea65a1aa193ea907b50f7dd168b5
-Merge: 3f41f4adea4b 69a9171dbbaf
+Merge: 3f41f4ade 69a9171db
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Mar 3 14:33:08 2011 -0800
 
     Merge remote branch 'jeremyhu/master'
 
 commit 3f41f4adea4bbb90d4bda4dab600595b655e3ed8
-Merge: 8e4c3ce55b0f dae24abcd44f
+Merge: 8e4c3ce55 dae24abcd
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Mar 3 14:12:36 2011 -0800
 
     Merge remote branch 'sandmann/for-keithp'
 
 commit 8e4c3ce55b0f186bc6ba4039e30629669b6087b7
-Merge: f3d19c0cf332 296561506a91
+Merge: f3d19c0cf 296561506
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Mar 3 13:42:07 2011 -0800
 
@@ -115645,7 +115966,7 @@ Date:   Mon Feb 28 12:32:53 2011 -0500
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit c2207d11f243900bc2f641e08d80da63d84e97a8
-Merge: 00779932de86 579ee8f5d84c
+Merge: 00779932d 579ee8f5d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Feb 28 11:26:09 2011 +1000
 
@@ -115900,7 +116221,7 @@ Date:   Fri Feb 25 11:08:19 2011 +1000
     Reviewed-by: Fernando Carrijo <fcarrijo@freedesktop.org>
 
 commit 229b055bdbc53370944401649234e8a38183f4fb
-Merge: 6178959e3dd6 b17fc99cb9ca
+Merge: 6178959e3 b17fc99cb
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Feb 24 19:44:35 2011 -0800
 
@@ -115954,7 +116275,7 @@ Date:   Thu Feb 24 19:18:35 2011 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 83861595782aaa05907f9cf7b236d50261d404d9
-Merge: a1cc0e52b0e8 4102a00962f5
+Merge: a1cc0e52b 4102a0096
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Feb 24 18:59:07 2011 -0800
 
@@ -115974,7 +116295,7 @@ Date:   Tue Nov 30 21:17:19 2010 +0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 365ad68fb9f7029550505b7c276a808050cada9c
-Merge: 0801afbd7c2c 720c895db932
+Merge: 0801afbd7 720c895db
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Feb 24 18:49:40 2011 -0800
 
@@ -116308,7 +116629,7 @@ Date:   Wed Feb 23 14:44:23 2011 +0100
     Signed-off-by: Cyril Brulebois <kibi@debian.org>
 
 commit 579ee8f5d84c3a523b7b3e3941eabb226d1d19e2
-Merge: b636893137da 17265ccb027e
+Merge: b63689313 17265ccb0
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Feb 23 08:44:42 2011 +1000
 
@@ -116614,14 +116935,14 @@ Date:   Fri Feb 18 14:46:33 2011 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 2c77aeb39f59f1a94cc603a2e6256a62ce785c36
-Merge: 816d67de2ba9 402b329c3aa8
+Merge: 816d67de2 402b329c3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Feb 18 14:29:32 2011 -0800
 
     Merge remote branch 'jcristau/for-keith'
 
 commit 816d67de2ba9bdfe652da32cb6447a3056342b98
-Merge: a73c28f0bdaf 3bbb70a1a7b2
+Merge: a73c28f0b 3bbb70a1a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Feb 18 12:20:26 2011 -0800
 
@@ -116641,14 +116962,14 @@ Date:   Thu Feb 10 16:27:29 2011 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0bc9b15a622377c57e617411ccd26c4b5bf8cba4
-Merge: d1123b66ebbc 93cd4b1034e3
+Merge: d1123b66e 93cd4b103
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Feb 18 12:04:41 2011 -0800
 
     Merge remote branch 'ajax/for-keithp'
 
 commit d1123b66ebbcf96dd816236f54befc568a5f7c68
-Merge: 5d020c313515 f6e4ace9eabe
+Merge: 5d020c313 f6e4ace9e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Feb 18 11:59:25 2011 -0800
 
@@ -117363,7 +117684,7 @@ Date:   Thu Jan 13 20:19:18 2011 +0200
     Reviewed-by: Ville Syrjälä <ville.syrjala@nokia.com>
 
 commit ea1ffd3e60bdcedbec5a6f28929f8677bf45d450
-Merge: 12b0f7df2caa 53602c362174
+Merge: 12b0f7df2 53602c362
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 2 15:19:55 2011 -0800
 
@@ -117454,21 +117775,21 @@ Date:   Sun Jan 30 14:06:14 2011 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 246d40b685292fa6393ba22127152137494af2af
-Merge: 70f2d39fbde3 8c1f75a1d4cb
+Merge: 70f2d39fb 8c1f75a1d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 2 14:51:33 2011 -0800
 
     Merge remote branch 'jeremyhu/master'
 
 commit 70f2d39fbde38d0baa687f1755b6c4c686f23052
-Merge: 3a91c2d21c32 a9d3c43a57cb
+Merge: 3a91c2d21 a9d3c43a5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 2 14:43:19 2011 -0800
 
     Merge remote branch 'jturney/master'
 
 commit 3a91c2d21c3231e2a011d95c3cfc01785430c1cf
-Merge: ac0a00a840a5 82b1eaa6cad2
+Merge: ac0a00a84 82b1eaa6c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 2 14:37:00 2011 -0800
 
@@ -117721,21 +118042,21 @@ Date:   Thu Jan 13 16:08:29 2011 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit be3be7580b6f6fd2f7fa4d4abfe5e1ab19470223
-Merge: 57a1d9b85331 a1d885fdd675
+Merge: 57a1d9b85 a1d885fdd
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jan 20 21:21:21 2011 -0800
 
     Merge remote branch 'ajax/for-keithp'
 
 commit 57a1d9b85331f6fe19d5111f5163139572ffbf02
-Merge: 24ce650cf4f0 642376979948
+Merge: 24ce650cf 642376979
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jan 20 21:16:24 2011 -0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 24ce650cf4f0c6fa72faecd38c53d40703e6c959
-Merge: bbdf81a056be 09fd010902fa
+Merge: bbdf81a05 09fd01090
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jan 20 21:11:53 2011 -0800
 
@@ -118243,14 +118564,14 @@ Date:   Sat Jan 15 12:13:39 2011 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit abfea17342da774aa4e3a351a73c8f2af6e6fd28
-Merge: 361128389e5c e65c3f8bcc86
+Merge: 361128389 e65c3f8bc
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jan 18 15:19:34 2011 -0800
 
     Merge remote branch 'ajax/for-keithp'
 
 commit 361128389e5cb0101cbd091ff8de77cf34608f6c
-Merge: 65ceaadbf0fb d9225b9602c8
+Merge: 65ceaadbf d9225b960
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jan 18 15:18:08 2011 -0800
 
@@ -118588,7 +118909,7 @@ Date:   Tue Nov 23 11:38:50 2010 -0800
     Acked-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 8456625d64bb0013a496f3b56ea3aa20cf7a6142
-Merge: aa30a86583c3 ce74e7562dcc
+Merge: aa30a8658 ce74e7562
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jan 7 09:35:07 2011 +1000
 
@@ -118933,14 +119254,14 @@ Date:   Wed Jan 5 20:41:04 2011 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0dede200c9ac7adbe8b8c16efacc3edc1f183cd9
-Merge: 7714357f5067 2e781457d43e
+Merge: 7714357f5 2e781457d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 5 08:51:46 2011 -0800
 
     Merge remote branch 'vsyrjala/misc_fixes'
 
 commit 7714357f506782973d25e270f85140b42507ed35
-Merge: 02e18c9fb58c b01dd9d33651
+Merge: 02e18c9fb b01dd9d33
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 5 08:43:18 2011 -0800
 
@@ -119633,7 +119954,7 @@ Date:   Wed Dec 15 14:59:13 2010 -0500
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit e7dc253452a1ba64718a08fdc070405b494f53cd
-Merge: d1107918d462 d5b0d58573ff
+Merge: d1107918d d5b0d5857
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 20 00:48:45 2010 -0800
 
@@ -119735,14 +120056,14 @@ Date:   Fri Dec 10 00:08:24 2010 +0000
     Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit f1542f1d716723cba7c323849086585635121893
-Merge: 9716d3124799 8a8fdd762ad8
+Merge: 9716d3124 8a8fdd762
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 14 15:04:12 2010 -0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 9716d3124799c6db0d1c782aa72c72f972d5a158
-Merge: 03ea0b772648 f641e4b34aa9
+Merge: 03ea0b772 f641e4b34
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 14 15:01:36 2010 -0800
 
@@ -119919,7 +120240,7 @@ Date:   Wed Dec 8 18:54:30 2010 +0000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 519d243f0c8e3c80226701f71d2cfa62e42dbff7
-Merge: 9f9c732311ef 446482efaa3d
+Merge: 9f9c73231 446482efa
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 7 13:39:58 2010 -0800
 
@@ -120377,14 +120698,14 @@ Date:   Sun Jun 6 15:23:37 2010 -0700
     Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit f5b8bd620f91214c0b87e9b04d57015655792352
-Merge: 01e9fa7da389 8127c83c81bf
+Merge: 01e9fa7da 8127c83c8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 6 19:51:06 2010 -0800
 
     Merge remote branch 'jajones/for-keith'
 
 commit 01e9fa7da389fc7ab834b4234b8484514144b7f4
-Merge: 79870dbf72d4 68a1b0de95f7
+Merge: 79870dbf7 68a1b0de9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 6 19:45:11 2010 -0800
 
@@ -120407,14 +120728,14 @@ Date:   Sat Dec 4 16:13:29 2010 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit c4a7a5917ab828d4a0bd825a98e4d641bcb378f1
-Merge: 5de312a60d82 714b68d9e5bf
+Merge: 5de312a60 714b68d9e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 6 19:28:07 2010 -0800
 
     Merge remote branch 'jeremyhu/master'
 
 commit 5de312a60d8227ed670849ecf888ea878aa81430
-Merge: 311cad33155c 8f42b2b69387
+Merge: 311cad331 8f42b2b69
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Dec 6 19:22:52 2010 -0800
 
@@ -120765,7 +121086,7 @@ Date:   Wed Nov 24 00:11:11 2010 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 3824417335ec00a87b51f8d05e592099b8507680
-Merge: dab064fa5e0b f4f41c812d2b
+Merge: dab064fa5 f4f41c812
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Dec 2 08:39:33 2010 -0800
 
@@ -121015,14 +121336,14 @@ Date:   Sat Nov 27 00:14:51 2010 -0800
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit 02449ee24b484c9fea501df5274d95a9f87cab23
-Merge: afd6eb66d5ef b85f9063c237
+Merge: afd6eb66d b85f9063c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Nov 30 13:30:59 2010 -0800
 
     Merge remote branch 'ajax/for-keithp'
 
 commit afd6eb66d5ef6a59be4c03da4588aaa2ee47b9ad
-Merge: b16964910d29 ffcbfa0063bd
+Merge: b16964910 ffcbfa006
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Nov 30 13:28:13 2010 -0800
 
@@ -121540,14 +121861,14 @@ Date:   Wed Nov 24 14:20:30 2010 +1000
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 4e0f8f666e61390206c42ad2087477a912525bc7
-Merge: 400ddf2f58ce 639600fa7eba
+Merge: 400ddf2f5 639600fa7
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 24 11:47:33 2010 -0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 400ddf2f58ce673c74d4e8ee829729cd3c75f8c9
-Merge: 7250f078c12f e074f745a80b
+Merge: 7250f078c e074f745a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 24 11:46:18 2010 -0800
 
@@ -121897,21 +122218,21 @@ Date:   Tue Jun 22 19:45:26 2010 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 38c46ccf796462d068d95acb9022de2acfc3a1f7
-Merge: 3051dd513596 c8998af3eba4
+Merge: 3051dd513 c8998af3e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 15 09:06:33 2010 +0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 3051dd5135962283fc6c7de377a7c819d8a04e7f
-Merge: ed547a9fc8a4 c5975722a95c
+Merge: ed547a9fc c5975722a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 15 08:58:02 2010 +0800
 
     Merge remote branch 'jeremyhu/master'
 
 commit ed547a9fc8a4f5cd95ef882b656a376c163eda6d
-Merge: 78f94f19aab6 84e8de1271bb
+Merge: 78f94f19a 84e8de127
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Nov 15 08:51:27 2010 +0800
 
@@ -122182,7 +122503,7 @@ Date:   Wed Nov 10 21:35:58 2010 -0800
     Reviewed-by: Adam Jackson <ajax@redhat.com>
 
 commit 88cb61e1e55c54982b90e2a77465faaac6a0ba89
-Merge: 19f43836d100 4ed4915bc0fb
+Merge: 19f43836d 4ed4915bc
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 11 12:54:46 2010 +1000
 
@@ -122195,7 +122516,7 @@ Date:   Thu Nov 11 12:54:46 2010 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 4ed4915bc0fbe9b4419ca4a0d4e43c2fee032ae9
-Merge: 291c39dfef84 ec1bfbc66926
+Merge: 291c39dfe ec1bfbc66
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 10 16:58:21 2010 -0800
 
@@ -122255,14 +122576,14 @@ Date:   Sat Sep 11 17:55:57 2010 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit c9c0f93f8ed42413a05193ee71c69fa6b41f6a03
-Merge: 73f6de1ad8b5 4132b1c591bd
+Merge: 73f6de1ad 4132b1c59
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 10 16:11:29 2010 -0800
 
     Merge remote branch 'whot/for-keith'
 
 commit 73f6de1ad8b5e1641102b54ff48a36ebb99ccacb
-Merge: 333b6ed26e36 3dc3aefb88c1
+Merge: 333b6ed26 3dc3aefb8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 10 16:02:22 2010 -0800
 
@@ -122423,7 +122744,7 @@ Date:   Mon May 17 19:39:54 2010 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit acba00c0c1129fe4ef7655f018cd21dbb1ee9a1f
-Merge: 383dfe23f164 44e816541470
+Merge: 383dfe23f 44e816541
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 10 14:41:08 2010 -0800
 
@@ -122617,7 +122938,7 @@ Date:   Thu Nov 4 12:53:18 2010 +1000
     Reviewed-by: Julien Cristau <jcristau@debian.org>
 
 commit a52efb096e166e325deb3d6b502671f339a4fa15
-Merge: fe8d122b133a f72aadd38b73
+Merge: fe8d122b1 f72aadd38
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 3 06:50:45 2010 -0700
 
@@ -123019,7 +123340,7 @@ Date:   Sun Oct 17 09:58:50 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit d738175eaf1098e29b8afb6de8e99b5098e366a7
-Merge: 8806a04f7f02 9872e0f0115c
+Merge: 8806a04f7 9872e0f01
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 19 22:50:15 2010 -0700
 
@@ -123435,7 +123756,7 @@ Date:   Tue Mar 23 16:34:26 2010 +0000
     Reviewed-by: Colin Harrison <colin.harrison@virgin.net>
 
 commit 5aff712a8d2eb9f965ecbb93216cc0bcdc327ae6
-Merge: 5b98c6267f57 e354ccac36a8
+Merge: 5b98c6267 e354ccac3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Oct 18 17:16:23 2010 -0700
 
@@ -123646,7 +123967,7 @@ Date:   Mon Sep 27 13:58:40 2010 -0400
     Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit eaf0b6a4d83d49930d21d5191f335fcac962632e
-Merge: 693e92d4049e 23229c7ce597
+Merge: 693e92d40 23229c7ce
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Oct 15 13:46:59 2010 +1000
 
@@ -124053,7 +124374,7 @@ Date:   Sat Sep 25 10:05:10 2010 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 5532687a929426c4b1c4667f4591ed362f097c9b
-Merge: 9df4fb0adf66 682a3ee60867
+Merge: 9df4fb0ad 682a3ee60
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Sep 28 08:15:07 2010 -0700
 
@@ -124229,7 +124550,7 @@ Date:   Tue Sep 21 15:13:30 2010 +0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 98197d931b266674557b52b4a7099c6470114e55
-Merge: 01ad3725a8d0 402942cdbc51
+Merge: 01ad3725a 402942cdb
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Sep 23 15:30:37 2010 -0700
 
@@ -124481,7 +124802,7 @@ Date:   Sun May 30 19:12:31 2010 +0300
     Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
 
 commit c768cdda92696b636c10bb2df64167d5274b4b99
-Merge: 5a725385fbb9 20798536326f
+Merge: 5a725385f 207985363
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Sep 13 16:48:33 2010 -0700
 
@@ -124871,7 +125192,7 @@ Date:   Wed Sep 8 16:08:24 2010 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit bbffb85461eb63bfb1e01e2cb9674607b9221604
-Merge: 9a1a4ccbe026 71972c2534d4
+Merge: 9a1a4ccbe 71972c253
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Sep 10 11:55:34 2010 -0700
 
@@ -124910,7 +125231,7 @@ Date:   Mon Aug 30 21:24:30 2010 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ca0d578d29f37b61e62556fff59732741885625b
-Merge: cf88363db0eb 08adf41f6315
+Merge: cf88363db 08adf41f6
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Sep 10 11:50:27 2010 -0700
 
@@ -124940,7 +125261,7 @@ Date:   Fri Aug 27 10:20:29 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit fa22f97af65efc2a147e9be0b7f288848965ff60
-Merge: 6edbdb7f9e02 65466652936b
+Merge: 6edbdb7f9 654666529
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Sep 10 11:47:41 2010 -0700
 
@@ -126565,7 +126886,7 @@ Date:   Sat Jun 19 23:40:37 2010 -0700
     Reviewed-by: Patrick E. Kane <pekane52@gmail.com>
 
 commit 9fbbff3c0456f1969d45cc957d3260723caf62d7
-Merge: 95756f410c65 9ac8e206ffe1
+Merge: 95756f410 9ac8e206f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jul 21 11:56:39 2010 -0700
 
@@ -126650,7 +126971,7 @@ Date:   Wed Jul 14 12:57:29 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0fc02c0bf92f694889589e3648acc08d4684de37
-Merge: 0540c46066f9 9d8ec712a67c
+Merge: 0540c4606 9d8ec712a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jul 13 15:05:36 2010 -0700
 
@@ -126747,7 +127068,7 @@ Date:   Fri Jul 9 10:36:12 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 2307ab5bc9365ebbe04568edb7c7620a23689b70
-Merge: c65280ce8df4 fd4f5059f081
+Merge: c65280ce8 fd4f5059f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Jul 6 23:54:54 2010 -0400
 
@@ -126910,7 +127231,7 @@ Date:   Thu Jun 3 19:00:53 2010 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 69b2b5c85ec079ef49f84722daa5f148cedc2e1b
-Merge: b90faa71567c 14327858391e
+Merge: b90faa715 143278583
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jul 1 23:46:53 2010 -0400
 
@@ -127727,7 +128048,7 @@ Date:   Thu Jun 10 19:21:18 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit a41d6e9bffbe56cfa1c3b84388a3d9f5a982f1a9
-Merge: 7e8f10012173 f4190feb25ec
+Merge: 7e8f10012 f4190feb2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Jun 11 10:08:13 2010 -0700
 
@@ -127880,7 +128201,7 @@ Date:   Fri Jun 4 16:58:58 2010 +0700
     Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 620ca54aaa0b363fcf68cec1bd6c37e68c988352
-Merge: fd69234db004 8ff9b502cfce
+Merge: fd69234db 8ff9b502c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 10 19:18:53 2010 -0700
 
@@ -127952,7 +128273,7 @@ Date:   Thu Jun 3 19:17:14 2010 -0700
     Reviewed-by: Eamon Walsh <ewalsh@tycho.nsa.gov>
 
 commit 07a093add0b7e40c4d9b9b59273e3ff9e14a88a7
-Merge: 84190d20954e dc614484f93b
+Merge: 84190d209 dc614484f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 10 18:39:10 2010 -0700
 
@@ -128104,7 +128425,7 @@ Date:   Thu Jun 10 06:11:10 2010 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 84190d20954ef7888e4d96832c2a4b3225b4dfa2
-Merge: 4172aa137c1b 5e1ef1f4dde4
+Merge: 4172aa137 5e1ef1f4d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 10 13:36:35 2010 -0700
 
@@ -128432,7 +128753,7 @@ Date:   Fri Jun 4 14:22:06 2010 +0700
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
 
 commit 5d4e2c594059ffb536c8e506c2623320d3c6a787
-Merge: eacc42132ed0 793dd399468f
+Merge: eacc42132 793dd3994
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Jun 5 22:20:28 2010 -0700
 
@@ -128837,7 +129158,7 @@ Date:   Fri Jun 4 11:09:46 2010 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0f12e86e600522768f5f64eafc1230526e700ab7
-Merge: aa7c09f7d04d f114f54986ac
+Merge: aa7c09f7d f114f5498
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 3 15:09:32 2010 -0700
 
@@ -129019,7 +129340,7 @@ Date:   Wed Jun 2 14:31:56 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b13d7a8e09c8e3eb5003420c3c0484431e5a052b
-Merge: f0ab726d8966 dcceb90b1dcc
+Merge: f0ab726d8 dcceb90b1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jun 3 07:01:26 2010 -0700
 
@@ -129484,7 +129805,7 @@ Date:   Mon May 24 09:14:27 2010 -0700
     Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
 
 commit b11465a6ecdc2b8373e6fc8af427edc4602bcaa1
-Merge: 7c085aebfede 0abf065e38c4
+Merge: 7c085aebf 0abf065e3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 24 22:18:31 2010 -0700
 
@@ -129623,7 +129944,7 @@ Date:   Tue May 18 19:35:10 2010 +0300
     Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
 
 commit 2ffffb4daf6161e6a22d81442ecf6209acc9e975
-Merge: b5e0f6d8f45c d5306084b575
+Merge: b5e0f6d8f d5306084b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun May 23 23:22:08 2010 -0700
 
@@ -129998,14 +130319,14 @@ Date:   Fri May 14 19:31:56 2010 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 103507af0c0ce7d7482a67163249864af36a2374
-Merge: 8bd8d81dc473 99fcf655bdc9
+Merge: 8bd8d81dc 99fcf655b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 19 22:27:53 2010 -0700
 
     Merge remote branch 'vignatti/bus-cleanup'
 
 commit 8bd8d81dc473bf72ea108b1896a55e32defa02e2
-Merge: c620a1c0a4ca 66d5ecc5fd36
+Merge: c620a1c0a 66d5ecc5f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 19 22:27:20 2010 -0700
 
@@ -130025,7 +130346,7 @@ Date:   Thu May 20 10:26:56 2010 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 8b6c1809c09f832051327d86e1a25dc0ec5cc878
-Merge: d88ba7721d2d c38552d115e3
+Merge: d88ba7721 c38552d11
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 19 12:58:02 2010 -0700
 
@@ -130501,7 +130822,7 @@ Date:   Fri May 14 16:25:43 2010 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f87002cb7d8729b1da4cbefe7653f4cfd3a2d956
-Merge: a4fbc0fedafd 890f536f8d66
+Merge: a4fbc0fed 890f536f8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri May 14 11:46:29 2010 -0700
 
@@ -130539,7 +130860,7 @@ Date:   Thu May 13 07:12:43 2010 +0300
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit 795432d4a92ed5b9fa4d9163e73c8e4fe4c74534
-Merge: f2a0c324e37c 92ed75ac59e2
+Merge: f2a0c324e 92ed75ac5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu May 13 18:22:49 2010 -0700
 
@@ -130821,7 +131142,7 @@ Date:   Sat May 8 15:19:03 2010 -0700
     Reviewed-by: Eamon Walsh <ewalsh@tycho.nsa.gov>
 
 commit 59857ee5da5f1f3f4900292581b9586477513211
-Merge: 21ceae9002c6 432cbbec194e
+Merge: 21ceae900 432cbbec1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed May 12 16:48:08 2010 -0700
 
@@ -131042,7 +131363,7 @@ Date:   Tue May 11 09:08:40 2010 -0700
     Reviewed-by: Adam Jackson <ajax@redhat.com>
 
 commit 3df22b293c1f1d27e7ce16662744c578d35b5aba
-Merge: fa6c70125720 9de0e31746d5
+Merge: fa6c70125 9de0e3174
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue May 11 08:38:44 2010 -0700
 
@@ -131172,7 +131493,7 @@ Date:   Mon May 10 14:00:49 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 95074538cce93abc1739a4d9dd78b0500fb8fec9
-Merge: c0799779dffe 2160ff5240d7
+Merge: c0799779d 2160ff524
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon May 10 13:49:33 2010 -0700
 
@@ -131400,7 +131721,7 @@ Date:   Fri Apr 30 12:18:09 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit a80b1f888f2f7674a715d512ab950eeadee20448
-Merge: 4971099860e8 0efd7b8d82a4
+Merge: 497109986 0efd7b8d8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun May 2 16:35:17 2010 -0700
 
@@ -131509,7 +131830,7 @@ Date:   Wed Apr 28 12:37:08 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 986d46144b183a36b4e98aed95eca0c55a8b4251
-Merge: a974c8e7cba4 b5b8f91b82d7
+Merge: a974c8e7c b5b8f91b8
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 30 12:40:53 2010 -0700
 
@@ -131519,21 +131840,21 @@ Date:   Fri Apr 30 12:40:53 2010 -0700
             hw/xfree86/common/xf86xv.c
 
 commit a974c8e7cba40c8d7d1b91e07de8c414627b71a2
-Merge: 6581bc459174 02e86221b851
+Merge: 6581bc459 02e86221b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 30 12:33:00 2010 -0700
 
     Merge remote branch 'whot/for-keith'
 
 commit 6581bc4591746c906d97f8b868f946c47bc6d756
-Merge: 0e91e19f783d d073e51beeed
+Merge: 0e91e19f7 d073e51be
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 30 12:29:52 2010 -0700
 
     Merge remote branch 'yselkowitz/master'
 
 commit 0e91e19f783d21198fc2e210203e0f10040a9cd0
-Merge: 81a081c1f0cb edbc56c08846
+Merge: 81a081c1f edbc56c08
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 30 12:27:51 2010 -0700
 
@@ -131727,7 +132048,7 @@ Date:   Sat Apr 17 21:36:23 2010 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 3f63db89191701139d45332ca80b9d6eb327c773
-Merge: 41bdb6c003cc 54e51de8cd95
+Merge: 41bdb6c00 54e51de8c
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Apr 26 20:18:13 2010 -0700
 
@@ -132124,7 +132445,7 @@ Date:   Wed Apr 21 18:28:13 2010 +0300
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7ac6a6b7d0dfc5e021270b2898accd3425aa008a
-Merge: 0782894b5702 f7ef6fd9a1a1
+Merge: 0782894b5 f7ef6fd9a
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 21 16:07:38 2010 -0700
 
@@ -132382,7 +132703,7 @@ Date:   Mon Apr 19 09:26:10 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b3ab978df861c08298f57529e3db980489055c35
-Merge: a92b2c2c8dd1 0ad022a729ba
+Merge: a92b2c2c8 0ad022a72
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Apr 18 22:01:40 2010 -0700
 
@@ -132544,7 +132865,7 @@ Date:   Wed Apr 14 17:27:51 2010 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit e424d5812300e82de375d83dc0b490a76d865016
-Merge: 5b0faf355465 0e7703f9b192
+Merge: 5b0faf355 0e7703f9b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Apr 15 15:01:34 2010 -0700
 
@@ -132730,7 +133051,7 @@ Date:   Fri Apr 9 10:58:48 2010 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ab60975fe28cb135b4183c57b7f50d3615921c1f
-Merge: adbbc661080b 59edde7c28db
+Merge: adbbc6610 59edde7c2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Apr 12 21:40:41 2010 -0700
 
@@ -132790,7 +133111,7 @@ Date:   Tue Feb 16 08:11:41 2010 -0800
     Reviewed-by: Keith Packard <keithp@keithp.com>
 
 commit d7c98c1c81ae272f66edb05fde20f4c616604add
-Merge: 82cf3a4ae018 03ccbd257994
+Merge: 82cf3a4ae 03ccbd257
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 7 22:25:51 2010 -0700
 
@@ -132958,14 +133279,14 @@ Date:   Mon Apr 5 19:12:22 2010 -0400
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit cbda58c963af5bb9c4643e9017dd4eec589ceff3
-Merge: a7698a677682 c983f40fe4f3
+Merge: a7698a677 c983f40fe
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Apr 7 15:51:38 2010 -0700
 
     Merge remote branch 'yselkowitz/master'
 
 commit a7698a677682a32960b885c22fdba2add70f4658
-Merge: 495cec794dad 165a4a9c7de0
+Merge: 495cec794 165a4a9c7
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Apr 6 12:36:15 2010 -0700
 
@@ -133112,14 +133433,14 @@ Date:   Fri Mar 26 09:33:20 2010 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 57cb1a854a1b6d91d214b3fa250a7df2ed20d433
-Merge: 4b3d67a7647f 28a5f14b4089
+Merge: 4b3d67a76 28a5f14b4
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 29 11:46:00 2010 -0700
 
     Merge remote branch 'jeremyhu/master'
 
 commit 4b3d67a7647f696957727948f9757a261e15d14e
-Merge: 579715f830fb aa91508356f2
+Merge: 579715f83 aa9150835
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 29 11:44:07 2010 -0700
 
@@ -133536,7 +133857,7 @@ Date:   Mon Mar 22 18:01:17 2010 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit b29220dc765cb6f878c5466e00e4bd21f3bd803d
-Merge: c3da76643aee ed31d50b5f7f
+Merge: c3da76643 ed31d50b5
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Mar 21 23:01:58 2010 -0700
 
@@ -133784,7 +134105,7 @@ Date:   Sun Mar 21 17:23:46 2010 -0700
     Bump to 1.7.99.902 -- 1.8 RC2
 
 commit 235fa5030428084368e5be57fca695647b7b79c4
-Merge: 1c612acca856 fa5103a02bd5
+Merge: 1c612acca fa5103a02
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Mar 21 15:38:40 2010 -0700
 
@@ -133810,7 +134131,7 @@ Date:   Wed Mar 17 14:32:38 2010 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 95ca39b981624df5338a16b506289014c431ae82
-Merge: e7ff95663878 bf181915e103
+Merge: e7ff95663 bf181915e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sun Mar 21 15:24:06 2010 -0700
 
@@ -133998,7 +134319,7 @@ Date:   Fri Mar 12 16:52:56 2010 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit df9b6f16b27398545cd4cff8a56dd59a3813351d
-Merge: 5f169f54936c 5172253bae3b
+Merge: 5f169f549 5172253ba
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Mar 15 08:26:58 2010 -0700
 
@@ -134323,7 +134644,7 @@ Date:   Wed Jan 27 20:38:38 2010 +0000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 780c95caf9888fa4548dfe4c1c78a7e7ce99a9ed
-Merge: 018b177591c9 758f6971750e
+Merge: 018b17759 758f69717
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Feb 24 09:59:19 2010 -0800
 
@@ -134491,7 +134812,7 @@ Date:   Mon Feb 15 14:18:00 2010 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit ca9c2472d74c7107ccc117e2c9c723c168d2eccf
-Merge: e40ba5798c36 02d1116e7eb8
+Merge: e40ba5798 02d1116e7
 Author: Keith Packard <keithp@keithp.com>
 Date:   Mon Feb 22 13:26:06 2010 -0800
 
@@ -134829,7 +135150,7 @@ Date:   Fri Feb 12 13:46:03 2010 -0800
     Bump to 1.7.99.901 -- 1.8 RC1
 
 commit 57ffeb3f2b3313dcef92a396f1f55fdbc064b2c5
-Merge: c6d9bc092c84 c76248fda99c
+Merge: c6d9bc092 c76248fda
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Feb 12 13:36:32 2010 -0800
 
@@ -135556,7 +135877,7 @@ Date:   Wed Jan 27 11:34:45 2010 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 0b21a0416b4cb2c32da5e3fda05a0682eb97d56e
-Merge: 1e6fd65d0b95 837bd2bbc02b
+Merge: 1e6fd65d0 837bd2bbc
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 27 14:14:15 2010 -0800
 
@@ -135875,7 +136196,7 @@ Date:   Mon Jan 11 18:02:55 2010 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
 
 commit 44f9c3d16c9c9b3362306a9ba26ee52e7baafeca
-Merge: 032f97808c65 84956ca43b08
+Merge: 032f97808 84956ca43
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Jan 13 10:19:21 2010 -0800
 
@@ -136031,7 +136352,7 @@ Date:   Thu Jan 7 14:12:34 2010 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 8ab4749aaefb3727b9fc58bb37b50a2d07eb1531
-Merge: 8d53d84485fd 9437504b21df
+Merge: 8d53d8448 9437504b2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Jan 7 10:32:21 2010 -0800
 
@@ -136394,14 +136715,14 @@ Date:   Wed Dec 23 16:05:16 2009 +1000
     Signed-off-by: Julien Cristau <jcristau@debian.org>
 
 commit 9fad8f06fb89ac2ae05bea0fa24cab3df7677297
-Merge: 871bbe1d87fa 42e8c9224e6c
+Merge: 871bbe1d8 42e8c9224
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 30 09:28:19 2009 -0800
 
     Merge remote branch 'dbn/inputclass'
 
 commit 871bbe1d87fa3c7ebd075e1d1eec33e45b08493d
-Merge: db2c6f7c9128 e1165632bdfb
+Merge: db2c6f7c9 e1165632b
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 30 09:16:45 2009 -0800
 
@@ -136716,7 +137037,7 @@ Date:   Tue Dec 22 15:40:40 2009 +1000
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7dc78db79edd15b971110acaf16bbe7f69e40bdb
-Merge: 81a623f036fe b44c9be244ce
+Merge: 81a623f03 b44c9be24
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Dec 22 21:25:18 2009 -0800
 
@@ -136897,14 +137218,14 @@ Date:   Mon Dec 14 08:41:18 2009 +1000
     Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 0cb638dc6822e54567a1731ea1cf588475a226e9
-Merge: 6a6a041c2d8d fbdf493a3e7e
+Merge: 6a6a041c2 fbdf493a3
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 16 21:58:44 2009 -0800
 
     Merge remote branch 'alanc/master'
 
 commit 6a6a041c2d8d32f6355db77cd59cff371038c683
-Merge: 8127465f44fe d50319550458
+Merge: 8127465f4 d50319550
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 16 21:57:32 2009 -0800
 
@@ -137171,7 +137492,7 @@ Date:   Tue Dec 1 11:04:06 2009 -0800
     Acked-by: Soeren Sandmann <sandmann@daimi.au.dk>
 
 commit d3e054ac07dae12a82ad764b0622fddbef4b9ec5
-Merge: 12fb31815db9 97a6454ea575
+Merge: 12fb31815 97a6454ea
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Dec 11 09:22:22 2009 -0800
 
@@ -137390,7 +137711,7 @@ Date:   Wed Dec 2 20:24:02 2009 +0100
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 98c8b752254a27ab1aaf881b36bfda0f74929d0a
-Merge: 0e084d8c71e6 91c1bd78f724
+Merge: 0e084d8c7 91c1bd78f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Dec 2 15:28:07 2009 -0800
 
@@ -138388,7 +138709,7 @@ Date:   Wed Nov 4 15:35:37 2009 +0200
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 7442f3355ab8f0bb2b1a270da18c65d8d315d4dd
-Merge: 0573042cddb6 7897b6c2d41b
+Merge: 0573042cd 7897b6c2d
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Nov 4 08:55:20 2009 -0800
 
@@ -138649,7 +138970,7 @@ Date:   Wed Oct 28 11:44:27 2009 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit deb72fc61464250af8185dab2da8ee09f13c55d8
-Merge: 55f4c80a4c89 a60e676f1fd2
+Merge: 55f4c80a4 a60e676f1
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Oct 28 10:54:13 2009 -0700
 
@@ -138800,7 +139121,7 @@ Date:   Thu Oct 22 00:00:35 2009 +0900
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 1228e2d052f0bb98175c55c194340773b5fedb40
-Merge: 08e7f62faf72 52bc6d944946
+Merge: 08e7f62fa 52bc6d944
 Author: Keith Packard <keithp@keithp.com>
 Date:   Wed Oct 21 22:46:53 2009 +0900
 
@@ -139230,7 +139551,7 @@ Date:   Tue Oct 13 20:14:58 2009 -0500
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 6e158003e80534ce007290f75c89d698aec1d00b
-Merge: 2b14e1420391 5e762f0e2f20
+Merge: 2b14e1420 5e762f0e2
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 13 18:40:42 2009 -0700
 
@@ -139472,7 +139793,7 @@ Date:   Wed Oct 7 09:07:03 2009 -0700
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit 68304215e25876ee639015969b4f07e1c9c515e0
-Merge: 6676f49e34f8 315aaef55750
+Merge: 6676f49e3 315aaef55
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Oct 6 22:41:42 2009 -0700
 
@@ -146875,7 +147196,7 @@ Date:   Thu Jun 4 17:33:25 2009 -0400
     xace: fix a bad send access hook call.
 
 commit 993daf06497c85bb6a1e70592df380503d721dfb
-Merge: 2bda50ee14b7 e1e8c7ddd7fd
+Merge: 2bda50ee1 e1e8c7ddd
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Jun 4 15:11:36 2009 +1000
 
@@ -146938,7 +147259,7 @@ Date:   Wed Jun 3 13:37:32 2009 -0400
     s/MIN/min/, s/MAX/max/ (#2968)
 
 commit 6de67d3206f0a4e307070714564c19efc84da2ec
-Merge: af4e658401ec 7f027d9dc014
+Merge: af4e65840 7f027d9dc
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jun 3 16:11:33 2009 +1000
 
@@ -147333,7 +147654,7 @@ Date:   Thu May 28 15:32:03 2009 -0400
     These have been nops since 2006 and functionally void since 7.0.
 
 commit d7aef3f663f4b5d861799f8615dcd301d5ce2906
-Merge: a25f248fc3bd e08c6a075277
+Merge: a25f248fc e08c6a075
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu May 28 17:20:58 2009 +1000
 
@@ -147385,7 +147706,7 @@ Date:   Mon May 4 19:24:47 2009 -0500
     Signed-off-by: Federico Mena Quintero <federico@novell.com>
 
 commit b12010e10f38951358b48ff1076c026f943b7cc3
-Merge: 6e6927247359 f1441b83538e
+Merge: 6e6927247 f1441b835
 Author: Søren Sandmann Pedersen <sandmann@redhat.com>
 Date:   Wed May 27 15:56:30 2009 -0400
 
@@ -149219,7 +149540,7 @@ Date:   Thu Apr 23 08:42:38 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 057fc9a4f89282e440b5e11458f1dd8655879dd8
-Merge: 95628b797e2b 932d6bcbb681
+Merge: 95628b797 932d6bcbb
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Apr 24 16:15:47 2009 +1000
 
@@ -149395,7 +149716,7 @@ Date:   Fri Apr 17 15:22:57 2009 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit d5ad14c8ed4d8360e1df8cd0bacf6a7c9c31df91
-Merge: 54716fd3dbc2 0e0642ee9466
+Merge: 54716fd3d 0e0642ee9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Sun Apr 19 22:28:22 2009 +1000
 
@@ -150222,7 +150543,7 @@ Date:   Thu Mar 26 22:22:32 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 6c3b633299f12051fcf37fb8439f358de876cf03
-Merge: adf21dba7617 0cfd48130842
+Merge: adf21dba7 0cfd48130
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Apr 7 19:36:27 2009 +1000
 
@@ -156723,7 +157044,7 @@ Date:   Thu Dec 4 09:47:25 2008 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
 
 commit 22d4ddcc3d63b7fbf2a23f5162075e4ee06db781
-Merge: d2dad384f572 c3bf15ba85fd
+Merge: d2dad384f c3bf15ba8
 Author: Matthieu Herrb <matthieu@crux.(none)>
 Date:   Sun Dec 7 23:56:15 2008 +0100
 
@@ -157679,7 +158000,7 @@ Date:   Tue Nov 25 23:15:35 2008 -0800
     New version of dolt
 
 commit 4715f079b9c61362755c95c1ebf89c97cc6fff2b
-Merge: 9ffc6719390d ed597f19fdc3
+Merge: 9ffc67193 ed597f19f
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Nov 25 22:19:08 2008 -0800
 
@@ -158560,7 +158881,7 @@ Date:   Fri Nov 21 12:21:45 2008 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@redhat.com>
 
 commit 387563b77743d92be83420d982eaf57f5459a883
-Merge: 85f650c9b76a f6e01fa1b87e
+Merge: 85f650c9b f6e01fa1b
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Sun Nov 23 13:15:46 2008 +0100
 
@@ -158962,7 +159283,7 @@ Date:   Fri Nov 14 12:36:20 2008 -0500
     Signed-off-by: James Cloos <cloos@jhcloos.com>
 
 commit ba4e08244ed3923eecf26842dfc1df17c696e053
-Merge: 81fd17f5f49c 5bad5d2abea2
+Merge: 81fd17f5f 5bad5d2ab
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Thu Nov 13 15:04:18 2008 -0500
 
@@ -166066,7 +166387,7 @@ Date:   Mon May 26 17:56:08 2008 +0930
     Signed-off-by: Peter Hutterer <peter@cs.unisa.edu.au>
 
 commit 26c1958c322be3ac4dfec9ba2c41c5202bd03709
-Merge: 5fe57787faa2 29586101dc11
+Merge: 5fe57787f 29586101d
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon May 26 17:37:31 2008 +0930
 
@@ -166545,7 +166866,7 @@ Date:   Wed May 21 21:51:27 2008 +0930
     Big boss says UniSA isn't unique enough. Who am I to argue?
 
 commit 7509fb498c02fe1cebe4139612b8871ec877c130
-Merge: 2ae3bed33731 dfb7de657134
+Merge: 2ae3bed33 dfb7de657
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Wed May 21 16:25:35 2008 +0930
 
@@ -166605,7 +166926,7 @@ Date:   Tue May 20 10:54:32 2008 +0930
     fb: shut up two compiler warnings.
 
 commit 99d28c3ef37aeffe7d8ec41e45a650ba248c6958
-Merge: fc7e2566cc07 0178b6a4abed
+Merge: fc7e2566c 0178b6a4a
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue May 20 10:20:14 2008 +0930
 
@@ -167205,7 +167526,7 @@ Date:   Fri May 9 15:38:44 2008 -0700
     <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=4258475>
 
 commit 7b3066d9b9099135d9c49e0682161d5568fc535b
-Merge: 2a3d1421e0cc 315f089056da
+Merge: 2a3d1421e 315f08905
 Author: Drew Parsons <drew@emerall.com>
 Date:   Sat May 10 00:01:15 2008 +1000
 
@@ -167305,7 +167626,7 @@ Date:   Thu May 8 16:04:24 2008 -0400
     Bug #13104: Remove broken XAA a1 glyph fast path.
 
 commit ddaecfa13cefee7c66b39b606c8640c6544d4943
-Merge: 9c2e0871cfbe cf20df39cc78
+Merge: 9c2e0871c cf20df39c
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu May 8 14:33:58 2008 -0400
 
@@ -167563,7 +167884,7 @@ Date:   Fri May 2 14:56:58 2008 +0930
     xfree86: don't try to repaint the cursor before cursors exist.
 
 commit 334456952930cb3e55c02fcdada2d0c074cd0520
-Merge: 8e56fd9728d6 3b8d53452cd6
+Merge: 8e56fd972 3b8d53452
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Fri May 2 11:00:14 2008 +0930
 
@@ -168472,7 +168793,7 @@ Date:   Mon Apr 21 22:06:38 2008 -0700
     (cherry picked from commit a033c0b3dbb3b963261faa39f0236457cb00ff44)
 
 commit 8190ef87547b704848231bde10b1cdffc6442790
-Merge: 179a082c26f9 2ddbfd345786
+Merge: 179a082c2 2ddbfd345
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Apr 22 18:04:05 2008 +0930
 
@@ -169110,7 +169431,7 @@ Date:   Mon Apr 14 09:58:49 2008 +0200
     EXA: Teach exaCompositeFallbackPictDesc() about x8r8g8b8.
 
 commit 1a9d7205cd5640eb65f019336097d86301942ea7
-Merge: 90f491cf8eb8 6866e84e3c60
+Merge: 90f491cf8 6866e84e3
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Apr 14 16:25:58 2008 +0930
 
@@ -169295,7 +169616,7 @@ Date:   Fri Feb 22 11:01:51 2008 +1030
     X.Org Bug 14418 <http://bugs.freedesktop.org/show_bug.cgi?id=14418>
 
 commit 90f491cf8eb869f27c4278b26c1bb84432b12d63
-Merge: cbe01b3083eb b4380d803092
+Merge: cbe01b308 b4380d803
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Fri Apr 11 08:29:52 2008 +0930
 
@@ -169488,7 +169809,7 @@ Date:   Tue Apr 8 20:37:25 2008 -0700
     (cherry picked from commit 126e9bc8c480b403dedc44c1e8c4fe1476340ed9)
 
 commit cbe01b3083eb65c9d4259b1071683febebf11600
-Merge: 5ffbcfec3d37 389dae73cc0f
+Merge: 5ffbcfec3 389dae73c
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Wed Apr 9 10:46:46 2008 +0930
 
@@ -169588,7 +169909,7 @@ Date:   Thu Apr 3 14:50:05 2008 -0400
     EXA: Fix TS origin computation when implementing RenderComposite with tiling.
 
 commit fd06e8f8c1d82a9d91931e8532bee0fd9c9ca9ab
-Merge: b46a00918691 6c0cfe3d43b1
+Merge: b46a00918 6c0cfe3d4
 Author: Peter Hutterer <whot@potoroo.wearablelab.ml.unisa.edu.au>
 Date:   Mon Apr 7 07:56:41 2008 +0930
 
@@ -169600,7 +169921,7 @@ Date:   Mon Apr 7 07:56:41 2008 +0930
             dix/dispatch.c
 
 commit 539bf3c2836727e7560c64144071b086f8ea32fe
-Merge: 3ab33e7cd46c 6c0cfe3d43b1
+Merge: 3ab33e7cd 6c0cfe3d4
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Mon Apr 7 00:10:16 2008 +0200
 
@@ -170061,7 +170382,7 @@ Date:   Thu Mar 27 15:18:39 2008 +1000
     RH BZ 435216
 
 commit 9df915b84d45d39aed7557c98883b20a66da2e96
-Merge: 47eb658e8027 333e7123dc48
+Merge: 47eb658e8 333e7123d
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Tue Mar 25 17:50:50 2008 +0100
 
@@ -170603,7 +170924,7 @@ Date:   Tue Mar 4 02:44:48 2008 -0500
     XACE: Check the return value of the selection create hook call.
 
 commit 4f2cd0ed96d3b10c78774c721c2ffbfb0556dddd
-Merge: 23ae68a4c74a 453661a9e193
+Merge: 23ae68a4c 453661a9e
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Mar 4 18:11:10 2008 +1030
 
@@ -172062,7 +172383,7 @@ Date:   Fri Feb 1 14:13:29 2008 +1030
     Reviewed-by: Peter Hutterer <peter@cs.unisa.edu.au>
 
 commit e5e531ce96264518f278f572a4d0bfcd345aa618
-Merge: 6c38682084e2 1692dcf19747
+Merge: 6c3868208 1692dcf19
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Jan 31 16:36:17 2008 +1030
 
@@ -172179,14 +172500,14 @@ Date:   Mon Jan 28 12:18:43 2008 -0800
     (cherry picked from commit 116800279d2ec783c63f43d3902627edde6a4cff)
 
 commit 16b0614c8c441eb1692bde9e58fadf54a9c6f00f
-Merge: 1a88aed5c82c e915a2639752
+Merge: 1a88aed5c e915a2639
 Author: David Nusinow <dnusinow@debian.org>
 Date:   Sat Jan 26 16:13:25 2008 -0500
 
     Merge commit 'upstream/master'
 
 commit 0ac175597712edfeae676f536746a4d26d625e30
-Merge: 210eeef49577 e915a2639752
+Merge: 210eeef49 e915a2639
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Sat Jan 26 13:55:07 2008 +1030
 
@@ -172640,7 +172961,7 @@ Date:   Wed Jan 9 19:52:00 2008 -0800
     More Xv extension byte swapping fixes
 
 commit 38bf01bd1c925614a6e67a38aa3cefc7b8fe3bca
-Merge: 4e85c7c322fa 0883e838e252
+Merge: 4e85c7c32 0883e838e
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Jan 10 13:38:46 2008 +1030
 
@@ -172876,7 +173197,7 @@ Date:   Thu Jan 3 18:09:56 2008 +1030
     dix: free ClassesRec when a BadAlloc occurs during CoreKeyboardProc.
 
 commit 8da83836b60f7cdb75d08482f4311fa0e2ab4e1d
-Merge: eace88989c3b ae869fc76697
+Merge: eace88989 ae869fc76
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Jan 3 17:04:54 2008 +1030
 
@@ -173515,7 +173836,7 @@ Date:   Fri Dec 14 00:53:54 2007 -0500
     Bump video driver ABI and extension ABI for devPrivates rework.
 
 commit 86b2e59bfb79bd042a13c35fbb4ccecec576f629
-Merge: 1c1a4bc970be cb0d7e2c2692
+Merge: 1c1a4bc97 cb0d7e2c2
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Dec 14 00:32:24 2007 -0500
 
@@ -173563,7 +173884,7 @@ Date:   Thu Dec 13 15:55:28 2007 -0800
     (cherry picked from commit fc04c9759b30d062111d4a7f3f411ed0f18cbde4)
 
 commit c8feb73f5841e7812d8dfdb91f1064e2033d028c
-Merge: 9a7ce573636e a125ce4a84f5
+Merge: 9a7ce5736 a125ce4a8
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Dec 13 18:38:25 2007 -0500
 
@@ -175030,7 +175351,7 @@ Date:   Mon Nov 19 21:01:22 2007 -0500
             during merge conflict resolution.
 
 commit 2d17f47cc7d6b174857617d31ad1b437d8e97d94
-Merge: 60be452c2e88 ea9c63e93b9b
+Merge: 60be452c2 ea9c63e93
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Nov 19 18:10:46 2007 -0500
 
@@ -175358,7 +175679,7 @@ Date:   Thu Nov 8 17:25:36 2007 -0500
     Don't sleep(1) at server exit.
 
 commit 1603130236c55ddabc3854d4ba62d544debcf1f5
-Merge: f207e69d62bc f7dd0c72b8f8
+Merge: f207e69d6 f7dd0c72b
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Nov 14 13:35:50 2007 -0500
 
@@ -175735,7 +176056,7 @@ Date:   Thu Nov 8 10:00:35 2007 +1030
     Also clean up to return error codes instead of sending the error manually.
 
 commit 184a7b8917a15bb2c719153b9b016c03aab42101
-Merge: a8808ac3d093 0b729051c04d
+Merge: a8808ac3d 0b729051c
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Nov 8 09:34:35 2007 +1030
 
@@ -175746,7 +176067,7 @@ Date:   Thu Nov 8 09:34:35 2007 +1030
             Xi/opendev.c
 
 commit e94ab0b502160376d1956345196f7e1c7e2e886f
-Merge: 26e1fc7b42de 9bee1c691281
+Merge: 26e1fc7b4 9bee1c691
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Wed Nov 7 19:04:24 2007 +0100
 
@@ -175785,7 +176106,7 @@ Date:   Wed Nov 7 18:43:16 2007 +0100
               XNEST_LIBS contains the right thing.
 
 commit 0b729051c04da7068f1e6dd319190bd0a362b2c0
-Merge: b7ee005d3273 d7c5e8bfc1ae
+Merge: b7ee005d3 d7c5e8bfc
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Wed Nov 7 15:37:23 2007 +1030
 
@@ -175884,7 +176205,7 @@ Date:   Tue Nov 6 16:26:09 2007 -0500
     on the x11perf benchmark.
 
 commit aaa50b64113b122aaebd46e3b78e3fb7a8d70500
-Merge: 868e303630d8 ddce48ede036
+Merge: 868e30363 ddce48ede
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Tue Nov 6 16:25:40 2007 +0100
 
@@ -175911,7 +176232,7 @@ Date:   Tue Nov 6 09:40:14 2007 +0000
     to subsequent assertion failure in libdbus.
 
 commit a52c9b2a59f27266557ff9d5d2c08492e04135a6
-Merge: c7e18beb3c87 58332894c061
+Merge: c7e18beb3 58332894c
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Nov 5 19:08:36 2007 -0500
 
@@ -175939,7 +176260,7 @@ Date:   Mon Nov 5 15:01:13 2007 -0500
     xselinux: Register SELinux extension protocol names.
 
 commit 632c33c5c18b3e091c4fce98280af4d583e99640
-Merge: 4113f040c587 dda10c9066a6
+Merge: 4113f040c dda10c906
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Mon Nov 5 17:52:33 2007 +0100
 
@@ -176609,7 +176930,7 @@ Date:   Thu Oct 25 12:35:01 2007 -0400
     xselinux: Label the default device directly with the process context.
 
 commit b633d54b94d746d26e13014634d9f63bbb7e8f7d
-Merge: 4b05f19cb9e4 48ca5961caee
+Merge: 4b05f19cb 48ca5961c
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Oct 25 12:19:30 2007 -0400
 
@@ -176811,7 +177132,7 @@ Date:   Fri Oct 19 16:34:54 2007 -0700
     they should be.
 
 commit a3a95d3475dc91ed2e8a55bf484a6b3f2b5ac32a
-Merge: a358b87f45ce 7e1cada6c6b9
+Merge: a358b87f4 7e1cada6c
 Author: Eric Anholt <eric@anholt.net>
 Date:   Fri Oct 19 15:44:17 2007 -0700
 
@@ -177017,7 +177338,7 @@ Date:   Wed Oct 17 16:09:40 2007 -0400
     Need to merge so this type of thing stops happening.
 
 commit c3f7b862550fa8f46633162f83db8c27e46fc672
-Merge: af4dde0ac19e feac0759522c
+Merge: af4dde0ac feac07595
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Oct 17 15:00:54 2007 -0400
 
@@ -177597,7 +177918,7 @@ Date:   Sun Oct 14 14:59:12 2007 -0400
     Fix GLX byteswapping.
 
 commit 927757e1028f45f7fd94b9a2ab35567e0f34b2a8
-Merge: ccda4b66bdfc 17ffc34ad5e9
+Merge: ccda4b66b 17ffc34ad
 Author: Kristian Høgsberg <krh@redhat.com>
 Date:   Fri Oct 12 19:28:39 2007 -0400
 
@@ -177877,7 +178198,7 @@ Date:   Fri Oct 5 12:19:03 2007 +0930
     regardless of who is the pairing client.
 
 commit 4611f9568cdadf9c00f4b7ca4c77c8c6f07e94f8
-Merge: ab11bad54707 3549a1282365
+Merge: ab11bad54 3549a1282
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Thu Oct 4 13:07:50 2007 +0200
 
@@ -177950,7 +178271,7 @@ Date:   Thu Oct 4 11:38:01 2007 +0200
     it for them completely.
 
 commit 604ebb5a6de372e6a8a96e0ee997db7929126860
-Merge: 1365aeff5499 4ba76a7e2b62
+Merge: 1365aeff5 4ba76a7e2
 Author: Dodji Seketeli <dodji@openedhand.com>
 Date:   Wed Oct 3 16:13:16 2007 +0200
 
@@ -178088,7 +178409,7 @@ Date:   Tue Oct 2 13:13:51 2007 -0700
     Also fix incorrect library inclusion by kdrive which broke the build.
 
 commit 439edc768eea17667846ce573c843b8377e0dfb4
-Merge: c8ccf469dcb2 93ae6fe18c41
+Merge: c8ccf469d 93ae6fe18
 Author: Eric Anholt <eric@anholt.net>
 Date:   Tue Oct 2 12:14:04 2007 -0700
 
@@ -179021,7 +179342,7 @@ Date:   Thu Sep 27 11:44:03 2007 +0930
     This is hopefully better than hardcodey calling CoreProcessPointerEvent.
 
 commit 27612748e0ec20f3a23839f0a12e39f598dd722c
-Merge: b61461425eb1 3b114f2603fc
+Merge: b61461425 3b114f260
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Sep 26 07:47:29 2007 -0400
 
@@ -179442,7 +179763,7 @@ Date:   Wed Sep 19 04:46:10 2007 -0700
     hey -- you have to start somewhere. ;)
 
 commit 97c150b61bbe436453b05d3c07cd2173870aac40
-Merge: 57907e0943da 547ad2125ece
+Merge: 57907e094 547ad2125
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Sep 19 07:25:55 2007 -0400
 
@@ -179567,7 +179888,7 @@ Date:   Sat Sep 15 14:01:57 2007 +0200
     Initialize output->pendingProperties.
 
 commit b9f7aeb20015290a8acf938a11bf9272bf3527cf
-Merge: e4d11e58ce34 06d27f804596
+Merge: e4d11e58c 06d27f804
 Author: Eric Anholt <eric@anholt.net>
 Date:   Thu Sep 13 00:15:45 2007 +0000
 
@@ -179981,7 +180302,7 @@ Date:   Wed Sep 5 17:46:23 2007 -0700
     broken uses.
 
 commit e332335241af28ef0ab66b102d0cbc4e5c73ac68
-Merge: 7381e9149e3c accd71bda6f9
+Merge: 7381e9149 accd71bda
 Author: Ben Byer <bbyer@bbyer.apple.com>
 Date:   Wed Sep 5 15:51:23 2007 -0700
 
@@ -180026,7 +180347,7 @@ Date:   Wed Sep 5 14:31:01 2007 -0700
     so it doesn't make sense to require it when building on OSX/Darwin.
 
 commit ff01e44e33fd072958fb0157dae072f1b1c88944
-Merge: 8ba8c16af773 47300ed2be59
+Merge: 8ba8c16af 47300ed2b
 Author: Ben Byer <bbyer@bbyer.apple.com>
 Date:   Wed Sep 5 13:56:08 2007 -0700
 
@@ -180176,7 +180497,7 @@ Date:   Tue Sep 4 14:49:49 2007 -0700
     Revert part of 529acb175440969af9d7fa38aab8d7dea0dc2661 because libtool is smart.
 
 commit bf5948518763b5e21eff806a0a9abc5f7757fa10
-Merge: 4062db4020c6 735da3dcd09f
+Merge: 4062db402 735da3dcd
 Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
 Date:   Tue Sep 4 22:40:31 2007 +0200
 
@@ -180492,7 +180813,7 @@ Date:   Tue Aug 28 09:28:25 2007 -0400
     FontRec privates.
 
 commit 85547073265ae9bc4ae3af920a6d3214fd1ca0c5
-Merge: 860a09cfb8af 7d54399cfdaa
+Merge: 860a09cfb 7d54399cf
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Aug 28 07:25:21 2007 -0400
 
@@ -180592,7 +180913,7 @@ Date:   Fri Aug 24 16:00:31 2007 -0700
     Bump video driver ABI for pci-rework.
 
 commit 91f358336f77c0e4f577be65cca977d17298e36c
-Merge: b9a806f0b3d4 8b6b40b7271a
+Merge: b9a806f0b 8b6b40b72
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Aug 24 15:04:21 2007 -0700
 
@@ -180646,7 +180967,7 @@ Date:   Fri Aug 24 13:04:48 2007 +0200
     case.
 
 commit 8b6b40b7271acd81a9548f502c18f46f3b640640
-Merge: ab7a6d860d4a 3305d17195e3
+Merge: ab7a6d860 3305d1719
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Thu Aug 23 18:19:17 2007 -0700
 
@@ -180783,7 +181104,7 @@ Date:   Wed Aug 22 16:54:29 2007 +0100
     Fix <pixman.h> include to <pixman/pixman.h>
 
 commit b6a7c0112c42a3287e53647c38b2c0c5bf8fefa0
-Merge: 53941c8e6801 6ef4ecd82670
+Merge: 53941c8e6 6ef4ecd82
 Author: Søren Sandmann Pedersen <sandmann@redhat.com>
 Date:   Tue Aug 21 14:26:34 2007 -0400
 
@@ -181095,7 +181416,7 @@ Date:   Mon Aug 13 10:43:48 2007 -0400
     current interface.
 
 commit f367285fd5825e0adc271982a529c9904ad65c89
-Merge: b1272eefd9a3 ff4bd3addb48
+Merge: b1272eefd ff4bd3add
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Sun Aug 12 15:31:10 2007 +0930
 
@@ -181470,7 +181791,7 @@ Date:   Wed Jul 25 14:57:13 2007 -0700
     ProcRenderAddGlyphs: Convert while loops to for loops where more natural
 
 commit e34fcd2bf42dbd72ab6ce2df80f2dcaa13416e74
-Merge: 32c0dcc8c0d1 f3955c0a020b
+Merge: 32c0dcc8c f3955c0a0
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Aug 2 14:27:03 2007 -0400
 
@@ -182778,7 +183099,7 @@ Date:   Wed Jun 20 18:42:00 2007 +0200
     can't actually occur when swapped out.
 
 commit 1f97a7647606226cde61d6ad7a94f2b0b571a06c
-Merge: 5dee64fc99f3 2e7fef7d0837
+Merge: 5dee64fc9 2e7fef7d0
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Jun 19 17:20:52 2007 +0930
 
@@ -182820,7 +183141,7 @@ Date:   Tue Jun 19 11:28:07 2007 +0930
     device to interact, so this seems like a reasonable solution.
 
 commit ab7a6d860d4a275a810a64b1ba7b13726ed10575
-Merge: e9130b8bac73 2e7fef7d0837
+Merge: e9130b8ba 2e7fef7d0
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Mon Jun 18 16:51:13 2007 -0700
 
@@ -182902,7 +183223,7 @@ Date:   Mon Jun 11 21:25:42 2007 -0400
     Delete fbBltmmx().
 
 commit e2a720c9a17dc860ee0a858c2b21fd71e86cdcd0
-Merge: 878cac71aa00 3f9adb18f127
+Merge: 878cac71a 3f9adb18f
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Jun 11 15:29:11 2007 -0400
 
@@ -183226,7 +183547,7 @@ Date:   Tue May 29 14:54:27 2007 -0600
     Remove wscons keyboard handling stuff that doesn't belong there anymore.
 
 commit 60de6c7ef9bdcee043f63e8e0d493e6feba6a9d0
-Merge: 3a6549a163ab 2f13b7c113c1
+Merge: 3a6549a16 2f13b7c11
 Author: Matthieu Herrb <matthieu@deville.herrb.com>
 Date:   Tue May 29 12:14:49 2007 -0600
 
@@ -183399,7 +183720,7 @@ Date:   Wed May 23 12:56:04 2007 -0400
     Add missing offsets for window coordinates - reported by Colin Harrison
 
 commit 2a4aa63a23ddd816b647b851a01865861827a7eb
-Merge: 9cee4ec5e6e0 cc648e609d47
+Merge: 9cee4ec5e cc648e609
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue May 22 14:50:26 2007 -0400
 
@@ -183950,7 +184271,7 @@ Date:   Mon Apr 30 10:33:12 2007 -0600
     fix __glXErrorCallBack() proto
 
 commit 6b33459bf5aac23c3ecc7002d091c02f327d907a
-Merge: 18252a515d49 3c91a993e8c7
+Merge: 18252a515 3c91a993e
 Author: Brian <brian@yutani.localnet.net>
 Date:   Mon Apr 30 10:26:19 2007 -0600
 
@@ -184138,7 +184459,7 @@ Date:   Fri Apr 27 08:13:08 2007 -0400
     are both 0.
 
 commit f28eea0647f007c2e2415ecc6fceef46201faad4
-Merge: 339b73e710a0 ae04f2cb0a06
+Merge: 339b73e71 ae04f2cb0
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Fri Apr 27 16:34:36 2007 +0930
 
@@ -184669,7 +184990,7 @@ Date:   Tue Apr 17 13:46:55 2007 -0400
     security: remove debugging code.
 
 commit 1f06d32ef58749d0f0c062193d237ee98f60e90f
-Merge: cf962a849db2 fc162c6cfa06
+Merge: cf962a849 fc162c6cf
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Apr 17 12:10:22 2007 -0400
 
@@ -184840,7 +185161,7 @@ Date:   Thu Apr 12 11:16:19 2007 +0930
     This workaround is obsolete with 33a5d9605e3e282f6aa1921d7321a2a12ef02c42
 
 commit d4dad6f84f82a4ade5005c3aa93511c1295875b8
-Merge: f1f8b562aaaa 33a5d9605e3e
+Merge: f1f8b562a 33a5d9605
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Thu Apr 12 11:11:03 2007 +0930
 
@@ -185094,7 +185415,7 @@ Date:   Fri Apr 6 13:38:12 2007 +0300
     GLcore: fix after moving xf86glx_util.[hc] to Mesa.
 
 commit cf962a849db2b259ca558c6265ea7e3328a4d312
-Merge: 5ad562565ac8 5a804f2e97ab
+Merge: 5ad562565 5a804f2e9
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Apr 5 14:41:39 2007 -0400
 
@@ -185240,7 +185561,7 @@ Date:   Tue Apr 3 09:27:57 2007 -0600
     about setting the XFree86Server symbol.
 
 commit 1cc8db72816cd079f30255046e10043c350bf683
-Merge: 645d87cf8ef7 a39f297ada4f
+Merge: 645d87cf8 a39f297ad
 Author: Matthieu Herrb <matthieu@roadrock.(none)>
 Date:   Tue Apr 3 16:04:45 2007 +0200
 
@@ -185259,7 +185580,7 @@ Date:   Tue Apr 3 19:02:14 2007 +0930
     Delete all grabs from all devices when deleting a window.
 
 commit 5f382c9c7fbda6eccf8e76c28a90b55ff2f0aef3
-Merge: 9b0b3406682b f09ee168e234
+Merge: 9b0b34066 f09ee168e
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Apr 3 15:07:18 2007 +0930
 
@@ -185379,7 +185700,7 @@ Date:   Mon Apr 2 12:26:27 2007 -0600
     formatting fixes
 
 commit e8777a91f37d828b9df839bf3d9cf2f954bdddb0
-Merge: a12054757d21 96ce17aa9441
+Merge: a12054757 96ce17aa9
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Apr 2 15:36:26 2007 +0930
 
@@ -185444,7 +185765,7 @@ Date:   Fri Mar 30 16:05:46 2007 -0600
     values of 1280 (my screen width).
 
 commit e9130b8bac73a0843d5ff6b2216eccfb3e094a48
-Merge: 2c6d47108880 92e8cdbd32b0
+Merge: 2c6d47108 92e8cdbd3
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Mar 30 13:39:15 2007 -0700
 
@@ -185581,7 +185902,7 @@ Date:   Wed Mar 28 12:57:11 2007 -0400
     xace: provide creation-time resource hook call in CreateWindow().
 
 commit 99b220969f2f8ba829bc8294b27ca90fd9311be4
-Merge: 728ad64d979f 82a8b99a6c46
+Merge: 728ad64d9 82a8b99a6
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Mar 28 12:54:04 2007 -0400
 
@@ -185594,7 +185915,7 @@ Date:   Wed Mar 28 12:03:19 2007 -0400
     Refuse to create tiny modes from EDID detailed timing.
 
 commit 2c6d47108880584f1221ff86c6c8947627f9f607
-Merge: c4fe1bcce1c1 85220446359a
+Merge: c4fe1bcce 852204463
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Wed Mar 28 08:08:04 2007 -0700
 
@@ -185664,7 +185985,7 @@ Date:   Mon Mar 26 16:04:50 2007 -0700
     Fix indentation of fakexa help text.
 
 commit 728ad64d979fd9e5cca28e8c15118c18d707c431
-Merge: 0331c6a8fcba 6a0bed16e80a
+Merge: 0331c6a8f 6a0bed16e
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Mar 27 13:16:40 2007 -0400
 
@@ -185701,7 +186022,7 @@ Date:   Mon Mar 26 12:44:58 2007 -0700
     Update xorg.conf manpage for new RandR 1.2 monitor options.
 
 commit 0331c6a8fcba1dc27ef45aaf5f694799d0085413
-Merge: 84a066cc88fe f7c5aa0dc0fa
+Merge: 84a066cc8 f7c5aa0dc
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Mar 26 10:28:05 2007 -0400
 
@@ -186066,7 +186387,7 @@ Date:   Mon Mar 19 16:11:01 2007 +1030
             by the evdev driver).
 
 commit 015d728bcde5b16a72a976579755421e3023626b
-Merge: 65b0eb60b0b9 b167583fe234
+Merge: 65b0eb60b b167583fe
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Mar 19 09:42:56 2007 +1030
 
@@ -186373,7 +186694,7 @@ Date:   Wed Mar 7 09:57:02 2007 -0500
     devPrivates rework: move reset functions into a single call.
 
 commit bb111291d854b4329e47367ce3c67e8a2785e6e9
-Merge: 74175e0af74c e9bfb2b3d7df
+Merge: 74175e0af e9bfb2b3d
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Mar 7 09:03:46 2007 -0500
 
@@ -186445,7 +186766,7 @@ Date:   Tue Mar 6 11:09:30 2007 -0800
     updated todo list
 
 commit 81d581e655fc989da3be4256b83849a63b8607b7
-Merge: a05ffca8dd0d d5aba03feff4
+Merge: a05ffca8d d5aba03fe
 Author: Ben Byer <bbyer@bbyer.(none)>
 Date:   Tue Mar 6 10:37:29 2007 -0800
 
@@ -186476,7 +186797,7 @@ Date:   Tue Mar 6 02:31:59 2007 -0800
     moved new event-handling code from X11Application.m to darwinEvents.c in preparation for making all Darwin servers use it
 
 commit 0ccd1443fd6db397b42e5b99ce733ce1316c785e
-Merge: ec1ef8a56d62 9b6bb06f13a7
+Merge: ec1ef8a56 9b6bb06f1
 Author: Ben Byer <bbyer@bbyer.(none)>
 Date:   Tue Mar 6 01:04:50 2007 -0800
 
@@ -186551,7 +186872,7 @@ Date:   Mon Mar 5 12:34:37 2007 -0500
     devPrivates rework: remove some debugging code from dixFreePrivates.
 
 commit 23fc429aad5b2721911862617772c314e1036bb0
-Merge: e684824709fa fe7b8f423787
+Merge: e68482470 fe7b8f423
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Mar 5 12:18:54 2007 -0500
 
@@ -186597,7 +186918,7 @@ Date:   Mon Feb 26 09:40:00 2007 +1100
     modes: add commit/prepare hooks
 
 commit 1f0075786fedde538a95e2f39681052e25021d88
-Merge: 57aa5e908dc1 12175b668a94
+Merge: 57aa5e908 12175b668
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Mon Mar 5 12:37:17 2007 +1030
 
@@ -186798,7 +187119,7 @@ Date:   Wed Feb 28 15:43:06 2007 +1030
     between coordinates stored in device and coordinates sent by the event.
 
 commit d9bcb22d199e8444b9762a35754e04d327dd5915
-Merge: 272d9341d0f7 c16343ac2ca1
+Merge: 272d9341d c16343ac2
 Author: Ben Byer <bbyer@bbyer.apple.com>
 Date:   Tue Feb 27 16:28:20 2007 -0800
 
@@ -187223,14 +187544,14 @@ Date:   Thu Feb 15 17:07:42 2007 +0200
     http://xorg.freedesktop.org/wiki/XDC2007Notes#head-2719037a1905516c45cf74f0e155c8703221e446
 
 commit f452507ca9209598401d15da0039aaa4e1fed1a3
-Merge: 04632835b740 811675733e97
+Merge: 04632835b 811675733
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Feb 15 09:47:20 2007 -0500
 
     Merge branch 'master' into my-XACE-SELINUX
 
 commit 04632835b7402456fdcf6c8fa01970cd2804e27c
-Merge: 88f89b9ac1b9 9ecf79ca0111
+Merge: 88f89b9ac 9ecf79ca0
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Feb 15 09:27:05 2007 -0500
 
@@ -187278,7 +187599,7 @@ Date:   Wed Feb 14 17:09:33 2007 +1030
     fix: WarpCursor needs to send MotionNotify.
 
 commit c4fe1bcce1c1e4822e688959b331b47a051d6e0a
-Merge: e540d572c5ac d570ff7c8185
+Merge: e540d572c d570ff7c8
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Wed Feb 14 15:39:52 2007 -0800
 
@@ -187342,7 +187663,7 @@ Date:   Mon Feb 12 17:18:29 2007 -0500
     Remove spurious LIBADD from xf4bpp
 
 commit 16eb7254f861465f988ae3861ac3449c2c966062
-Merge: 3814862a869e c4b7e9d1c167
+Merge: 3814862a8 c4b7e9d1c
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Feb 9 12:38:49 2007 -0800
 
@@ -187521,7 +187842,7 @@ Date:   Mon Jan 29 17:30:59 2007 -0800
     Typical results were failure to sync, and a black screen.
 
 commit 3814862a869ee83d307eb01225d5949039f435d8
-Merge: a216de9b7ff5 31f2d4a57e04
+Merge: a216de9b7 31f2d4a57
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Mon Jan 29 15:14:31 2007 -0800
 
@@ -187562,7 +187883,7 @@ Date:   Mon Jan 29 16:10:03 2007 +1030
     mi:     Fix cursor rendering issues.
 
 commit 15a81b6325d359990017b8e9f17ce18a7eff1354
-Merge: 3759254c0967 cc3d66d4a53f
+Merge: 3759254c0 cc3d66d4a
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Sun Jan 28 17:18:57 2007 +1030
 
@@ -187575,7 +187896,7 @@ Date:   Wed Nov 15 17:50:02 2006 +1030
     o fix minor error in comment for GetPointerEvents()
 
 commit 3759254c0967ae83bdcbf097d9e8a58733c8e6f9
-Merge: ba547d4f6a27 ca5ebe3971d8
+Merge: ba547d4f6 ca5ebe397
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Sun Jan 28 17:05:55 2007 +1030
 
@@ -187594,7 +187915,7 @@ Date:   Fri Jan 26 13:00:45 2007 +0100
     Xorg #9692
 
 commit a216de9b7ff55e2b73c487d037f248f00bd2e63b
-Merge: 24506ea65be4 cf7ca9d09cba
+Merge: 24506ea65 cf7ca9d09
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Thu Jan 25 10:17:32 2007 -0800
 
@@ -187629,7 +187950,7 @@ Date:   Wed Jan 24 15:33:49 2007 -0800
     read_legcay_BIOS, and delete all remnants of it from all other places.
 
 commit fdb3a0798f0d17e72ec7293d59a7a81b5ffdf95b
-Merge: 39b51e1bfc49 a53586eebc16
+Merge: 39b51e1bf a53586eeb
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Wed Jan 24 14:49:39 2007 -0800
 
@@ -187657,7 +187978,7 @@ Date:   Thu Jan 25 00:29:20 2007 +0800
     Make Xinearama screen information reflect CRTC rotation.
 
 commit 39b51e1bfc4924fc3bda4342ef9c6c0125d9f4fa
-Merge: 637b19b3ee73 788cfce91179
+Merge: 637b19b3e 788cfce91
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Tue Jan 23 13:25:56 2007 -0800
 
@@ -187699,7 +188020,7 @@ Date:   Mon Jan 22 09:13:59 2007 -0800
     ARCH_PCI_OS_INIT mechanism useless.  Remove it.
 
 commit 7dfb3cea913b02a6b36c308d1330bd40abe6b41f
-Merge: c279d5fdc536 2dc866252c84
+Merge: c279d5fdc 2dc866252
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Mon Jan 22 08:44:36 2007 -0800
 
@@ -187737,7 +188058,7 @@ Date:   Fri Jan 19 14:52:23 2007 -0800
         -ardelay and -arinterval, respectively.
 
 commit c279d5fdc53612a90f33fafe9e9c59ced008dd51
-Merge: 88f248e67143 14d6a9b32738
+Merge: 88f248e67 14d6a9b32
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Jan 19 12:59:54 2007 -0800
 
@@ -188030,7 +188351,7 @@ Date:   Tue Jan 9 16:34:40 2007 -0800
     Track rename of DamagePost -> DamageAdd.
 
 commit da09964a931cc64d05ab571bf545fdad35a6d395
-Merge: e1f73d220873 e3aa6ad201eb
+Merge: e1f73d220 e3aa6ad20
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Tue Jan 9 15:27:34 2007 -0800
 
@@ -188115,7 +188436,7 @@ Date:   Thu Jan 4 15:37:33 2007 -0800
     Incorporate new byte-order related configure changes.
 
 commit 8dd5771a1b91c331860b667fb18e484452000aad
-Merge: 45aa26ccb4f6 7d2ec92170eb
+Merge: 45aa26ccb 7d2ec9217
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Thu Jan 4 15:01:38 2007 -0800
 
@@ -188281,7 +188602,7 @@ Date:   Thu Dec 28 13:15:11 2006 -0800
     Export exaMove{In,Out}Pixmap().
 
 commit 683ca3f7afaf15fd3ca7918f6175b5a9e4a6f05b
-Merge: 05f915050cad 9563b2eea2f6
+Merge: 05f915050 9563b2eea
 Author: Eric Anholt <eric@anholt.net>
 Date:   Wed Dec 27 16:11:31 2006 -0800
 
@@ -188322,7 +188643,7 @@ Date:   Sat Dec 9 22:51:59 2006 +0200
     Make sure we're not copying sym_interpret across from an empty source.
 
 commit 43a4376bd72ef1b6486cddb60ad57b2d6169292a
-Merge: 4b1c9ac3d137 d9e079d2a385
+Merge: 4b1c9ac3d d9e079d2a
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Dec 22 13:53:55 2006 -0500
 
@@ -188384,7 +188705,7 @@ Date:   Tue Dec 19 16:38:34 2006 -0800
     xorg.conf man page should say "XFree86-DGA", not "Xorg-DGA"
 
 commit a81dbaae0597492f0245080c6f5af7158e05e2d0
-Merge: fb6d676de5aa d442998e3961
+Merge: fb6d676de d442998e3
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Dec 19 16:11:19 2006 -0500
 
@@ -188424,7 +188745,7 @@ Date:   Tue Dec 19 18:45:25 2006 +0100
     This affects drivers with no UploadToScreen or UploadToScreen failures.
 
 commit 4334860e69e7d5b156082bd05c7a86708e5bad4c
-Merge: 7e4717683d6c fdcc22ca1704
+Merge: 7e4717683 fdcc22ca1
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Tue Dec 19 16:29:26 2006 +0100
 
@@ -188459,14 +188780,14 @@ Date:   Tue Dec 19 15:24:19 2006 +0100
     See https://bugs.freedesktop.org/show_bug.cgi?id=6772 .
 
 commit ca5ebe3971d8ebcfed00c5ebcd026cdd0ce0c6ba
-Merge: 4d07b503727b 1b029fd896b7
+Merge: 4d07b5037 1b029fd89
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Dec 19 10:51:01 2006 +1030
 
     Merge branch 'master' of git://anongit.freedesktop.org/git/xorg/xserver
 
 commit 2d0a63126b3d3a17005b7e122617ee0c5f44a55b
-Merge: d8b5394eda9d 1b029fd896b7
+Merge: d8b5394ed 1b029fd89
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Dec 19 10:31:40 2006 +1030
 
@@ -188693,7 +189014,7 @@ Date:   Tue Dec 12 15:59:08 2006 -0500
     Split AssignClientState() into two routines, new routine is server-specific.
 
 commit 62e7722ebd8d341a23eb56cb330eeb00e6a975a6
-Merge: e12480699467 f3c60900e575
+Merge: e12480699 f3c60900e
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Dec 12 13:54:33 2006 -0500
 
@@ -188797,7 +189118,7 @@ Date:   Sun Dec 10 11:24:05 2006 -0500
     Accept EDID > 1.3 but < 2.0 if we find it, assume it's compatible.
 
 commit e1f73d220873fa091695e46b7fcd008663a95a6f
-Merge: 27d682fa0305 d56249a15ead
+Merge: 27d682fa0 d56249a15
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Fri Dec 8 17:24:15 2006 -0800
 
@@ -188817,7 +189138,7 @@ Date:   Fri Dec 8 17:24:15 2006 -0800
             hw/xfree86/utils/scanpci/Makefile.am
 
 commit d56249a15ead51ad4d2117d5538ada24af05b693
-Merge: f1f8df1889ab ec84f72d077e
+Merge: f1f8df188 ec84f72d0
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Fri Dec 8 15:52:37 2006 -0600
 
@@ -188979,7 +189300,7 @@ Date:   Tue Dec 5 18:50:19 2006 +1030
     Ironing some glitches caused by the merge
 
 commit 3c8f166022a2d19af14eb670fa382503ba1451cd
-Merge: 2a511492f9a2 f9f7d7f3be53
+Merge: 2a511492f f9f7d7f3b
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
 Date:   Tue Dec 5 18:28:33 2006 +1030
 
@@ -189060,7 +189381,7 @@ Date:   Fri Dec 1 15:56:52 2006 +1030
             DeliverDeviceEvents() caters for MPX devices.
 
 commit ccd804c6c01cdfffe938fa5336be9b5668a6f0c0
-Merge: 9423ac134a2a 82912ad7709e
+Merge: 9423ac134 82912ad77
 Author: Drew Parsons <drew@pug.localdomain>
 Date:   Fri Dec 1 15:21:57 2006 +1100
 
@@ -189099,7 +189420,7 @@ Date:   Wed Nov 29 22:19:57 2006 -0500
     Add required root window context to config file.
 
 commit 143558500a89a5c887c75c03798bae68c953cac9
-Merge: e3d3d29db5ee ee9bdd3f4a14
+Merge: e3d3d29db ee9bdd3f4
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Nov 29 20:41:41 2006 -0500
 
@@ -189233,7 +189554,7 @@ Date:   Mon Nov 27 16:21:31 2006 -0800
     Move mode handling helpers from ddcProperty.c to xf86Mode.c.
 
 commit b4b0d901d98371a8aa7b17d195e18e83e2a6a618
-Merge: 64de3baf85f6 d6cd0313c7f2
+Merge: 64de3baf8 d6cd0313c
 Author: Eric Anholt <eric@anholt.net>
 Date:   Mon Nov 27 15:43:15 2006 -0800
 
@@ -189452,7 +189773,7 @@ Date:   Mon Nov 20 13:10:07 2006 +1030
             bugfix in mipointer, semicolon after preprocessor statement
 
 commit ca2874b273232d9f51881b1cd754ed6847bfaf47
-Merge: c9a5f9d3911c e2f6dacc7365
+Merge: c9a5f9d39 e2f6dacc7
 Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
 Date:   Sat Nov 18 19:56:32 2006 +0000
 
@@ -189625,7 +189946,7 @@ Date:   Tue Nov 14 15:33:07 2006 +0100
     Bug #9023: Only check mice for "mouse" or "void" if identifier is != NULL.
 
 commit a724b7f1302ba7a59f140b521f13d2ddf0fcf9bf
-Merge: 6facd958c2e7 f80a8ae6e682
+Merge: 6facd958c f80a8ae6e
 Author: Jeremy C. Reed <reed@glacier.reedmedia.net>
 Date:   Mon Nov 13 20:32:26 2006 -0600
 
@@ -189949,7 +190270,7 @@ Date:   Tue Nov 7 15:48:05 2006 -0800
     A couple more cases of error message before freeing strings.
 
 commit 05f1c302460a14c8fa9a943a12d69adcd3c30d58
-Merge: 3e7e0e35094d 46af6d1e953f
+Merge: 3e7e0e350 46af6d1e9
 Author: Adam Jackson <ajax@benzedrine.nwnk.net>
 Date:   Tue Nov 7 18:42:54 2006 -0500
 
@@ -189995,7 +190316,7 @@ Date:   Tue Nov 7 01:29:51 2006 -0800
     getevents.c
 
 commit c20d3bf7533da0bf26beaf7d8c359d18edbd70e8
-Merge: 028bbdc04171 3d39c02fe6aa
+Merge: 028bbdc04 3d39c02fe
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Tue Nov 7 01:21:28 2006 -0800
 
@@ -190034,14 +190355,14 @@ Date:   Mon Nov 6 00:30:09 2006 +0100
     Fix typo in Xvesa: incorrect reporting of DAC capabilities.
 
 commit 028bbdc0417173803695808ba9f48498519273a3
-Merge: 50504c68e1d4 8deaaa312ad7
+Merge: 50504c68e 8deaaa312
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sat Nov 4 17:46:26 2006 -0800
 
     Merge master back to randr-1.2
 
 commit 50504c68e1d407232cf83465981b235e542ef31f
-Merge: 8b87ce197417 cde8806c2930
+Merge: 8b87ce197 cde8806c2
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sat Nov 4 17:43:19 2006 -0800
 
@@ -190121,7 +190442,7 @@ Date:   Fri Oct 27 12:36:56 2006 -0700
     and 1024x768@75 modes.
 
 commit 22ee2e4e1f1d9fd9ca9f25c9bf25370034b771d4
-Merge: 49a26681b2bd bd0c82965490
+Merge: 49a26681b bd0c82965
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Nov 3 12:54:56 2006 -0800
 
@@ -190234,7 +190555,7 @@ Date:   Thu Nov 2 12:25:03 2006 +0100
     Build with -D_PC on ix86 only.
 
 commit 543b397277d1f03b8091e44812010abcd5d80102
-Merge: 4056e6e79a4e 645d05762055
+Merge: 4056e6e79 645d05762
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Thu Nov 2 19:00:35 2006 -0800
 
@@ -190305,14 +190626,14 @@ Date:   Thu Nov 2 03:22:09 2006 +0200
     bump to 1.2.99.0
 
 commit 18c246a13b887b865de6a17e6cd1c259b9bc383d
-Merge: 794f2e7291cc 4843d823f4d3
+Merge: 794f2e729 4843d823f
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Nov 2 03:21:37 2006 +0200
 
     Merge branch 'input-hotplug'
 
 commit 4843d823f4d38d8bd468ce3a8feddbff229ed416
-Merge: ba9f5138fc32 a7b944f0d96c
+Merge: ba9f5138f a7b944f0d
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Nov 2 03:18:13 2006 +0200
 
@@ -190328,7 +190649,7 @@ Date:   Thu Nov 2 03:16:10 2006 +0200
     config file.
 
 commit be291a6d9764cf29a7d9a8114d47d9f41ce856e9
-Merge: a2d6242106bb 6fdfd9dad91d
+Merge: a2d624210 6fdfd9dad
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Nov 2 03:15:25 2006 +0200
 
@@ -190445,7 +190766,7 @@ Date:   Sun Oct 29 17:49:46 2006 +0100
     kill GNU-make'ism.
 
 commit 0107320fac0913aae2cb169992e31c670b4bd2f7
-Merge: 06b6b971d065 a34446f5b3d9
+Merge: 06b6b971d a34446f5b
 Author: Thomas Hellstrom <thomas-at-tungstengraphics-dot-com>
 Date:   Sun Oct 29 15:23:35 2006 +0100
 
@@ -190516,7 +190837,7 @@ Date:   Fri Oct 27 18:26:30 2006 +0200
     Import libdrm functions for the drm memory manager.
 
 commit e3d3d29db5eef057b4e8294377c9c3147436bc2f
-Merge: 92387e99d085 004d00e6689f
+Merge: 92387e99d 004d00e66
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Thu Oct 26 20:21:16 2006 -0400
 
@@ -190567,7 +190888,7 @@ Date:   Thu Oct 26 20:38:58 2006 +0300
     lnx_ia64.c.
 
 commit 8c0556e7cb1de8c387ddd886a03a8f8afff1fd0e
-Merge: cdc8a4b7b2f0 004d00e6689f
+Merge: cdc8a4b7b 004d00e66
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Oct 26 15:21:22 2006 +0300
 
@@ -190585,7 +190906,7 @@ Date:   Thu Oct 26 01:10:08 2006 +0300
     The fallthrough to gettimeofday() is preserved.
 
 commit cdc8a4b7b2f099b8860a54c5c9f488e6f7c4913a
-Merge: 3da918a16c89 d28583329031
+Merge: 3da918a16 d28583329
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Oct 26 00:28:30 2006 +0300
 
@@ -190626,14 +190947,14 @@ Date:   Wed Oct 25 11:39:27 2006 +0200
     without pretending it's always on.
 
 commit 59511974db843fa7e11133894cfc10c20fdaf60f
-Merge: 054f8cd2675a 598ac7a83698
+Merge: 054f8cd26 598ac7a83
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Tue Oct 24 17:26:20 2006 -0700
 
     Merge branch 'master' into randr-1.2
 
 commit 598ac7a83698327b607084abaebcbd22f8d25fbb
-Merge: 828c34e83ccd 948a97b97e93
+Merge: 828c34e83 948a97b97
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Tue Oct 24 17:23:12 2006 -0700
 
@@ -190732,7 +191053,7 @@ Date:   Tue Oct 24 09:04:14 2006 -0700
     Fix from HEAD accidentally reverted during merge.
 
 commit 8b909135664abb69ada522e8e39495d9eca717ac
-Merge: 21291d6ca718 948a97b97e93
+Merge: 21291d6ca 948a97b97
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Tue Oct 24 08:57:59 2006 -0700
 
@@ -190789,7 +191110,7 @@ Date:   Mon Oct 23 05:12:15 2006 +0300
     Remove unused xf86CheckButton.
 
 commit c5b5b046e86b159a9d32451308f38246cc4587f7
-Merge: fab1d37ecbee 948a97b97e93
+Merge: fab1d37ec 948a97b97
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Mon Oct 23 02:58:30 2006 +0300
 
@@ -190975,7 +191296,7 @@ Date:   Sat Oct 21 22:06:43 2006 +1000
     Minor typos in Xserver man page.
 
 commit e26a494f417c3c700636ee68892c3015b2e0f27a
-Merge: 736b0d507859 aeba855b0783
+Merge: 736b0d507 aeba855b0
 Author: Zephaniah E. Hull <warp@agamemnon.b5>
 Date:   Sat Oct 21 04:26:14 2006 -0400
 
@@ -191289,7 +191610,7 @@ Date:   Fri Oct 13 17:34:53 2006 -0700
     Separate configuration from layout changes to send correct events.
 
 commit 335b503c5e7041bb0c44611e496d1c46f554e630
-Merge: bd3d93be82d9 cf948b7b04df
+Merge: bd3d93be8 cf948b7b0
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Oct 13 18:10:45 2006 +0300
 
@@ -191303,7 +191624,7 @@ Date:   Fri Oct 13 14:48:10 2006 +0100
     to avoid cursor movements signalling io.
 
 commit 4b53a5e4b147ab748b28dffc1d330b7148d8efa6
-Merge: 23f6f08b7b5c 042d4a407d0e
+Merge: 23f6f08b7 042d4a407
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Wed Oct 11 20:50:31 2006 -0400
 
@@ -191517,7 +191838,7 @@ Date:   Sat Oct 7 14:16:51 2006 +0300
     layer.
 
 commit 4c342246300e06bdf5c9c62cc1d2f6aa57a524db
-Merge: 8382234a7f31 49a70c8570b0
+Merge: 8382234a7 49a70c857
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 6 18:01:13 2006 -0700
 
@@ -191570,14 +191891,14 @@ Date:   Thu Oct 5 16:07:26 2006 -0400
     Improve error handling, messages during initialization.
 
 commit de63a469dcd0a8ae98554bca540ac0106cccf2a5
-Merge: 9c7440bdf5a4 8382234a7f31
+Merge: 9c7440bdf 8382234a7
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Oct 5 20:29:19 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/xserver into input-hotplug
 
 commit b4659faf9b455b44ac8e691cc7a8fc00a967c80b
-Merge: c4f30c63538e 8382234a7f31
+Merge: c4f30c635 8382234a7
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Wed Oct 4 14:46:04 2006 -0700
 
@@ -191613,7 +191934,7 @@ Date:   Tue Oct 3 17:48:50 2006 -0700
     Don't insert RCS tag into generated pci id header files
 
 commit 75e0cc41b201b9ceb2615e7cec0dd5b4c136b343
-Merge: 6926776f0ecd 20c0ceedfbce
+Merge: 6926776f0 20c0ceedf
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Oct 3 13:58:03 2006 -0400
 
@@ -191647,7 +191968,7 @@ Date:   Mon Oct 2 02:17:14 2006 +0300
     Use XkbCharToInt as that's what we're doing.
 
 commit 3c98cebb6e954855528794fec46830f456cbdec1
-Merge: fa1ac94178cf 2cf1098436d6
+Merge: fa1ac9417 2cf109843
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Mon Oct 2 02:18:17 2006 +0300
 
@@ -191675,21 +191996,21 @@ Date:   Sat Sep 30 17:05:46 2006 +0300
     if built with --enable-debug.
 
 commit 20c0ceedfbce9ae5c70703900b52973917ac4cd0
-Merge: 49a70c8570b0 84eb2c0a06de
+Merge: 49a70c857 84eb2c0a0
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Sep 29 15:37:00 2006 -0400
 
     Merge branch 'master' into my-XACE-modular
 
 commit 518db35ca3f569e7cb95dbddeddb93f3691de498
-Merge: 5d99e05f05a4 84eb2c0a06de
+Merge: 5d99e05f0 84eb2c0a0
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Sep 29 00:35:21 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/xserver into input-hotplug
 
 commit 5d99e05f05a42a82a9f02844df9bfebaa673759d
-Merge: ad631afcf3fb 58933757862c
+Merge: ad631afcf 589337578
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Sep 29 00:35:07 2006 +0300
 
@@ -191713,7 +192034,7 @@ Date:   Thu Sep 28 15:09:40 2006 -0600
     Patch by Dan Nicholson.
 
 commit 4bc5dc2854e33bf343cdea44a3c3b4c41f6f4145
-Merge: cf6e9687ffcc f9542e749544
+Merge: cf6e9687f f9542e749
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Thu Sep 28 13:27:13 2006 -0700
 
@@ -191753,7 +192074,7 @@ Date:   Wed Aug 30 19:12:17 2006 +0200
     Add wrapper for new ioctl to update drawable information in the DRM.
 
 commit ad321fad4b9ab3a2c70cfff37ca6c8faaa5cce9c
-Merge: 5e9d33fe87f9 f7c1d942416d
+Merge: 5e9d33fe8 f7c1d9424
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Sep 24 17:56:43 2006 +0300
 
@@ -191957,14 +192278,14 @@ Date:   Sat Sep 16 03:49:11 2006 -0400
     Thanks, automake.
 
 commit 6926776f0ecd1e8e81c5c40ccd3a97227bc44dcb
-Merge: 6950267dd690 49a70c8570b0
+Merge: 6950267dd 49a70c857
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Sep 15 15:28:13 2006 -0400
 
     Merge branch 'my-XACE-modular' into my-XACE-SELINUX
 
 commit 49a70c8570b03aff8239324a2474918a6fbc52a0
-Merge: d1110c5c83a7 05231e336db8
+Merge: d1110c5c8 05231e336
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Sep 15 15:26:57 2006 -0400
 
@@ -192192,7 +192513,7 @@ Date:   Sun Sep 10 11:13:18 2006 -0700
     so I think we can tolerate the extra #ifdef for the next release.
 
 commit 60db190ecfce52cbfa888c0af3210634f9186bed
-Merge: 5e9d33fe87f9 65256109bb8f
+Merge: 5e9d33fe8 65256109b
 Author: Zephaniah E. Hull <warp@agamemnon.b5>
 Date:   Sun Sep 10 03:49:17 2006 -0400
 
@@ -192217,7 +192538,7 @@ Date:   Fri Sep 8 15:31:18 2006 -0400
     Add SELinux extension configure-time support.
 
 commit fb34c02861ab3629c1c85c156e73b158518db7c7
-Merge: 9c503f09ce78 d1110c5c83a7
+Merge: 9c503f09c d1110c5c8
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Sep 8 15:30:12 2006 -0400
 
@@ -192285,7 +192606,7 @@ Date:   Thu Sep 7 15:35:16 2006 -0400
     DRI locking between 2D and 3D drivers around VT switch.
 
 commit 5e9d33fe87f9d24e55c468d4b2bb761c9efdb26a
-Merge: 629798c73ad7 64479fffa225
+Merge: 629798c73 64479fffa
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Sep 7 15:43:31 2006 +0300
 
@@ -192337,7 +192658,7 @@ Date:   Tue Sep 5 15:23:54 2006 -0700
     (unsigned long)(1 << 31) = bad news on x86_64.
 
 commit 0b81fccd2ee4e054e5cffb739de07460ff2c13f7
-Merge: 20c4ac6e0386 c2813514cf7b
+Merge: 20c4ac6e0 c2813514c
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Tue Sep 5 18:03:25 2006 -0400
 
@@ -192403,7 +192724,7 @@ Date:   Tue Aug 29 16:35:32 2006 -0700
     appear in the server's string.
 
 commit 1c8851ad491dd02d1c79e620b46384956838ed42
-Merge: d59b52fc08f2 5ddbf4bcd46f
+Merge: d59b52fc0 5ddbf4bcd
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Tue Aug 29 16:34:04 2006 -0700
 
@@ -192439,7 +192760,7 @@ Date:   Tue Aug 29 23:49:26 2006 +0300
     Yeah.  That was dumb.
 
 commit 942b4369990a255257f66835caf8671432c405a3
-Merge: 77d315bd2fd2 393dc0a3388d
+Merge: 77d315bd2 393dc0a33
 Author: Ian Romanick <idr@us.ibm.com>
 Date:   Tue Aug 29 13:30:37 2006 -0700
 
@@ -192499,7 +192820,7 @@ Date:   Tue Aug 29 13:19:12 2006 +0300
     couple of range-related thinkos in level name copying.
 
 commit 7fa3383e3c8eea7d1eb0e556393f2431cf8e6ed2
-Merge: 8d77d44fda3a ebbdc1342a24
+Merge: 8d77d44fd ebbdc1342
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Tue Aug 29 15:16:01 2006 +0300
 
@@ -192512,14 +192833,14 @@ Date:   Mon Aug 28 18:17:32 2006 -0400
     Remove calls to LoaderCheckUnresolved(), since it's now a stub.
 
 commit 8d77d44fda3aacbae62864a3620e09095b79e92d
-Merge: d6f36bd28009 2fde560bbb9c
+Merge: d6f36bd28 2fde560bb
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Aug 27 23:08:49 2006 +0300
 
     Merge branch 'origin' into input-hotplug
 
 commit 20c4ac6e038607ebbf6c04639670514c016d8597
-Merge: 13c6713c8276 8d4f21ab53c4
+Merge: 13c6713c8 8d4f21ab5
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Fri Aug 25 18:49:46 2006 -0400
 
@@ -192552,7 +192873,7 @@ Date:   Fri Aug 25 12:05:16 2006 -0700
     GL_NV_{vertex,fragment}_program, and related extensions can be enabled.
 
 commit 21291d6ca7188e5733ed0c93215ee0f1f0f90cc9
-Merge: 1a5561c4eccc cd2da4e41eae
+Merge: 1a5561c4e cd2da4e41
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Fri Aug 25 09:34:21 2006 -0700
 
@@ -192567,7 +192888,7 @@ Date:   Fri Aug 25 12:43:17 2006 +0300
     best-effort attempt to keep configs working.
 
 commit 7c4167f0d6b33c9c602b04fcfd246fd3aeddd709
-Merge: 393f8347edcc cd2da4e41eae
+Merge: 393f8347e cd2da4e41
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Aug 25 11:15:33 2006 +0300
 
@@ -192609,7 +192930,7 @@ Date:   Thu Aug 24 17:58:52 2006 -0700
     Add some missing bits of GL_SGI_color_table.
 
 commit ae608b2071d882966e9c7ede71f846b1ecec0b23
-Merge: 2c865277fe1d b879356ce969
+Merge: 2c865277f b879356ce
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Aug 24 14:56:33 2006 -0700
 
@@ -192632,7 +192953,7 @@ Date:   Thu Aug 24 14:49:46 2006 -0700
     Regenerate from gl_API.xml 1.62.  Functions move, no real changes.
 
 commit 3a36b0a24aa9e9e238faa7f00100f59800f5142b
-Merge: db1ab1bdb2f7 b879356ce969
+Merge: db1ab1bdb b879356ce
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Aug 24 23:35:28 2006 +0300
 
@@ -192670,7 +192991,7 @@ Date:   Thu Aug 24 15:50:15 2006 -0400
     More #ifdef USE_DEPRECATED_KEYBOARD_DRIVER.
 
 commit 4ed311cf1c29090c53e474a3001c5702ff8409df
-Merge: 73e58adda96c b29b236d8878
+Merge: 73e58adda b29b236d8
 Author: Matthias Hopf <mhopf@suse.de>
 Date:   Thu Aug 24 20:17:10 2006 +0200
 
@@ -192703,7 +193024,7 @@ Date:   Thu Aug 24 14:51:26 2006 +0300
     Fix horrendous thinko.  Indicators now work perfectly.
 
 commit 4adf9af313c9f63b6ad734e174efe1d36ddb5813
-Merge: 33af05d58f1f 67bd672c8808
+Merge: 33af05d58 67bd672c8
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Aug 24 10:59:33 2006 +0300
 
@@ -192722,7 +193043,7 @@ Date:   Wed Aug 23 22:39:42 2006 +0000
     Add xorg.conf IgnoreABI option which does the same thing as -ignoreABI
 
 commit b983773d446cef6a0948ca264ed48126e404ae9a
-Merge: 0623d3643fc2 d9a86566c21a
+Merge: 0623d3643 d9a86566c
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Wed Aug 23 17:16:50 2006 -0700
 
@@ -192844,14 +193165,14 @@ Date:   Wed Aug 23 14:33:41 2006 +0300
     the moment), and use that instead of nasty pointer assignments.
 
 commit 52ba722e4c89c052609b4fc62e965d92778aa2dd
-Merge: 9138d5a51e41 05541259bdb0
+Merge: 9138d5a51 05541259b
 Author: Eamon Walsh <ewalsh@tycho.nsa.gov>
 Date:   Mon Aug 21 18:49:31 2006 -0400
 
     Merge branch 'XACE-modular' into my-XACE-modular
 
 commit 05541259bdb0dfaab015a01caa3722b7a1b782e2
-Merge: c2535f67923b a1ac0440bba6
+Merge: c2535f679 a1ac0440b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Aug 21 13:07:41 2006 -0700
 
@@ -192867,7 +193188,7 @@ Date:   Fri Aug 18 18:03:41 2006 +0300
     configure time.
 
 commit 0704bb298cc826cd117815898c6bc015a693c2c9
-Merge: c14036977fef a1ac0440bba6
+Merge: c14036977 a1ac0440b
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Aug 18 17:30:14 2006 +0300
 
@@ -192887,14 +193208,14 @@ Date:   Fri Aug 18 17:24:34 2006 +0300
     input.h: add InitCoreDevices prototype
 
 commit 1c2cb30cd88ba4453f9da339025f8ff39f7f5412
-Merge: 633b6a69f560 70ddd0f39d51
+Merge: 633b6a69f 70ddd0f39
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Aug 18 17:05:50 2006 +0300
 
     Merge branch 'origin' into input-hotplug
 
 commit 19f673b7788d32c220e7e06734f1074b0e4a999c
-Merge: cb0a565d2b2c 70ddd0f39d51
+Merge: cb0a565d2 70ddd0f39
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Aug 18 17:05:41 2006 +0300
 
@@ -192917,7 +193238,7 @@ Date:   Fri Aug 18 14:43:10 2006 +0100
     (Brett Stahlman & Colin Harrison)
 
 commit 708b225689b5a4ba9ffe3372b584b715ef9eacdc
-Merge: e1f4565be5ce ee5e2cbd2bee
+Merge: e1f4565be ee5e2cbd2
 Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
 Date:   Fri Aug 18 09:13:52 2006 +0100
 
@@ -192962,7 +193283,7 @@ Date:   Thu Aug 17 16:22:07 2006 -0400
     It would be really nice if we only did this in one place instead of 40.
 
 commit 633b6a69f560c0a77dcff78fdef5fcf0041e2e04
-Merge: 95dbfcf8828c 7da51447eaab
+Merge: 95dbfcf88 7da51447e
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Aug 17 21:25:14 2006 +0300
 
@@ -193070,21 +193391,21 @@ Date:   Tue Aug 15 15:23:53 2006 +0300
     Fix debug_events prototype.
 
 commit d003bada3352ec7d734498c4c732904876a9d1e2
-Merge: d6433be3cca8 a815b9b990e0
+Merge: d6433be3c a815b9b99
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Aug 12 22:48:55 2006 +0300
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/xserver into input-hotplug
 
 commit a815b9b990e068f02d9cbba2b17f2cc3a30a9310
-Merge: 37943e2f1abc 984babe86bf8
+Merge: 37943e2f1 984babe86
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Sat Aug 12 21:58:33 2006 +0300
 
     Merge branch 'master' of git+ssh://gsap7@git.freedesktop.org/git/xorg/xserver
 
 commit d6433be3cca807dd78fbb1f45d9ba0212283083d
-Merge: 2bf9e3dc1ec5 984babe86bf8
+Merge: 2bf9e3dc1 984babe86
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Aug 12 21:50:52 2006 +0300
 
@@ -193143,7 +193464,7 @@ Date:   Sat Aug 12 19:25:06 2006 +0300
     Define HAVE_EXECINFO_H as well as HAVE_BACKTRACE, when we find execinfo.h.
 
 commit 26c3cd1c9e3f52548389817a6d89a377e20c4269
-Merge: 008aa7eb6ed0 c4951e0a6b6c
+Merge: 008aa7eb6 c4951e0a6
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Aug 12 18:58:18 2006 +0300
 
@@ -193172,7 +193493,7 @@ Date:   Thu Aug 10 20:43:15 2006 -0400
     mode.  Also add M_T_PREFERRED bit, to select a 'best' mode out of a set.
 
 commit c2535f67923bde0bfb0e72363467110806e2f40f
-Merge: c0cb8d1fb805 db82e12fac5e
+Merge: c0cb8d1fb db82e12fa
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Aug 10 10:37:59 2006 -0700
 
@@ -193194,7 +193515,7 @@ Date:   Thu Aug 10 20:28:06 2006 +0300
     auto.
 
 commit 1a5561c4ecccaf32b03c41373adf376100d457aa
-Merge: 190f229ed77d db82e12fac5e
+Merge: 190f229ed db82e12fa
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Aug 10 10:20:37 2006 -0700
 
@@ -193215,7 +193536,7 @@ Date:   Thu Aug 10 18:02:47 2006 +0300
     XKB (and thus don't need to count the extra repeat events).
 
 commit 172d45b9b75f95c997d1e9358040eead496e2a06
-Merge: 3832a3d7db0f db82e12fac5e
+Merge: 3832a3d7d db82e12fa
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Thu Aug 10 14:14:54 2006 +0300
 
@@ -193260,7 +193581,7 @@ Date:   Wed Aug 9 14:48:51 2006 -0400
     Remove the bc flag from the -help text, since it's gone.
 
 commit 767f372dd02232469f9fd804b811a17eaf762e1e
-Merge: c4f5de6cc3b9 462bb61b0fe9
+Merge: c4f5de6cc 462bb61b0
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
 Date:   Wed Aug 9 20:23:30 2006 +0200
 
@@ -193278,7 +193599,7 @@ Date:   Wed Aug 9 20:21:52 2006 +0200
     hooks.
 
 commit 5506b4ad200745236f997c121e8200179c47b749
-Merge: 4be9abb8504b 462bb61b0fe9
+Merge: 4be9abb85 462bb61b0
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Wed Aug 9 07:21:01 2006 +0300
 
@@ -193339,7 +193660,7 @@ Date:   Tue Aug 8 14:54:10 2006 +0300
     Sending MapNotify is more correct in this case than NKN, so do that.
 
 commit 31089816317f27c668b12a15c74fdd226a8df9f7
-Merge: ab3ebfefdb7d 12dbd8a02f79
+Merge: ab3ebfefd 12dbd8a02
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Tue Aug 8 12:01:12 2006 +0300
 
@@ -193463,7 +193784,7 @@ Date:   Mon Aug 7 16:51:09 2006 +0300
     memcpy events into our event structure instead of doing pointer assignment.
 
 commit c85e64cba1d2d88f676ca7cf23b52a6f8219e90e
-Merge: a406f6bfeaa4 f54b71b772a1
+Merge: a406f6bfe f54b71b77
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Mon Aug 7 15:54:55 2006 +0300
 
@@ -193550,7 +193871,7 @@ Date:   Wed Aug 2 09:55:32 2006 -0700
     Remove pciConfigPtr and all of the associated cruft.
 
 commit 966ebd3d2d84b440e89504d055a0e937303ed11d
-Merge: a94176627cdd 39169fd373b9
+Merge: a94176627 39169fd37
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Wed Aug 2 08:14:58 2006 -0700
 
@@ -193605,14 +193926,14 @@ Date:   Mon Jul 31 13:54:36 2006 -0700
     Build fixes for last pull from HEAD.
 
 commit 65dc25d8f86b962f2adc765a9ff327419f98092b
-Merge: 69533fc04f38 b74c845a1233
+Merge: 69533fc04 b74c845a1
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Mon Jul 31 12:30:30 2006 -0700
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/xserver into pci-rework
 
 commit b74c845a1233f78b841ff8840272c50873300c20
-Merge: 3112a6c4f26d 02daa6bb103e
+Merge: 3112a6c4f 02daa6bb1
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Mon Jul 31 10:26:06 2006 -0700
 
@@ -193636,7 +193957,7 @@ Date:   Mon Jul 31 17:32:05 2006 +0100
        and GC stripple and tile pixmaps.
 
 commit 69533fc04f38c67fd424776c5191a4ba57ba8c8f
-Merge: ef1aecaaf6cd 24051ef97406
+Merge: ef1aecaaf 24051ef97
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Mon Jul 31 09:26:04 2006 -0700
 
@@ -193684,7 +194005,7 @@ Date:   Sun Jul 30 11:08:47 2006 +0300
     remove README (which doesn't exist) from EXTRA_DIST
 
 commit 87fe85f38b6f781bf0e2eb555526e3d77779f9fa
-Merge: 3518e2d0debc 654619d76c77
+Merge: 3518e2d0d 654619d76
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sun Jul 30 10:51:34 2006 +0300
 
@@ -193782,7 +194103,7 @@ Date:   Wed Jul 26 13:25:13 2006 -0700
     Pass correct pointer to xf86MapLegacyIO.
 
 commit 3518e2d0debc97e2bacdefe604b280e7fdfdd216
-Merge: eb7733a48a92 3821f6aeaa71
+Merge: eb7733a48 3821f6aea
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Wed Jul 26 11:29:21 2006 +0300
 
@@ -193809,7 +194130,7 @@ Date:   Tue Jul 25 15:38:09 2006 -0700
     pci_device_get_bridge_buses can be used.
 
 commit 380b51d605a82c98082a2cebd70a0d1d0735eaa7
-Merge: 82f6b7e75e04 8977b07434d7
+Merge: 82f6b7e75 8977b0743
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Tue Jul 25 11:30:04 2006 -0700
 
@@ -193907,7 +194228,7 @@ Date:   Sun Jul 23 19:02:12 2006 -0400
     Allow XOpenDevice on closed devices.
 
 commit e73e5e2a4d8f22889d840a7719479f9af686cb9c
-Merge: a73cef1f005c 8977b07434d7
+Merge: a73cef1f0 8977b0743
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Jul 22 13:56:30 2006 -0400
 
@@ -193920,7 +194241,7 @@ Date:   Sun Jul 23 03:36:47 2006 +1000
     glx: fix typo from tag removal
 
 commit a73cef1f005ca66db18e952e676ee5a21b829700
-Merge: 672ca156bfb1 70869fc6777f
+Merge: 672ca156b 70869fc67
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Sat Jul 22 12:07:22 2006 -0400
 
@@ -193963,7 +194284,7 @@ Date:   Fri Jul 21 19:16:38 2006 -0700
     Fix stupid typos.
 
 commit 672ca156bfb11440e6e234650bfba9d38e1edb52
-Merge: d14d91f094c3 6cf844ab6992
+Merge: d14d91f09 6cf844ab6
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Jul 21 19:58:42 2006 -0400
 
@@ -193996,7 +194317,7 @@ Date:   Fri Jul 21 16:47:45 2006 -0700
     which in turn allows the elimination of hw/xfree86/int10/pci.c.
 
 commit 87a6346bf7f086b5f98b2b2ecd52f27efe864e56
-Merge: b73fb2ae35a8 0486d3966d28
+Merge: b73fb2ae3 0486d3966
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Jul 21 19:36:25 2006 -0400
 
@@ -194011,7 +194332,7 @@ Date:   Fri Jul 21 19:35:04 2006 -0400
     XkbSA_XFree86Private.
 
 commit b73fb2ae35a82e0bdd48f01132e971fb84946ff1
-Merge: e7ac27ad81ef aff404f293ed
+Merge: e7ac27ad8 aff404f29
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Jul 21 19:30:26 2006 -0400
 
@@ -194033,7 +194354,7 @@ Date:   Fri Jul 21 19:10:26 2006 -0400
     Ugh.
 
 commit 7465010d59ec435bd00b738f0cef766b352dc7eb
-Merge: 1d31ed778284 0aaac95b0d12
+Merge: 1d31ed778 0aaac95b0
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Fri Jul 21 19:05:41 2006 -0400
 
@@ -194059,7 +194380,7 @@ Date:   Fri Jul 21 18:41:46 2006 -0400
     Remove the loader's required and referenced symbol lists, dead code.
 
 commit 07ad92d2c4cb07db8487d76efc822fd7b88137cb
-Merge: 18624a9b7cf8 22db3fdb54d2
+Merge: 18624a9b7 22db3fdb5
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Fri Jul 21 15:25:35 2006 -0700
 
@@ -194090,7 +194411,7 @@ Date:   Thu Jul 20 18:19:07 2006 -0700
     Fix the RandR failure path for rotated screens.
 
 commit 22db3fdb54d2f7f6b72638b46c186af6db04e214
-Merge: 2f98841fde6b 93cd53860c3a
+Merge: 2f98841fd 93cd53860
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Fri Jul 21 13:55:37 2006 -0700
 
@@ -194333,7 +194654,7 @@ Date:   Thu Jul 20 17:33:13 2006 -0400
     Remove the DDXTIME conditional, for being unused.
 
 commit c69c00d6523a35232a32e54a533811fc2b37815a
-Merge: 46369350d408 84683f19b4d1
+Merge: 46369350d 84683f19b
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Jul 20 12:08:38 2006 -0700
 
@@ -194407,7 +194728,7 @@ Date:   Thu Jul 13 21:10:48 2006 -0700
     Modify linuxGetSizesStruct to use pci_device instead of pciConfigPtr.
 
 commit 12595a77d6c2f037f48dfe751bdc10505b3317df
-Merge: 37838de62edc 4c225a3a8b2e
+Merge: 37838de62 4c225a3a8
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Jul 13 12:48:03 2006 -0700
 
@@ -194448,7 +194769,7 @@ Date:   Sat Jul 8 21:57:07 2006 +0100
     Fix crash in Xephyr when running on host X with keymap width < 4 ( i.e xvnc )
 
 commit 21e3e3ca298dce22e5fad6ef38aa6fe9736a1d3b
-Merge: e8056218944e 39b2f7b2182a
+Merge: e80562189 39b2f7b21
 Author: Matthew Allum <mallum@polystyrene.(none)>
 Date:   Sat Jul 8 21:13:52 2006 +0100
 
@@ -194535,7 +194856,7 @@ Date:   Thu Jul 6 17:39:14 2006 -0400
     Switch the default mouse device on Linux to /dev/input/mice.
 
 commit 37838de62edc474f44c0a48bd56470a6c23f8956
-Merge: fd49a0dcc132 8d07ee070ecf
+Merge: fd49a0dcc 8d07ee070
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Jul 6 13:01:57 2006 -0700
 
@@ -194561,7 +194882,7 @@ Date:   Thu Jul 6 14:22:33 2006 -0400
     Spotted by Aaron Plattner.
 
 commit fd49a0dcc13280cf195bd6c7ee0f23d0840cb665
-Merge: e66e7b48e155 28b95fd9d1c2
+Merge: e66e7b48e 28b95fd9d
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Jul 6 09:52:15 2006 -0700
 
@@ -194619,7 +194940,7 @@ Date:   Wed Jun 28 15:59:01 2006 -0400
     DoGetDrawableAttributes and __glXQueryContextInfoEXT.
 
 commit e66e7b48e15543f3753951a19376f0446759963a
-Merge: a9d4842893b6 eb35f812a5b6
+Merge: a9d484289 eb35f812a
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Wed Jul 5 15:21:36 2006 -0700
 
@@ -194733,7 +195054,7 @@ Date:   Sat Jul 1 12:34:36 2006 -0700
     Missing close parenthesis in one of the setuid() fixes.
 
 commit 124a81eb389dfa510ac07ca93ee17c4c9d6e56ea
-Merge: d3d6c5f4d05e 179737d4a07e
+Merge: d3d6c5f4d 179737d4a
 Author: Keith Packard <keithp@neko.keithp.com>
 Date:   Sat Jul 1 11:12:50 2006 -0700
 
@@ -194761,7 +195082,7 @@ Date:   Wed Jun 7 01:46:00 2006 -0700
     Move variable declarations to start of blocks as required by c89
 
 commit a9d4842893b65232d61fe4c63f074d30e81021d2
-Merge: 66cac9b17498 6bd4c254396c
+Merge: 66cac9b17 6bd4c2543
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Fri Jun 30 11:49:29 2006 -0700
 
@@ -194775,7 +195096,7 @@ Date:   Mon Jun 26 01:52:24 2006 +0200
     Updated for Solaris 10 changes to DDI
 
 commit 66cac9b17498497d939bfb7a4075bcee5a485e5f
-Merge: 7c4e54025345 54d9acd51133
+Merge: 7c4e54025 54d9acd51
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Wed Jun 28 14:11:49 2006 -0700
 
@@ -194812,14 +195133,14 @@ Date:   Tue Jun 27 04:11:47 2006 +0200
     cairo's clip-operator test.
 
 commit 7c4e54025345455f420cd2abaa7a40679689d3cb
-Merge: 9d0a15dca56b ff6b59a0dbad
+Merge: 9d0a15dca ff6b59a0d
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Mon Jun 26 14:39:44 2006 -0700
 
     Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/xserver into pci-rework
 
 commit ff6b59a0dbadbe61a53e48c23965d3073d95791b
-Merge: b3c869304cd8 48c871564d49
+Merge: b3c869304 48c871564
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Jun 26 13:02:33 2006 -0700
 
@@ -194902,7 +195223,7 @@ Date:   Wed Jun 21 09:30:59 2006 -0700
     Add a manpage for EXA.
 
 commit 9d0a15dca56b14821cad474f9db9c332acb3b1e6
-Merge: 6c514ca14c23 d67fd106968e
+Merge: 6c514ca14 d67fd1069
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Thu Jun 22 16:21:10 2006 -0700
 
@@ -194938,7 +195259,7 @@ Date:   Wed Jun 21 18:12:41 2006 -0700
     Use XACE, not XCSECURITY to decide if SecurityLookup* are exported
 
 commit 3177dc498a955cd58cd6054a7c7e69724db4a59b
-Merge: 3f19803e0b1a 91dcac529548
+Merge: 3f19803e0 91dcac529
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Jun 21 18:06:06 2006 -0700
 
@@ -194951,7 +195272,7 @@ Date:   Wed Jun 21 18:05:51 2006 -0700
     APPGROUP requires both X-ACE & XC-SECURITY now
 
 commit 91dcac5295486cc55a34ad91704bfa483bd31eeb
-Merge: d8135eb9e414 77c947b900fa
+Merge: d8135eb9e 77c947b90
 Author: Adam Jackson <ajax@benzedrine.nwnk.net>
 Date:   Wed Jun 21 20:49:30 2006 -0400
 
@@ -194978,7 +195299,7 @@ Date:   Wed Jun 21 16:24:20 2006 -0700
     Correct ifdef - should be XACE, not XSECURITY
 
 commit 90af38fa0c46c2081d2becac262a614c26ba6ef1
-Merge: 3e098efa35ba 77c947b900fa
+Merge: 3e098efa3 77c947b90
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Jun 21 16:23:31 2006 -0700
 
@@ -195005,7 +195326,7 @@ Date:   Wed Jun 21 16:18:41 2006 -0700
      of updates.)
 
 commit aa131c51e06e735d7b54cadf51205f703a3de4ef
-Merge: 1708b0c7d962 77aa701e898c
+Merge: 1708b0c7d 77aa701e8
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Wed Jun 21 14:39:52 2006 -0700
 
@@ -195073,7 +195394,7 @@ Date:   Tue Jun 20 19:01:34 2006 -0700
      - Added X-ACE sources to Xext/Makefile.am
 
 commit a46c06dab8392cf8012c7cc0b916de9a9e569671
-Merge: 49b368c0bb04 d44b2a0a57fb
+Merge: 49b368c0b d44b2a0a5
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Jun 20 18:40:18 2006 -0700
 
@@ -195105,7 +195426,7 @@ Date:   Tue Jun 20 18:14:27 2006 -0700
     Move Xserver API for security extension to securitysrv.h
 
 commit 49b368c0bb04816c4a3579071c596b2398cae3ec
-Merge: 63f6e6bbfd0d 481d4012e74d
+Merge: 63f6e6bbf 481d4012e
 Author: Alan Coopersmith <alanc@alf.(none)>
 Date:   Tue Jun 20 16:22:39 2006 -0700
 
@@ -195118,7 +195439,7 @@ Date:   Tue Jun 20 16:16:19 2006 -0700
     Don't add -ldl to XORG_LIBS if it's not needed for dlopen
 
 commit 63f6e6bbfd0d3677e29621af982c9392ead98dd7
-Merge: 88ede2cec792 6df52fb7745c
+Merge: 88ede2cec 6df52fb77
 Author: Alan Coopersmith <alanc@alf.(none)>
 Date:   Tue Jun 20 16:03:34 2006 -0700
 
@@ -195131,7 +195452,7 @@ Date:   Tue Jun 20 16:02:55 2006 -0700
     Delete code that's been inside #if 0 since X11R6.7.
 
 commit 75398cff82b56c0a8fc301e84e2087f59a61a360
-Merge: 1f91b5726c72 2b58685402e7
+Merge: 1f91b5726 2b5868540
 Author: Ian Romanick <idr@umwelt.(none)>
 Date:   Tue Jun 20 15:49:47 2006 -0700
 
@@ -195143,7 +195464,7 @@ Date:   Tue Jun 20 15:49:47 2006 -0700
             hw/xfree86/loader/xf86sym.c
 
 commit 88ede2cec79281a43cecb43ee6dec65770f82530
-Merge: 227a31934051 2b58685402e7
+Merge: 227a31934 2b5868540
 Author: Alan Coopersmith <alanc@alf.(none)>
 Date:   Tue Jun 20 15:29:55 2006 -0700
 
@@ -195193,7 +195514,7 @@ Date:   Wed May 5 20:07:37 2004 +0000
     (cherry picked from 0106715000196c7b349a0b4494b61545f0f5e138 commit)
 
 commit 0707eb33d6826e1300a905edea28c12134600b12
-Merge: 37f0ae02457b 98d17bba7166
+Merge: 37f0ae024 98d17bba7
 Author: Alan Coopersmith <alanc@alf.(none)>
 Date:   Mon Jun 19 17:09:51 2006 -0700
 
@@ -195358,7 +195679,7 @@ Date:   Fri Jun 16 10:14:30 2006 -0700
     hadn't been bumped.
 
 commit 72ac20c0e878ad48ff61f7e846cbf1005a4eb435
-Merge: fc3e81473a98 b90088321e6e
+Merge: fc3e81473 b90088321
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Tue Jun 13 21:13:02 2006 -0700
 
@@ -195385,7 +195706,7 @@ Date:   Mon Jun 12 20:12:31 2006 +0200
     Provide option to report damage after operation is complete.
 
 commit fc3e81473a98d3b932faa73c0c01c21366a48a9e
-Merge: 4bedaad17dc7 041ef23192b1
+Merge: 4bedaad17 041ef2319
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Mon Jun 12 09:41:06 2006 -0700
 
@@ -195422,7 +195743,7 @@ Date:   Fri Jun 9 16:08:06 2006 -0700
     another function that was already in that file.
 
 commit 7810d87cd6ae9316d88f6a2e7696deb8837cec27
-Merge: dcfaa9f4f8fb caad8b724b97
+Merge: dcfaa9f4f caad8b724
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Fri Jun 9 15:16:50 2006 -0700
 
@@ -195494,7 +195815,7 @@ Date:   Fri Jun 9 09:51:28 2006 -0700
     based on FIXME in mi/miinitext.c
 
 commit dcfaa9f4f8fb10b75be50c9a49ccd88caf6d0f6a
-Merge: af9afe4cc50d 576e6fb1124a
+Merge: af9afe4cc 576e6fb11
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Thu Jun 8 15:03:00 2006 -0700
 
@@ -195514,7 +195835,7 @@ Date:   Thu Jun 8 17:46:53 2006 -0400
     Bug #7121: fix clipboard handling in Xming (Colin Harrison)
 
 commit af9afe4cc50df973bea2293a803f7dfdefaa6411
-Merge: caffac384320 3930da3f6209
+Merge: caffac384 3930da3f6
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Thu Jun 8 11:37:09 2006 -0700
 
@@ -195591,7 +195912,7 @@ Date:   Thu Jun 8 10:40:24 2006 -0700
     if anyone really cares about this code.
 
 commit caffac38432009e8dc01e7d3e72a7fa6fba2f078
-Merge: c5b3aa120bf9 9fa73721f0c3
+Merge: c5b3aa120 9fa73721f
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Thu Jun 8 10:38:43 2006 -0700
 
@@ -195702,7 +196023,7 @@ Date:   Wed Jun 7 17:44:06 2006 -0700
     when the symbol PCI_DOM_FROM_TAG couldn't be resolved at run-time.
 
 commit 23182315f34e3a0065739b43b15d4560e75b41a1
-Merge: bc05158a5ab0 757f40fca50a
+Merge: bc05158a5 757f40fca
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Wed Jun 7 17:03:48 2006 -0700
 
@@ -195739,7 +196060,7 @@ Date:   Wed Jun 7 14:09:13 2006 -0700
     updated the .gitignore file with more auto-generated files
 
 commit bc05158a5ab00c548e4b04b5638afe07bc702260
-Merge: 46f55f5dead5 cc465800ddca
+Merge: 46f55f5de cc465800d
 Author: Ian Romanick <idr@localhost.localdomain>
 Date:   Wed Jun 7 14:09:12 2006 -0700
 
@@ -195759,7 +196080,7 @@ Date:   Wed Jun 7 14:03:35 2006 -0700
     Fix compiler warnings about SetVendorRelease and SetVendorString
 
 commit 785c9789704ed142fe98cd17b5995e4a95b7141f
-Merge: 21ebcfd7027b 36d786e9f051
+Merge: 21ebcfd70 36d786e9f
 Author: Greg Kroah-Hartman <gregkh@suse.de>
 Date:   Wed Jun 7 13:20:21 2006 -0700
 

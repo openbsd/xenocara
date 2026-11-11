@@ -1049,12 +1049,24 @@ SProcXResQueryClientPixmapBytes(ClientPtr client)
 static int _X_COLD
 SProcXResQueryClientIds (ClientPtr client)
 {
+    int i;
+    xXResClientIdSpec *specs;
+
     REQUEST(xXResQueryClientIdsReq);
 
     REQUEST_AT_LEAST_SIZE (xXResQueryClientIdsReq);
     swapl(&stuff->numSpecs);
-    if (stuff->numSpecs > UINT32_MAX / sizeof(xXResClientIdSpec))
+    if (stuff->numSpecs > UINT32_MAX / sizeof(*specs))
         return BadLength;
+    REQUEST_FIXED_SIZE(xXResQueryClientIdsReq,
+                       stuff->numSpecs * sizeof(xXResClientIdSpec));
+
+    specs = (xXResClientIdSpec *) (stuff + 1);
+    for (i = 0; i < stuff->numSpecs; i++) {
+        swapl(&specs[i].client);
+        swapl(&specs[i].mask);
+    }
+
     return ProcXResQueryClientIds(client);
 }
 

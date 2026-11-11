@@ -771,7 +771,7 @@ XkbFlushLedEvents(DeviceIntPtr dev,
                 XkbDDXUpdateDeviceIndicators(dev, sli, sli->effectiveState);
             XkbSendExtensionDeviceNotify(dev, cause->client, ed);
         }
-        memset((char *) ed, 0, sizeof(XkbExtensionDeviceNotify));
+        memset((char *) ed, 0, sizeof(xkbExtensionDeviceNotify));
     }
     return;
 }
