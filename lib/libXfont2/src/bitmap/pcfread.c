@@ -208,7 +208,9 @@ pcfSeekToType(FontFilePtr file, PCFTablePtr tables, int ntables,
 
     for (i = 0; i < ntables; i++)
 	if (tables[i].type == type) {
-	    if (position > tables[i].offset)
+	    if (position < 0 || (CARD32)position > tables[i].offset)
+		return FALSE;
+	    if (tables[i].offset - (CARD32)position > INT_MAX)
 		return FALSE;
 	    if (!FontFileSkip(file, tables[i].offset - position))
 		return FALSE;

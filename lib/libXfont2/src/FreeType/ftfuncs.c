@@ -423,6 +423,7 @@ FreeTypeOpenInstance(FTInstancePtr *instance_return, FTFacePtr face,
     instance->face = face;
 
     instance->load_flags = load_flags;
+    instance->strike_index = 0xFFFFU;
     instance->spacing    = spacing;		/* Actual spacing */
     instance->pixel_size =0;
     instance->pixel_width_unit_x =0;
@@ -477,8 +478,6 @@ FreeTypeOpenInstance(FTInstancePtr *instance_return, FTFacePtr face,
 #if 1
         FT_F26Dot6  tt_char_width, tt_char_height, tt_dim_x, tt_dim_y;
         FT_Int     nn;
-
-        instance->strike_index=0xFFFFU;
 
         tt_char_width  = (FT_F26Dot6)(trans->scale*(1<<6) + 0.5);
         tt_char_height = (FT_F26Dot6)(trans->scale*(1<<6) + 0.5);
@@ -974,7 +973,8 @@ FT_Do_SBit_Metrics( FT_Face ft_face, FT_Size ft_size, FT_ULong strike_index,
 		    int *sbitchk_incomplete_but_exist )
 {
 #if 1
-    if ( strike_index != 0xFFFFU && ft_face->available_sizes != NULL )
+    if ( strike_index != 0xFFFFU && ft_face->available_sizes != NULL &&
+         strike_index < (FT_ULong) ft_face->num_fixed_sizes )
     {
       FT_Error         error;
       FT_Bitmap_Size*  sz = &ft_face->available_sizes[strike_index];

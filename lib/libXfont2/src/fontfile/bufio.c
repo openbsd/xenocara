@@ -87,6 +87,9 @@ BufFileRawSkip (BufFilePtr f, int count)
     off_t	fileoff;
     off_t	todo;
 
+    if (count < 0)
+	return BUFFILEEOF;
+
     curoff = f->bufp - f->buffer;
     fileoff = curoff + f->left;
     if (curoff + count <= fileoff) {
