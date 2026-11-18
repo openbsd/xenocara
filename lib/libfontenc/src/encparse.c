@@ -455,9 +455,11 @@ setCode(unsigned from, unsigned to, unsigned row_size,
     if (row_size == 0)
         index = from;
     else {
-        if ((value1 & 0xFF) >= row_size)
+        if ((from & 0xFF) >= row_size)
             return 0;           /* ignore out of range mappings */
         index = (from >> 8) * row_size + (from & 0xFF);
+        if (index > 0xFFFF)
+            return 0;           /* ignore mappings that exceed the encoding size */
     }
 
     /* Optimize away useless identity mappings.  This is only expected
