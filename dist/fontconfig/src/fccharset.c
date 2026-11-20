@@ -484,7 +484,7 @@ FcBool
 FcCharSetMerge (FcCharSet *a, const FcCharSet *b, FcBool *changed)
 {
     int      ai = 0, bi = 0;
-    FcChar16 an, bn;
+    FcChar32 an, bn;
 
     if (!a || !b)
 	return FcFalse;
@@ -502,6 +502,14 @@ FcCharSetMerge (FcCharSet *a, const FcCharSet *b, FcBool *changed)
     }
 
     while (bi < b->num) {
+	/*
+	 * Once a is exhausted, use a sentinel greater than any valid page
+	 * number.  Page numbers are 16-bit (FcCharSetNumbers is FcChar16), so
+	 * 0xffff is itself a legitimate page (chars U+FFFF00..U+FFFFFF).  Keep
+	 * an/bn as FcChar32 so the ~0 sentinel never collides with a real page;
+	 * otherwise a b page of 0xffff would be unioned into a leaf one past the
+	 * end of a's leaves array instead of being appended.
+	 */
 	an = ai < a->num ? FcCharSetNumbers (a)[ai] : ~0;
 	bn = FcCharSetNumbers (b)[bi];
 
