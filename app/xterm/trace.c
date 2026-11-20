@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.257 2026/10/11 09:51:21 tom Exp $ */
+/* $XTermId: trace.c,v 1.254 2026/04/07 23:01:02 tom Exp $ */
 
 /*
  * Copyright 1997-2025,2026 by Thomas E. Dickey
@@ -324,14 +324,8 @@ visibleChars(const Char *buf, size_t len)
 	size_t limit = ((len + 1) * 8) + 1;
 
 	if (limit > used) {
-	    char *check = realloc(result, limit);
-	    if (check == NULL) {
-		FreeAndNull(result);
-		used = 0;
-	    } else {
-		result = check;
-		used = limit;
-	    }
+	    used = limit;
+	    result = realloc(result, used);
 	}
 	if (result != NULL) {
 	    char *dst = result;
@@ -398,14 +392,8 @@ visibleIChars(const IChar *buf, size_t len)
 	size_t limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
-	    char *check = realloc(result, limit);
-	    if (check == NULL) {
-		FreeAndNull(result);
-		used = 0;
-	    } else {
-		result = check;
-		used = limit;
-	    }
+	    used = limit;
+	    result = realloc(result, used);
 	}
 	if (result != NULL) {
 	    char *dst = result;
@@ -696,7 +684,7 @@ TraceAtomName(Display *dpy, Atom atom)
 void
 TraceScreen(XtermWidget xw, int whichBuf)
 {
-    const TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
 
     if (screen->editBuf_index[whichBuf]) {
 	int row;
@@ -711,15 +699,12 @@ TraceScreen(XtermWidget xw, int whichBuf)
 
 		for (col = 0; col < ld->lineSize; ++col) {
 		    int ch = (int) ld->charData[col];
-		    unsigned attrs = ld->attribs[col];
 		    if (ch < ' ')
 			ch = ' ';
 		    if (ch == HIDDEN_CHAR)
 			ch = '?';
 		    else if (ch >= 127)
 			ch = '#';
-		    if (!(attrs & CHARDRAWN))
-			ch = '_';
 		    TRACE(("%c", ch));
 		}
 		TRACE((":\n"));

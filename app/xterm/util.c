@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.1032 2026/10/11 10:53:38 tom Exp $ */
+/* $XTermId: util.c,v 1.977 2026/04/29 22:21:00 tom Exp $ */
 
 /*
  * Copyright 1999-2025,2026 by Thomas E. Dickey
@@ -103,45 +103,11 @@
 		ScrollBarDrawThumb(xw, 1); \
 	    }
 
-#define GetDefaultBackground(screen) xw->core.background_pixel
-
-#if OPT_ISO_COLORS
-
-#define GetAnsiBackground(screen,ld,col) \
-	 (((ld->attribs[col] & BG_COLOR) \
-	  && okIndexedColor(GetCellColorBG(ld->color[col]))) \
-	    ? screen->Acolors[GetCellColorBG(ld->color[col])].value \
-	    : GetDefaultBackground(screen))
-
-#if OPT_DIRECT_COLOR
-#define PixelOfBG(screen,ld,col) \
-	(hasDirectBG(ld->attribs[col]) \
-	 ? (Pixel) GetCellColorBG(ld->color[col]) \
-	 : GetAnsiBackground(screen,ld,col))
-#else
-#define PixelOfBG(screen,ld,col) GetAnsiBackground(screen,ld,col)
-#endif
-
-#else
-#define PixelOfBG(screen,ld,col) GetDefaultBackground(screen)
-#endif
-
-#define NoPixel 0xfffffffff
-
 static int handle_translated_exposure(XtermWidget xw,
 				      int rect_x,
 				      int rect_y,
 				      int rect_width,
 				      int rect_height);
-static int ClearInLine(XtermWidget xw,
-		       int row,
-		       int col,
-		       unsigned len);
-static int ClearInLine2(XtermWidget xw,
-			int flags,
-			int row,
-			int col,
-			unsigned len);
 static void ClearLeft(XtermWidget xw);
 static void CopyWait(XtermWidget xw);
 static void horizontal_copy_area(XtermWidget xw,
@@ -153,8 +119,7 @@ static void vertical_copy_area(XtermWidget xw,
 			       int nlines,
 			       int amount,
 			       int left,
-			       int right,
-			       Bool faster);
+			       int right);
 
 #if OPT_WIDE_CHARS
 unsigned first_widechar;
@@ -169,7 +134,7 @@ int (*my_wcwidth) (wchar_t);
  * that we should fill with blanks, return true if filling is needed.
  */
 int
-DamagedCells(const TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
+DamagedCells(TScreen *screen, unsigned n, int *klp, int *krp, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
     int result = False;
@@ -177,6 +142,7 @@ DamagedCells(const TScreen *screen, unsigned n, int *klp, int *krp, int row, int
     assert(ld);
     if (col < (int) ld->lineSize) {
 	int nn = (int) n;
+	int kl = col;
 	int kr = col + nn;
 
 	if (kr >= (int) ld->lineSize) {
@@ -184,8 +150,7 @@ DamagedCells(const TScreen *screen, unsigned n, int *klp, int *krp, int row, int
 	    kr = col + nn;
 	}
 
-	if (nn >= 0) {
-	    int kl = col;
+	if (nn > 0) {
 	    assert(kl < (int) ld->lineSize);
 	    if (ld->charData[kl] == HIDDEN_CHAR) {
 		while (kl > 0) {
@@ -222,7 +187,7 @@ DamagedCells(const TScreen *screen, unsigned n, int *klp, int *krp, int row, int
 }
 
 int
-DamagedCurCells(const TScreen *screen, unsigned n, int *klp, int *krp)
+DamagedCurCells(TScreen *screen, unsigned n, int *klp, int *krp)
 {
     return DamagedCells(screen, n, klp, krp, screen->cur_row, screen->cur_col);
 }
@@ -327,8 +292,7 @@ FlushScroll(XtermWidget xw)
 		       scrollheight,
 		       screen->scroll_amt,
 		       left,
-		       right,
-		       False);
+		       right);
     ScrollSelection(screen, -(screen->scroll_amt), False);
     screen->scroll_amt = 0;
     screen->refresh_amt = 0;
@@ -391,7 +355,8 @@ AddToRefresh(XtermWidget xw)
      * If this line is visible, and there are scrolled-off lines, flush out
      * those which are now visible.
      */
-    ScrollJump(xw, !result && screen->scroll_amt);
+    if (!result && screen->scroll_amt)
+	FlushScroll(xw);
 
     return result;
 }
@@ -431,7 +396,6 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
     int lo_row = screen->bot_marg;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
-    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     if (hi_row < 0)
 	hi_row = 0;
@@ -448,18 +412,11 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
     TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
-    if (!screen->keepSelection
-	&& (!scroll_full_line ||
-	    (screen->endH.row >= screen->top_marg &&
-	     screen->startH.row - amount < screen->top_marg) ||
-	    (screen->startH.row <= screen->bot_marg &&
-	     screen->endH.row > screen->bot_marg))) {
-	ScrnDisownSelection(xw);
-    } else if ((left > 0 || right < screen->max_col) &&
-	       ((screen->startH.row >= hi_row &&
-		 screen->startH.row - amount <= lo_row) ||
-		(screen->endH.row >= hi_row &&
-		 screen->endH.row - amount <= lo_row))) {
+    if ((left > 0 || right < screen->max_col) &&
+	((screen->startH.row >= hi_row &&
+	  screen->startH.row - amount <= lo_row) ||
+	 (screen->endH.row >= hi_row &&
+	  screen->endH.row - amount <= lo_row))) {
 	/*
 	 * This could be improved slightly by excluding the special case where
 	 * the selection is on a single line outside left/right margins.
@@ -490,30 +447,21 @@ adjustHiliteOnFwdScroll(XtermWidget xw, int amount, Bool all_lines)
 		ScrnDisownSelection(xw);
 	    }
 	}
-	if (ScrnHaveSelection(screen)) {
-	    if (screen->startH.row <= lo_row &&
-		screen->endH.row > lo_row) {
-		int base = lo_row + 1;
-		int trim = screen->endH.row + 1 - base;
-		TRACE2(("truncate because selection straddles bottom-margin\n"));
-		screen->endH.row = lo_row;
-		screen->endH.col = MaxCols(screen);
-		ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
-	    } else if (screen->startH.row < hi_row &&
-		       screen->endH.row >= hi_row &&
-		       screen->endH.row - amount < hi_row) {
-		TRACE2(("truncate because selection is scrolled off margins\n"));
-		ScrnDisownSelection(xw);
-	    } else if (screen->startH.row < hi_row &&
-		       screen->endH.row >= hi_row &&
-		       screen->endH.row - amount >= hi_row) {
-		int base = hi_row + amount;
-		int trim = Max(1, screen->endH.row - amount - hi_row);
-		TRACE2(("truncate because selection straddles top-margin\n"));
-		screen->startH.row = base;
-		screen->startH.col = 0;
-		ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
-	    }
+	if (screen->startH.row <= lo_row && screen->endH.row > lo_row) {
+	    int base = lo_row + 1;
+	    int trim = screen->endH.row + 1 - base;
+	    TRACE2(("truncate because selection straddles bottom-margin\n"));
+	    screen->endH.row = lo_row;
+	    screen->endH.col = MaxCols(screen);
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
+	}
+	if (screen->startH.row < hi_row && screen->endH.row > hi_row) {
+	    int base = screen->startH.row;
+	    int trim = hi_row - base;
+	    TRACE2(("truncate because selection straddles top-margin\n"));
+	    screen->startH.row = hi_row;
+	    screen->startH.col = 0;
+	    ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
 	}
     }
 
@@ -534,9 +482,6 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
     TScreen *screen = TScreenOf(xw);
     int hi_row = screen->top_marg;
     int lo_row = screen->bot_marg;
-    int left = ScrnLeftMargin(xw);
-    int right = ScrnRightMargin(xw);
-    Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
 
     TRACE2(("adjustSelection BAK %s by %d (%s)\n",
 	    screen->whichBuf ? "alternate" : "normal",
@@ -550,16 +495,8 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
     TRACE2(("  margins %d..%d\n", screen->top_marg, screen->bot_marg));
     TRACE2(("  limits  %d..%d\n", hi_row, lo_row));
 
-    if (!screen->keepSelection &&
-	(!scroll_full_line ||
-	 (screen->startH.row <= screen->bot_marg &&
-	  screen->endH.row + amount > screen->bot_marg) ||
-	 (screen->startH.row < screen->top_marg &&
-	  screen->endH.row > screen->top_marg))) {
-	ScrnDisownSelection(xw);
-    } else if (screen->startH.row <= lo_row
-	       && screen->endH.row >= lo_row
-	       && screen->endH.row + amount > lo_row) {
+    if (screen->endH.row >= lo_row
+	&& screen->endH.row + amount > lo_row) {
 	/* truncate the selection because it extends out of scrolled region */
 	if (lo_row - amount >= screen->startH.row) {
 	    int trim = screen->endH.row - lo_row;
@@ -583,14 +520,13 @@ adjustHiliteOnBakScroll(XtermWidget xw, int amount)
 		    lo_row));
 	    ScrnDisownSelection(xw);
 	}
-    } else if (screen->endH.row >= hi_row && screen->endH.col > 0 &&
-	       screen->startH.row < hi_row) {
+    } else if (screen->endH.row >= hi_row && screen->startH.row < hi_row) {
 	int base = screen->startH.row;
 	int trim = hi_row - base;
 	TRACE2(("truncate because selection straddles top-margin\n"));
 	screen->startH.row = hi_row;
 	ScrnRefresh(xw, base, 0, trim, MaxCols(screen), True);
-    } else if (screen->endH.row > lo_row && screen->startH.row <= lo_row) {
+    } else if (screen->endH.row > lo_row && screen->startH.row > lo_row) {
 	TRACE2(("deselect because selection straddles bottom-margin\n"));
 	ScrnDisownSelection(xw);
     }
@@ -664,243 +600,6 @@ scrollInMargins(XtermWidget xw, int amount, int top)
     }
 }
 
-static Boolean
-row_has_data(const TScreen *screen, int row, Boolean trim)
-{
-    Boolean result = False;
-    CLineData *ld;
-
-    if ((ld = getLineData(screen, row)) != NULL) {
-	int col;
-
-	for (col = 0; col < screen->max_col; ++col) {
-	    if (ld->attribs[col] & CHARDRAWN &&
-		(!trim || ld->charData[col] != ' ')) {
-		result = True;
-		break;
-	    }
-	}
-    }
-    return result;
-}
-
-static Boolean
-row_has_data2(const TScreen *screen, int row, int left, int right)
-{
-    Boolean result = False;
-    CLineData *ld;
-
-    if ((ld = getLineData(screen, row)) != NULL) {
-	int col;
-
-	for (col = left; col < right; ++col) {
-	    if (ld->attribs[col] & CHARDRAWN) {
-		result = True;
-		break;
-	    }
-	}
-    }
-    return result;
-}
-
-static Boolean
-screen_has_data(XtermWidget xw)
-{
-    const TScreen *screen = TScreenOf(xw);
-    Boolean result = False;
-    int row;
-
-    for (row = 0; row < screen->max_row; ++row) {
-	if (row_has_data(screen, row, False)) {
-	    result = True;
-	    break;
-	}
-    }
-    return result;
-}
-
-static void
-ClearWithPixel(XtermWidget xw,
-	       Pixel bg,
-	       int y, int x,
-	       unsigned height, unsigned width)
-{
-    TScreen *screen = TScreenOf(xw);
-    Drawable draw = VDrawable(screen);
-    VTwin *win = WhichVWin(screen);
-    GC gc;
-
-    setCgsFore(xw, win, gcFiller, bg);
-    gc = getCgsGC(xw, win, gcFiller);
-    XFillRectangle(screen->display, draw, gc, x, y, width, height);
-}
-
-static void
-ClearPartOfUndrawn(XtermWidget xw, int top, int left, int bottom, int right)
-{
-    if (right >= left && bottom >= top) {
-	const TScreen *screen = TScreenOf(xw);
-	int x = CursorX2(screen, left, FontWidth(screen));
-	int y = CursorY2(screen, top);
-	unsigned width = (unsigned) ((right - left + 1) * FontWidth(screen));
-	unsigned height = (unsigned) ((bottom - top + 1) * FontHeight(screen));
-	int row, col;
-	Pixel old = NoPixel;
-	TRACE(("=> %d,%d %dx%d\n", y, x, height, width));
-	for (row = top; row <= bottom; ++row) {
-	    CLineData *ld;
-	    if ((ld = getLineData(screen, row)) != NULL) {
-		for (col = left; col < right; ++col) {
-		    Pixel now = PixelOfBG(screen, ld, col);
-		    if (now != old) {
-			TRACE2(("CELL %d.%d %#lx%s\n", row, col, now,
-				(ld->attribs[col] & CHARDRAWN)
-				? " fill" : ""));
-			old = now;
-		    }
-		}
-	    }
-	}
-	if (old == xw->core.background_pixel) {
-	    xtermClear2(xw, x, y, width, height);
-	} else {
-	    ClearWithPixel(xw, old, y, x, height, width);
-	}
-    }
-}
-
-/*
- * Check for undrawn cells in the area bounded by [first..last] lines,
- * inclusive, clearing them on the display.
- */
-static void
-ClearUndrawn(XtermWidget xw, int first, int last, int left, int right)
-{
-    const TScreen *screen = TScreenOf(xw);
-    int row_lo = last + 1;
-    int row_hi = first - 1;
-    int col_lo = MaxCols(screen) + 1;
-    int col_hi = -1;
-    int row;
-    int state = 0;
-    int prefix = -1;
-    int suffix = -1;
-    CLineData *ld;
-
-    TRACE(("ClearUndrawn %d.%d to %d.%d\n",
-	   row_lo, col_lo,
-	   row_hi, col_hi));
-    TRACE((" top/bottom: %d %d\n", first, last));
-    TRACE((" left/right: %d %d\n", left, right));
-    for (row = first; row <= last; ++row) {
-
-	if ((ld = getLineData(screen, row)) != NULL) {
-	    int col;
-	    Bool partial = False;
-	    for (col = left; col <= right; ++col) {
-		if ((ld->attribs[col] & CHARDRAWN)) {
-		    partial = True;
-		    break;
-		}
-	    }
-	    if (state == 0 && partial) {
-		state = 1;
-	    }
-	    if (state == 0) {
-		prefix = row;
-	    } else {
-		if (partial)
-		    suffix = -1;
-		else if (suffix < 0)
-		    suffix = row;
-		for (col = left; col <= right; ++col) {
-		    if (!(ld->attribs[col] & CHARDRAWN)) {
-			if (suffix != row) {
-			    if (row_lo > row)
-				row_lo = row;
-			    if (row_hi < row)
-				row_hi = row;
-			}
-			if (col_lo > col)
-			    col_lo = col;
-			if (col_hi < col)
-			    col_hi = col;
-		    }
-		}
-	    }
-	}
-    }
-    if (prefix >= 0) {
-	TRACE(("Nonempty prefix %d..%d\n", first, prefix));
-	ClearPartOfUndrawn(xw,
-			   first, left,
-			   prefix + 1, right);
-    }
-    if (row_hi >= row_lo && col_hi >= col_lo) {
-	TRACE(("Nonempty region %d.%d to %d.%d\n",
-	       row_lo, col_lo,
-	       row_hi, col_hi));
-	ClearPartOfUndrawn(xw,
-			   row_lo, col_lo,
-			   row_hi, col_hi);
-    }
-    if (suffix >= 0) {
-	TRACE(("Nonempty suffix %d..%d\n", suffix, last));
-	ClearPartOfUndrawn(xw,
-			   suffix, left,
-			   last, right);
-    }
-}
-
-static void
-RepaintRow(XtermWidget xw, int row, int col)
-{
-    const TScreen *screen = TScreenOf(xw);
-    LineLimits ll;
-
-    if (screen->no_copy_area) {
-	ClearUndrawn(xw, row, row, col, screen->max_col);
-    }
-
-    if (row_has_data(screen, row, False)) {
-	/* *INDENT-EQLS* */
-	memset(&ll, 0, sizeof(ll));
-	ll.col_1st = col;
-	ll.col_end = screen->max_col;
-	ll.num_col = ll.col_end - ll.col_1st + 1;
-	LineRefresh(xw, &ll, row, True);
-    }
-}
-
-static void
-RepaintMultiple(XtermWidget xw,
-		int firstline,
-		int nlines,
-		int amount,
-		int left,
-		int right)
-{
-    const TScreen *screen = TScreenOf(xw);
-    LineLimits ll;
-    int source;
-    int first = firstline + amount;
-    int last = firstline + nlines;
-
-    if (screen->no_copy_area)
-	ClearUndrawn(xw, first, last - 1, left, right);
-
-    for (source = first; source < last; ++source) {
-	if (row_has_data2(screen, source, left, right)) {
-	    memset(&ll, 0, sizeof(ll));
-	    ll.col_1st = left;
-	    ll.col_end = right;
-	    ll.num_col = ll.col_end - ll.col_1st + 1;
-	    LineRefresh(xw, &ll, source, True);
-	    free(ll.sizes);
-	}
-    }
-}
-
 #if OPT_WIDE_CHARS
 /*
  * If we're repainting a section of wide-characters that, e.g., ClearCells has
@@ -940,7 +639,7 @@ void
 xtermScroll(XtermWidget xw, int amount)
 {
     TScreen *screen = TScreenOf(xw);
-    int limit;
+    int i;
     int refreshtop = 0;
     int refreshheight;
     Boolean save_wrap = screen->do_wrap;
@@ -960,81 +659,44 @@ xtermScroll(XtermWidget xw, int amount)
     if (screen->cursor_state)
 	HideCursor(xw);
 
-    limit = screen->bot_marg - screen->top_marg + 1;
-    if (amount > limit)
-	amount = limit;
-    if (amount <= 0)
-	return;
-
-    if (ScrnHaveSelection(screen))
-	adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
-
-    if (!scroll_full_line) {
-	scrollInMargins(xw, amount, screen->top_marg);
-    } else if (scroll_all_lines) {
-	ScrnDeleteLine(xw,
-		       screen->saveBuf_index,
-		       screen->bot_marg + screen->savelines,
-		       0,
-		       (unsigned) amount);
-    } else {
-	ScrnDeleteLine(xw,
-		       screen->visbuf,
-		       screen->bot_marg,
-		       screen->top_marg,
-		       (unsigned) amount);
-    }
+    i = screen->bot_marg - screen->top_marg + 1;
+    if (amount > i)
+	amount = i;
 
     if (!scroll_full_line) {
 	refreshheight = 0;
-	ScrnUpdate2(xw,
-		    screen->top_marg,
-		    left,
-		    screen->bot_marg + 1 - screen->top_marg,
-		    right + 1 - left,
-		    True);
-    }
+    } else
 #if OPT_SCROLL_LOCK
-    else if ((screen->allowScrollLock && screen->scroll_lock)
-	     || (screen->autoScrollLock && screen->topline < 0)) {
+	if ((screen->allowScrollLock && screen->scroll_lock)
+	    || (screen->autoScrollLock && screen->topline < 0)) {
 	refreshheight = 0;
 	screen->scroll_amt = 0;
 	screen->refresh_amt = 0;
 	if (--(screen->topline) < -screen->savelines) {
-	    SetWindowTop(xw, -screen->savelines);
+	    screen->topline = -screen->savelines;
 	    screen->scroll_dirty = True;
 	}
 	if (++(screen->savedlines) > screen->savelines) {
 	    screen->savedlines = screen->savelines;
 	}
-    }
+    } else
 #endif
-    else if (screen->no_copy_area) {
-	refreshheight = screen->top_marg + limit;
-	if (scroll_all_lines) {
-	    IncrementSavedLines(amount);
-	}
-	if (ScrnHaveSelection(screen) &&
-	    screen->startH.row <= screen->bot_marg &&
-	    screen->endH.row - amount >= screen->top_marg) {
-	    ScrollSelection(screen, -amount, True);
-	}
-	ClearUndrawn(xw,
-		     screen->top_marg,
-		     screen->bot_marg,
-		     ScrnLeftMargin(xw),
-		     ScrnRightMargin(xw));
-    } else {
+    {
+	if (ScrnHaveSelection(screen))
+	    adjustHiliteOnFwdScroll(xw, amount, scroll_all_lines);
+
 	if (screen->jumpscroll) {
 	    if (screen->scroll_amt > 0) {
 		if (!screen->fastscroll) {
-		    ScrollJump(xw, screen->refresh_amt + amount > limit);
+		    if (screen->refresh_amt + amount > i)
+			FlushScroll(xw);
 		}
 		screen->scroll_amt += amount;
 		screen->refresh_amt += amount;
 	    } else {
 		if (!screen->fastscroll) {
-		    ScrollJump(xw, screen->scroll_amt < 0);
+		    if (screen->scroll_amt < 0)
+			FlushScroll(xw);
 		}
 		screen->scroll_amt = amount;
 		screen->refresh_amt = amount;
@@ -1047,40 +709,38 @@ xtermScroll(XtermWidget xw, int amount)
 	    int bot;
 
 	    ScrollSelection(screen, -(amount), False);
-	    if (amount == limit) {
+	    if (amount == i) {
 		ClearScreen(xw);
 		goto done;
 	    }
 
 	    shift = INX2ROW(screen, 0);
 	    bot = screen->max_row - shift;
-	    scrollheight = limit - amount;
+	    scrollheight = i - amount;
 	    refreshheight = amount;
 
 	    if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
-		(limit = screen->max_row - refreshheight + 1))
-		refreshtop = limit;
+		(i = screen->max_row - refreshheight + 1))
+		refreshtop = i;
 
 	    if (scroll_all_lines) {
 		scrolltop = 0;
-		if ((scrollheight += shift) > limit)
-		    scrollheight = limit;
+		if ((scrollheight += shift) > i)
+		    scrollheight = i;
 		IncrementSavedLines(amount);
 	    } else {
 		scrolltop = screen->top_marg + shift;
-		if ((limit = screen->bot_marg - bot) > 0) {
-		    scrollheight -= limit;
-		    if ((limit = screen->top_marg + amount - 1 - bot) >= 0) {
-			refreshtop += limit;
-			refreshheight -= limit;
+		if ((i = screen->bot_marg - bot) > 0) {
+		    scrollheight -= i;
+		    if ((i = screen->top_marg + amount - 1 - bot) >= 0) {
+			refreshtop += i;
+			refreshheight -= i;
 		    }
 		}
 	    }
 
-	    if (amount == 1 &&
-		screen->multiscroll &&
-		screen->topline == 0 &&
-		screen->top_marg == 0 &&
+	    if (screen->multiscroll && amount == 1 &&
+		screen->topline == 0 && screen->top_marg == 0 &&
 		screen->bot_marg == screen->max_row) {
 		if (screen->incopy < 0 && screen->scrolls == 0)
 		    CopyWait(xw);
@@ -1092,8 +752,7 @@ xtermScroll(XtermWidget xw, int amount)
 			       scrollheight,
 			       amount,
 			       left,
-			       right,
-			       True);
+			       right);
 
 	    if (refreshheight > 0) {
 		ClearCurBackground(xw,
@@ -1105,6 +764,30 @@ xtermScroll(XtermWidget xw, int amount)
 		if (refreshheight > shift)
 		    refreshheight = shift;
 	    }
+	}
+    }
+
+    if (amount > 0) {
+	if (left > 0 || right < screen->max_col) {
+	    scrollInMargins(xw, amount, screen->top_marg);
+	    ScrnUpdate2(xw,
+			screen->top_marg,
+			left,
+			screen->bot_marg + 1 - screen->top_marg,
+			right + 1 - left,
+			True);
+	} else if (scroll_all_lines) {
+	    ScrnDeleteLine(xw,
+			   screen->saveBuf_index,
+			   screen->bot_marg + screen->savelines,
+			   0,
+			   (unsigned) amount);
+	} else {
+	    ScrnDeleteLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->top_marg,
+			   (unsigned) amount);
 	}
     }
 
@@ -1177,9 +860,6 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 {
     TScreen *screen = TScreenOf(xw);
 
-    TRACE(("xtermColScroll %d %s @%d " TRACE_L "\n",
-	   amount, toLeft ? "left" : "right", at_col));
-
     if (amount > 0) {
 	int min_row;
 	int max_row;
@@ -1200,48 +880,23 @@ xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
 	    int save_col = screen->cur_col;
 	    int row;
 
-	    HideCursor(xw);
-	    if (!screen->keepSelection && ScrnHaveSelection(screen)) {
-		for (row = min_row; row <= max_row; row++) {
-		    if (ScrnIsRowInSelection(screen, row)) {
-			ScrnDisownSelection(xw);
-			break;
-		    }
-		}
-	    }
-
 	    screen->cur_col = at_col;
-	    for (row = min_row; row <= max_row; row++) {
-		screen->cur_row = row;
-		if (toLeft) {
+	    if (toLeft) {
+		for (row = min_row; row <= max_row; row++) {
+		    screen->cur_row = row;
 		    ScrnDeleteChar(xw, (unsigned) amount);
-		} else {
+		}
+	    } else {
+		for (row = min_row; row <= max_row; row++) {
+		    screen->cur_row = row;
 		    ScrnInsertChar(xw, (unsigned) amount);
 		}
 	    }
 	    screen->cur_row = save_row;
 	    screen->cur_col = save_col;
-#define ColLeftRight(delim) \
-	    if (ScrnIsRowInMargins(screen, screen->delim.row)) { \
-		if (toLeft) { \
-		    if ((screen->delim.col -= amount) < 0) \
-			screen->delim.col = 0; \
-		} else { \
-		    if ((screen->delim.col += amount) > screen->max_col) \
-			screen->delim.col = screen->max_col; \
-		} \
-	    }
-	    ColLeftRight(startH);
-	    ColLeftRight(endH);
-	    RepaintMultiple(xw,
-			    ScrnTopMargin(xw),
-			    ScrnBottomMargin(xw) + 1 - ScrnTopMargin(xw),
-			    0,
-			    at_col,
-			    ScrnRightMargin(xw));
+	    xtermRepaint(xw);
 	}
     }
-    TRACE((TRACE_R " xtermColScroll\n"));
 }
 
 /*
@@ -1254,7 +909,7 @@ void
 RevScroll(XtermWidget xw, int amount)
 {
     TScreen *screen = TScreenOf(xw);
-    int limit;
+    int i = screen->bot_marg - screen->top_marg + 1;
     int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
     Boolean scroll_full_line = ((left == 0) && (right == screen->max_col));
@@ -1267,44 +922,23 @@ RevScroll(XtermWidget xw, int amount)
     if (screen->cursor_state)
 	HideCursor(xw);
 
-    limit = screen->bot_marg - screen->top_marg + 1;
-    if (amount > limit)
-	amount = limit;
-    if (amount <= 0)
-	return;
+    if (amount > i)
+	amount = i;
 
     if (ScrnHaveSelection(screen))
 	adjustHiliteOnBakScroll(xw, amount);
 
-    if (!scroll_full_line || screen->no_copy_area) {
-	if (!scroll_full_line) {
-	    scrollInMargins(xw, -amount, screen->top_marg);
-	} else if (screen->no_copy_area) {
-	    ScrnInsertLine(xw,
-			   screen->visbuf,
-			   screen->bot_marg,
-			   screen->top_marg,
-			   (unsigned) amount);
-	}
-	if (ScrnHaveSelection(screen) &&
-	    screen->startH.row <= screen->bot_marg &&
-	    screen->endH.row >= screen->top_marg) {
-	    ScrollSelection(screen, amount, True);
-	}
-	RepaintMultiple(xw,
-			screen->top_marg,
-			screen->bot_marg + 1 - screen->top_marg,
-			0,
-			left,
-			right);
-	amount = 0;		/* cancel the other updates */
+    if (!scroll_full_line) {
+	;
     } else if (screen->jumpscroll) {
 	if (screen->scroll_amt < 0) {
-	    ScrollJump(xw, -screen->refresh_amt + amount > limit);
+	    if (-screen->refresh_amt + amount > i)
+		FlushScroll(xw);
 	    screen->scroll_amt -= amount;
 	    screen->refresh_amt -= amount;
 	} else {
-	    ScrollJump(xw, screen->scroll_amt > 0);
+	    if (screen->scroll_amt > 0)
+		FlushScroll(xw);
 	    screen->scroll_amt = -amount;
 	    screen->refresh_amt = -amount;
 	}
@@ -1317,15 +951,13 @@ RevScroll(XtermWidget xw, int amount)
 			    - screen->top_marg - refreshheight + 1);
 	int scrolltop = refreshtop + refreshheight;
 
-	if ((limit = screen->bot_marg - bot) > 0)
-	    scrollheight -= limit;
-	if ((limit = screen->top_marg + refreshheight - 1 - bot) > 0)
-	    refreshheight -= limit;
+	if ((i = screen->bot_marg - bot) > 0)
+	    scrollheight -= i;
+	if ((i = screen->top_marg + refreshheight - 1 - bot) > 0)
+	    refreshheight -= i;
 
-	if (amount == 1 &&
-	    screen->multiscroll &&
-	    screen->topline == 0 &&
-	    screen->top_marg == 0 &&
+	if (screen->multiscroll && amount == 1 &&
+	    screen->topline == 0 && screen->top_marg == 0 &&
 	    screen->bot_marg == screen->max_row) {
 	    if (screen->incopy < 0 && screen->scrolls == 0)
 		CopyWait(xw);
@@ -1337,8 +969,7 @@ RevScroll(XtermWidget xw, int amount)
 			   scrollheight,
 			   -amount,
 			   left,
-			   right,
-			   True);
+			   right);
 
 	if (refreshheight > 0) {
 	    ClearCurBackground(xw,
@@ -1632,7 +1263,7 @@ WriteText(XtermWidget xw, Cardinal offset, Cardinal length)
  * bottom margin are lost.
  */
 void
-InsertLine(XtermWidget xw, int amount)
+InsertLine(XtermWidget xw, int n)
 {
     TScreen *screen = TScreenOf(xw);
     int i;
@@ -1645,92 +1276,75 @@ InsertLine(XtermWidget xw, int amount)
 	|| screen->cur_col > right)
 	return;
 
-    TRACE(("InsertLine count=%d\n", amount));
+    TRACE(("InsertLine count=%d\n", n));
 
     set_cur_col(screen, ScrnLeftMargin(xw));
-
-    if (amount > (i = screen->bot_marg - screen->cur_row + 1))
-	amount = i;
-    if (amount <= 0)
-	return;
-
     if (screen->cursor_state)
 	HideCursor(xw);
 
-    if (ScrnHaveSelection(screen)) {
-	if (screen->cur_row >= screen->startH.row
-	    && screen->cur_row <= screen->endH.row) {
-	    ScrnDisownSelection(xw);
-	}
+    if (ScrnHaveSelection(screen)
+	&& ScrnAreRowsInSelection(screen,
+				  INX2ROW(screen, screen->top_marg),
+				  INX2ROW(screen, screen->cur_row - 1))
+	&& ScrnAreRowsInSelection(screen,
+				  INX2ROW(screen, screen->cur_row),
+				  INX2ROW(screen, screen->bot_marg))) {
+	ScrnDisownSelection(xw);
     }
 
     ResetWrap(screen);
-
-    if (scroll_full_line) {
-	ScrnInsertLine(xw,
-		       screen->visbuf,
-		       screen->bot_marg,
-		       screen->cur_row,
-		       (unsigned) amount);
-    } else {
-	scrollInMargins(xw, -amount, screen->cur_row);
+    if (n > (i = screen->bot_marg - screen->cur_row + 1))
+	n = i;
+    if (screen->jumpscroll && scroll_full_line) {
+	if (screen->scroll_amt <= 0 &&
+	    screen->cur_row <= -screen->refresh_amt) {
+	    if (-screen->refresh_amt + n > MaxRows(screen))
+		FlushScroll(xw);
+	    screen->scroll_amt -= n;
+	    screen->refresh_amt -= n;
+	} else {
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
+	}
     }
+    if (!screen->scroll_amt && scroll_full_line) {
+	int shift = INX2ROW(screen, 0);
+	int bot = screen->max_row - shift;
+	int refreshheight = n;
+	int refreshtop = screen->cur_row + shift;
+	int scrolltop = refreshtop + refreshheight;
+	int scrollheight = (screen->bot_marg
+			    - screen->cur_row - refreshheight + 1);
 
-    if (!scroll_full_line) {
-	ScrnUpdate2(xw,
-		    screen->cur_row,
-		    left,
-		    screen->bot_marg + 1 - screen->cur_row,
-		    right + 1 - left,
-		    True);
-    } else if (screen->no_copy_area) {
-	if (ScrnHaveSelection(screen)
-	    && screen->cur_row < screen->startH.row) {
-	    ScrollSelection(screen, amount, True);
+	if ((i = screen->bot_marg - bot) > 0)
+	    scrollheight -= i;
+	if ((i = screen->cur_row + refreshheight - 1 - bot) > 0)
+	    refreshheight -= i;
+	vertical_copy_area(xw, scrolltop - n, scrollheight, -n, left, right);
+	if (refreshheight > 0) {
+	    ClearCurBackground(xw,
+			       refreshtop,
+			       left,
+			       (unsigned) refreshheight,
+			       (unsigned) (right + 1 - left),
+			       (unsigned) FontWidth(screen));
 	}
-	RepaintMultiple(xw,
+    }
+    if (n > 0) {
+	if (scroll_full_line) {
+	    ScrnInsertLine(xw,
+			   screen->visbuf,
+			   screen->bot_marg,
+			   screen->cur_row,
+			   (unsigned) n);
+	} else {
+	    scrollInMargins(xw, -n, screen->cur_row);
+	    ScrnUpdate2(xw,
 			screen->cur_row,
-			screen->bot_marg + 1 - screen->cur_row,
-			0,
 			left,
-			right);
-    } else {
-	if (screen->jumpscroll) {
-	    if (screen->scroll_amt <= 0 &&
-		screen->cur_row <= -screen->refresh_amt) {
-		ScrollJump(xw, -screen->refresh_amt + amount > MaxRows(screen));
-		screen->scroll_amt -= amount;
-		screen->refresh_amt -= amount;
-	    } else {
-		ScrollJump(xw, screen->scroll_amt);
-	    }
-	}
-	if (!screen->scroll_amt) {
-	    int shift = INX2ROW(screen, 0);
-	    int bot = screen->max_row - shift;
-	    int refreshheight = amount;
-	    int refreshtop = screen->cur_row + shift;
-	    int scrolltop = refreshtop + refreshheight;
-	    int scrollheight = (screen->bot_marg
-				- screen->cur_row - refreshheight + 1);
-
-	    if ((i = screen->bot_marg - bot) > 0)
-		scrollheight -= i;
-	    if ((i = screen->cur_row + refreshheight - 1 - bot) > 0)
-		refreshheight -= i;
-	    vertical_copy_area(xw,
-			       scrolltop - amount,
-			       scrollheight,
-			       -amount, left, right,
-			       True);
-	    if (!screen->no_copy_area && refreshheight > 0) {
-		ClearCurBackground(xw,
-				   refreshtop,
-				   left,
-				   (unsigned) refreshheight,
-				   (unsigned) (right + 1 - left),
-				   (unsigned) FontWidth(screen));
-	    }
+			screen->bot_marg + 1 - screen->cur_row,
+			right + 1 - left,
+			True);
 	}
     }
 }
@@ -1740,7 +1354,7 @@ InsertLine(XtermWidget xw, int amount)
  * at the cursor's position, lines added at bottom margin are blank.
  */
 void
-DeleteLine(XtermWidget xw, int amount, Bool canSave)
+DeleteLine(XtermWidget xw, int n, Bool canSave)
 {
     TScreen *screen = TScreenOf(xw);
     int i;
@@ -1755,49 +1369,57 @@ DeleteLine(XtermWidget xw, int amount, Bool canSave)
 	!ScrnIsColInMargins(screen, screen->cur_col))
 	return;
 
-    TRACE(("DeleteLine count=%d\n", amount));
+    TRACE(("DeleteLine count=%d\n", n));
 
     set_cur_col(screen, ScrnLeftMargin(xw));
-
-    if (amount > (i = screen->bot_marg - screen->cur_row + 1))
-	amount = i;
-    if (amount <= 0)
-	return;
-
     if (screen->cursor_state)
 	HideCursor(xw);
 
-    if (ScrnHaveSelection(screen)) {
-	for (i = 0; i < amount; ++i) {
-	    if (screen->cur_row + i >= screen->startH.row
-		&& screen->cur_row + i <= screen->endH.row) {
-		ScrnDisownSelection(xw);
-		break;
-	    }
-	}
+    if (n > (i = screen->bot_marg - screen->cur_row + 1)) {
+	n = i;
+    }
+    if (ScrnHaveSelection(screen)
+	&& ScrnAreRowsInSelection(screen,
+				  INX2ROW(screen, screen->cur_row),
+				  INX2ROW(screen, screen->cur_row + n - 1))) {
+	ScrnDisownSelection(xw);
     }
 
     ResetWrap(screen);
+    if (screen->jumpscroll && scroll_full_line) {
+	if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
+	    if (screen->refresh_amt + n > MaxRows(screen))
+		FlushScroll(xw);
+	    if (canSave) {
+		screen->scroll_amt += n;
+		screen->refresh_amt += n;
+	    }
+	} else {
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
+	}
+    }
 
-    if (!scroll_full_line) {
-	scrollInMargins(xw, amount, screen->cur_row);
-    } else {
-	if (canSave && scroll_all_lines) {
+    /* adjust screen->buf */
+    if (n > 0) {
+	if (left > 0 || right < screen->max_col) {
+	    scrollInMargins(xw, n, screen->cur_row);
+	} else if (canSave && scroll_all_lines) {
 	    ScrnDeleteLine(xw,
 			   screen->saveBuf_index,
 			   screen->bot_marg + screen->savelines,
 			   0,
-			   (unsigned) amount);
+			   (unsigned) n);
 	} else {
 	    ScrnDeleteLine(xw,
 			   screen->visbuf,
 			   screen->bot_marg,
 			   screen->cur_row,
-			   (unsigned) amount);
+			   (unsigned) n);
 	}
-
     }
 
+    /* repaint the screen, as needed */
     if (!scroll_full_line) {
 	ScrnUpdate2(xw,
 		    screen->cur_row,
@@ -1805,179 +1427,132 @@ DeleteLine(XtermWidget xw, int amount, Bool canSave)
 		    screen->bot_marg + 1 - screen->cur_row,
 		    right + 1 - left,
 		    True);
-    } else if (screen->no_copy_area) {
-	if (ScrnHaveSelection(screen)
-	    && screen->cur_row < screen->startH.row) {
-	    ScrollSelection(screen, -amount, True);
-	}
-	RepaintMultiple(xw,
-			screen->cur_row,
-			screen->bot_marg + 1 - screen->cur_row,
-			0,
-			left,
-			right);
-    } else {
-	if (screen->jumpscroll) {
-	    if (screen->scroll_amt >= 0 && screen->cur_row == screen->top_marg) {
-		ScrollJump(xw, screen->refresh_amt + amount > MaxRows(screen));
-		if (canSave) {
-		    screen->scroll_amt += amount;
-		    screen->refresh_amt += amount;
-		}
-	    } else {
-		ScrollJump(xw, screen->scroll_amt);
-	    }
-	}
+    } else if (!screen->scroll_amt) {
+	int shift = INX2ROW(screen, 0);
+	int bot = screen->max_row - shift;
+	int refreshtop;
+	int refreshheight = n;
+	int scrolltop;
+	int scrollheight = i - n;
 
-	if (!screen->scroll_amt) {
-	    int shift = INX2ROW(screen, 0);
-	    int bot = screen->max_row - shift;
-	    int refreshtop;
-	    int refreshheight = amount;
-	    int scrolltop;
-	    int scrollheight = i - amount;
-
-	    if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
-		(i = screen->max_row - refreshheight + 1))
-		refreshtop = i;
-	    if (canSave && scroll_all_lines) {
-		scrolltop = 0;
-		if ((scrollheight += shift) > i)
-		    scrollheight = i;
-		IncrementSavedLines(amount);
-	    } else {
-		scrolltop = screen->cur_row + shift;
-		if ((i = screen->bot_marg - bot) > 0) {
-		    scrollheight -= i;
-		    if ((i = screen->cur_row + amount - 1 - bot) >= 0) {
-			refreshheight -= i;
-		    }
+	if ((refreshtop = screen->bot_marg - refreshheight + 1 + shift) >
+	    (i = screen->max_row - refreshheight + 1))
+	    refreshtop = i;
+	if (canSave && scroll_all_lines) {
+	    scrolltop = 0;
+	    if ((scrollheight += shift) > i)
+		scrollheight = i;
+	    IncrementSavedLines(n);
+	} else {
+	    scrolltop = screen->cur_row + shift;
+	    if ((i = screen->bot_marg - bot) > 0) {
+		scrollheight -= i;
+		if ((i = screen->cur_row + n - 1 - bot) >= 0) {
+		    refreshheight -= i;
 		}
 	    }
-	    vertical_copy_area(xw,
-			       scrolltop + amount,
-			       scrollheight,
-			       amount,
-			       left, right,
-			       True);
-	    if (shift > 0 && refreshheight > 0) {
-		int rows = refreshheight;
-		if (rows > shift)
-		    rows = shift;
-		ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
-		refreshtop += shift;
-		refreshheight -= shift;
-	    }
-	    if (refreshheight > 0) {
-		ClearCurBackground(xw,
-				   refreshtop,
-				   left,
-				   (unsigned) refreshheight,
-				   (unsigned) (right + 1 - left),
-				   (unsigned) FontWidth(screen));
-	    }
+	}
+	vertical_copy_area(xw, scrolltop + n, scrollheight, n, left, right);
+	if (shift > 0 && refreshheight > 0) {
+	    int rows = refreshheight;
+	    if (rows > shift)
+		rows = shift;
+	    ScrnUpdate(xw, refreshtop, 0, rows, MaxCols(screen), True);
+	    refreshtop += shift;
+	    refreshheight -= shift;
+	}
+	if (refreshheight > 0) {
+	    ClearCurBackground(xw,
+			       refreshtop,
+			       left,
+			       (unsigned) refreshheight,
+			       (unsigned) (right + 1 - left),
+			       (unsigned) FontWidth(screen));
 	}
     }
 }
 
 /*
- * Insert 'amount' blanks at the cursor's position, no wraparound
+ * Insert n blanks at the cursor's position, no wraparound
  */
 void
-InsertChar(XtermWidget xw, unsigned amount)
+InsertChar(XtermWidget xw, unsigned n)
 {
     TScreen *screen = TScreenOf(xw);
     CLineData *ld;
     unsigned limit;
     int row = INX2ROW(screen, screen->cur_row);
+    int left = ScrnLeftMargin(xw);
     int right = ScrnRightMargin(xw);
 
     if (screen->cursor_state)
 	HideCursor(xw);
 
-    if (!ScrnIsColInMargins(screen, screen->cur_col))
-	return;
-
-    TRACE(("InsertChar count=%d " TRACE_L "\n", amount));
+    TRACE(("InsertChar count=%d\n", n));
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsRowInSelection(screen, row)) {
-	if (screen->keepSelection) {
-	    int end = screen->max_col;
-	    int col = screen->cur_col;
-	    if (row == screen->startH.row) {
-		if (col < screen->startH.col) {
-		    screen->startH.col++;
-		}
-	    }
-	    if (row == screen->endH.row) {
-		if (col <= screen->endH.col) {
-		    screen->endH.col++;
-		}
-	    }
-	    screen->startH.col = Min(screen->startH.col, end);
-	    screen->endH.col = Min(screen->endH.col, end);
-	} else {
-	    ScrnDisownSelection(xw);
-	}
+	ScrnDisownSelection(xw);
     }
     ResetWrap(screen);
 
     limit = (unsigned) (right + 1 - screen->cur_col);
 
-    if (amount > limit)
-	amount = limit;
+    if (n > limit)
+	n = limit;
 
-    if (AddToVisible(xw)
-	&& (ld = getLineData(screen, screen->cur_row)) != NULL) {
-	int col = right + 1 - (int) amount;
+    if (screen->cur_col < left || screen->cur_col > right) {
+	n = 0;
+    } else if (AddToVisible(xw)
+	       && (ld = getLineData(screen, screen->cur_row)) != NULL) {
+	int col = right + 1 - (int) n;
 
 	/*
 	 * If we shift part of a multi-column character, fill the rest
 	 * of it with blanks.  Do similar repair for the text which will
 	 * be shifted into the right-margin.
 	 */
-#define RepairInsertChar() ClearInLine2(xw, 0, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	if_OPT_WIDE_CHARS(screen, {
 	    int kl;
 	    int kr = screen->cur_col;
-	    if (DamagedCurCells(screen, amount, &kl, (int *) 0) && kr > kl) {
-		RepairInsertChar();
+	    if (DamagedCurCells(screen, n, &kl, (int *) 0) && kr > kl) {
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	    }
-	    kr = screen->max_col - (int) amount + 1;
-	    if (DamagedCells(screen, amount, &kl, (int *) 0,
+	    kr = screen->max_col - (int) n + 1;
+	    if (DamagedCells(screen, n, &kl, (int *) 0,
 			     screen->cur_row,
 			     kr) && kr > kl) {
-		RepairInsertChar();
+		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	    }
 	});
 
-	ScrnInsertChar(xw, amount);	/* adjust screen->buf */
-
-	if (screen->no_copy_area) {
-	    RepaintRow(xw, screen->cur_row, screen->cur_col);
-	} else {
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
-		col = MaxCols(screen) / 2 - (int) amount;
-	    }
-#endif
-	    if (non_blank_line(screen, screen->cur_row,
-			       screen->cur_col, MaxCols(screen))) {
-		horizontal_copy_area(xw, screen->cur_col,
-				     col - screen->cur_col,
-				     (int) amount);
-	    }
-
-	    ClearCurBackground(xw,
-			       INX2ROW(screen, screen->cur_row),
-			       screen->cur_col,
-			       1U,
-			       amount,
-			       (unsigned) LineFontWidth(screen, ld));
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
+	    col = MaxCols(screen) / 2 - (int) n;
 	}
+#endif
+	/*
+	 * prevent InsertChar from shifting the end of a line over
+	 * if it is being appended to
+	 */
+	if (non_blank_line(screen, screen->cur_row,
+			   screen->cur_col, MaxCols(screen))) {
+	    horizontal_copy_area(xw, screen->cur_col,
+				 col - screen->cur_col,
+				 (int) n);
+	}
+
+	ClearCurBackground(xw,
+			   INX2ROW(screen, screen->cur_row),
+			   screen->cur_col,
+			   1U,
+			   n,
+			   (unsigned) LineFontWidth(screen, ld));
     }
-    TRACE((TRACE_R " InsertChar count=%d\n", amount));
+    if (n != 0) {
+	/* adjust screen->buf */
+	ScrnInsertChar(xw, n);
+    }
 }
 
 /*
@@ -2002,23 +1577,7 @@ DeleteChar(XtermWidget xw, unsigned n)
 
     if (ScrnHaveSelection(screen)
 	&& ScrnIsRowInSelection(screen, row)) {
-	if (screen->keepSelection) {
-	    int col = screen->cur_col;
-	    if (row == screen->startH.row) {
-		if (col < screen->startH.col) {
-		    screen->startH.col--;
-		}
-	    }
-	    if (row == screen->endH.row) {
-		if (col <= screen->endH.col) {
-		    screen->endH.col--;
-		}
-	    }
-	    screen->startH.col = Max(screen->startH.col, 0);
-	    screen->endH.col = Max(screen->endH.col, 0);
-	} else {
-	    ScrnDisownSelection(xw);
-	}
+	ScrnDisownSelection(xw);
     }
     ResetWrap(screen);
 
@@ -2042,28 +1601,26 @@ DeleteChar(XtermWidget xw, unsigned n)
 		ClearInLine(xw, screen->cur_row, kl, (unsigned) (kr - kl + 1));
 	});
 
-	ScrnDeleteChar(xw, n);
-
-	if (screen->no_copy_area) {
-	    RepaintRow(xw, screen->cur_row, screen->cur_col);
-	} else {
 #if OPT_DEC_CHRSET
-	    if (CSET_DOUBLE(GetLineDblCS(ld))) {
-		col = MaxCols(screen) / 2 - (int) n;
-	    }
-#endif
-	    horizontal_copy_area(xw,
-				 (screen->cur_col + (int) n),
-				 col - screen->cur_col,
-				 -((int) n));
-
-	    ClearCurBackground(xw,
-			       INX2ROW(screen, screen->cur_row),
-			       col,
-			       1U,
-			       n,
-			       (unsigned) LineFontWidth(screen, ld));
+	if (CSET_DOUBLE(GetLineDblCS(ld))) {
+	    col = MaxCols(screen) / 2 - (int) n;
 	}
+#endif
+	horizontal_copy_area(xw,
+			     (screen->cur_col + (int) n),
+			     col - screen->cur_col,
+			     -((int) n));
+
+	ClearCurBackground(xw,
+			   INX2ROW(screen, screen->cur_row),
+			   col,
+			   1U,
+			   n,
+			   (unsigned) LineFontWidth(screen, ld));
+    }
+    if (n != 0) {
+	/* adjust screen->buf */
+	ScrnDeleteChar(xw, n);
     }
 }
 
@@ -2091,7 +1648,8 @@ ClearAbove(XtermWidget xw)
 	if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
 	    int height;
 
-	    ScrollJump(xw, screen->scroll_amt);
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
 	    if ((height = screen->cur_row + top) > screen->max_row)
 		height = screen->max_row + 1;
 	    if ((height -= top) > 0) {
@@ -2136,7 +1694,8 @@ ClearBelow(XtermWidget xw)
 	int top;
 
 	if ((top = INX2ROW(screen, screen->cur_row)) <= screen->max_row) {
-	    ScrollJump(xw, screen->scroll_amt);
+	    if (screen->scroll_amt)
+		FlushScroll(xw);
 	    if (++top <= screen->max_row) {
 		chararea_clear_displayed_graphics(screen,
 						  0,
@@ -2170,6 +1729,11 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
 	   row, col, len,
 	   screen->startH.row,
 	   screen->startH.col));
+
+    if (ScrnHaveSelection(screen)
+	&& ScrnIsRowInSelection(screen, row)) {
+	ScrnDisownSelection(xw);
+    }
 
     if (col + (int) len >= MaxCols(screen)) {
 	len = (unsigned) (MaxCols(screen) - col);
@@ -2240,7 +1804,7 @@ ClearInLine2(XtermWidget xw, int flags, int row, int col, unsigned len)
     return rc;
 }
 
-static int
+int
 ClearInLine(XtermWidget xw, int row, int col, unsigned len)
 {
     const TScreen *screen = TScreenOf(xw);
@@ -2255,11 +1819,6 @@ ClearInLine(XtermWidget xw, int row, int col, unsigned len)
     if (col + (int) len < MaxCols(screen)) {
 	flags |= CHARDRAWN;
     }
-    if (ScrnHaveSelection(screen)
-	&& ScrnIsRowInSelection(screen, row)) {
-	ScrnDisownSelection(xw);
-    }
-
     return ClearInLine2(xw, flags, row, col, len);
 }
 
@@ -2288,11 +1847,11 @@ ClearRight(XtermWidget xw, int n)
     ld = getLineData(screen, screen->cur_row);
     if (AddToVisible(xw)) {
 	if_OPT_WIDE_CHARS(screen, {
+	    int col = screen->cur_col;
+	    int row = screen->cur_row;
 	    int kl;
 	    int kr;
 	    if (DamagedCurCells(screen, len, &kl, &kr) && kr >= kl) {
-		int col = screen->cur_col;
-		int row = screen->cur_row;
 		int xx = col;
 		if (kl < xx) {
 		    ClearInLine2(xw, 0, row, kl, (unsigned) (xx - kl));
@@ -2320,16 +1879,16 @@ ClearRight(XtermWidget xw, int n)
 static void
 ClearLeft(XtermWidget xw)
 {
-    const TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
     unsigned len = (unsigned) screen->cur_col + 1;
 
     assert(screen->cur_col >= 0);
     if (AddToVisible(xw)) {
 	if_OPT_WIDE_CHARS(screen, {
+	    int row = screen->cur_row;
 	    int kl;
 	    int kr;
 	    if (DamagedCurCells(screen, 1, &kl, &kr) && kr >= kl) {
-		int row = screen->cur_row;
 		ClearInLine2(xw, 0, row, kl, (unsigned) (kr - kl + 1));
 	    }
 	});
@@ -2366,7 +1925,8 @@ ClearScreen(XtermWidget xw)
     ScrnDisownSelection(xw);
     ResetWrap(screen);
     if ((top = INX2ROW(screen, 0)) <= screen->max_row) {
-	ScrollJump(xw, screen->scroll_amt);
+	if (screen->scroll_amt)
+	    FlushScroll(xw);
 	chararea_clear_displayed_graphics(screen,
 					  0,
 					  top,
@@ -2499,6 +2059,41 @@ do_erase_display(XtermWidget xw, int param, int mode)
     screen->protected_mode = saved_mode;
 }
 
+static Boolean
+row_has_data(TScreen *screen, int row)
+{
+    Boolean result = False;
+    CLineData *ld;
+
+    if ((ld = getLineData(screen, row)) != NULL) {
+	int col;
+
+	for (col = 0; col < screen->max_col; ++col) {
+	    if (ld->attribs[col] & CHARDRAWN && ld->charData[col] != ' ') {
+		result = True;
+		break;
+	    }
+	}
+    }
+    return result;
+}
+
+static Boolean
+screen_has_data(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    Boolean result = False;
+    int row;
+
+    for (row = 0; row < screen->max_row; ++row) {
+	if (row_has_data(screen, row)) {
+	    result = True;
+	    break;
+	}
+    }
+    return result;
+}
+
 static void
 do_extra_scroll(XtermWidget xw, Bool trimmed)
 {
@@ -2510,11 +2105,11 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	if (trimmed) {
 	    int row;
 	    Boolean hadData = (Boolean) ((screen->saved_fifo > 0)
-					 ? row_has_data(screen, -1, True)
+					 ? row_has_data(screen, -1)
 					 : False);
 
 	    for (row = 0; row < screen->max_row; ++row) {
-		Boolean hasData = row_has_data(screen, row, True);
+		Boolean hasData = row_has_data(screen, row);
 		if (hasData || hadData) {
 		    const LineData *src = getLineData(screen, row);
 		    LineData *dst = addScrollbackForLine(screen, src);
@@ -2525,7 +2120,7 @@ do_extra_scroll(XtermWidget xw, Bool trimmed)
 	    }
 	} else {
 	    xtermScroll(xw, screen->max_row);
-	    ScrollJump(xw, screen->scroll_amt);
+	    FlushScroll(xw);
 	}
 	xtermRepaint(xw);
     }
@@ -2703,30 +2298,25 @@ horizontal_copy_area(XtermWidget xw,
 static void
 vertical_copy_area(XtermWidget xw,
 		   int firstline,	/* line on screen to start copying at */
-		   int nlines,	/* number of lines in the scroll region */
+		   int nlines,
 		   int amount,	/* number of lines to move up (neg=down) */
-		   int left,	/* first column */
-		   int right,	/* last column */
-		   Bool faster)	/* true if line data has been moved... */
+		   int left,
+		   int right)
 {
     TScreen *screen = TScreenOf(xw);
 
     TRACE(("vertical_copy_area - firstline=%d nlines=%d left=%d right=%d amount=%d\n",
 	   firstline, nlines, left, right, amount));
 
-    if (amount != 0 && nlines > 0) {
-	if (faster && screen->no_copy_area) {
-	    RepaintMultiple(xw, firstline, nlines, amount, left, right);
-	} else {
-	    int src_x = CursorX(screen, left);
-	    int src_y = firstline * FontHeight(screen) + screen->border;
-	    unsigned int w = (unsigned) ((right + 1 - left) * FontWidth(screen));
-	    unsigned int h = (unsigned) (nlines * FontHeight(screen));
-	    int dst_x = src_x;
-	    int dst_y = src_y - amount * FontHeight(screen);
+    if (nlines > 0) {
+	int src_x = CursorX(screen, left);
+	int src_y = firstline * FontHeight(screen) + screen->border;
+	unsigned int w = (unsigned) ((right + 1 - left) * FontWidth(screen));
+	unsigned int h = (unsigned) (nlines * FontHeight(screen));
+	int dst_x = src_x;
+	int dst_y = src_y - amount * FontHeight(screen);
 
-	    copy_area(xw, src_x, src_y, w, h, dst_x, dst_y);
-	}
+	copy_area(xw, src_x, src_y, w, h, dst_x, dst_y);
 
 	if (screen->show_wrap_marks) {
 	    int row;
@@ -2756,8 +2346,7 @@ scrolling_copy_area(XtermWidget xw,
 {
 
     if (nlines > 0) {
-	vertical_copy_area(xw, firstline, nlines, amount, 0,
-			   TScreenOf(xw)->max_col, True);
+	vertical_copy_area(xw, firstline, nlines, amount, 0, TScreenOf(xw)->max_col);
     }
 }
 
@@ -2848,7 +2437,6 @@ xtermClear2(XtermWidget xw, int x, int y, unsigned width, unsigned height)
     Drawable draw = VDrawable(screen);
     GC gc;
 
-    TRACE2(("xtermClear2 %d,%d %dx%d\n", y, x, height, width));
     if ((gc = vwin->border_gc) != NULL) {
 	int vmark1 = screen->border;
 	int vmark2 = vwin->height + vmark1;
@@ -2951,21 +2539,13 @@ handle_translated_exposure(XtermWidget xw,
 		    (unsigned) rect_width,
 		    (unsigned) rect_height);
     }
-
-    if (y0 < 0)
-	y0 = 0;
-    if (x0 < 0)
-	x0 = 0;
-#define NUM_FRAC(num,den) num / den, 10 * (num % den) / den
-#define FMT_FRAC "[ %2d.%d, %2d.%d ]"
-    TRACE(("ULC " FMT_FRAC " RRC " FMT_FRAC "\n",
-	   NUM_FRAC(y0, FontHeight(screen)),
-	   NUM_FRAC(x0, FontWidth(screen)),
-	   NUM_FRAC(y1, FontHeight(screen)),
-	   NUM_FRAC(x1, FontWidth(screen))));
-
     toprow = y0 / FontHeight(screen);
+    if (toprow < 0)
+	toprow = 0;
+
     leftcol = x0 / FontWidth(screen);
+    if (leftcol < 0)
+	leftcol = 0;
 
     nrows = (y1 - 1) / FontHeight(screen) - toprow + 1;
     ncols = (x1 - 1) / FontWidth(screen) - leftcol + 1;
@@ -3013,9 +2593,7 @@ AssignFgColor(XtermWidget xw, Pixel fg)
 {
     Boolean repaint = False;
     TScreen *screen = TScreenOf(xw);
-#ifndef NO_ACTIVE_ICON
     VTwin *win = WhichVWin(screen);
-#endif
 
     T_COLOR(screen, TEXT_FG) = fg;
     TRACE(("... TEXT_FG: %#lx\n", fg));
@@ -3036,9 +2614,7 @@ AssignBgColor(XtermWidget xw, Pixel bg)
 {
     Boolean repaint = False;
     TScreen *screen = TScreenOf(xw);
-#ifndef NO_ACTIVE_ICON
     VTwin *win = WhichVWin(screen);
-#endif
 
     T_COLOR(screen, TEXT_BG) = bg;
     TRACE(("... TEXT_BG: %#lx\n", bg));
@@ -3261,10 +2837,6 @@ reallySwapColors(XtermWidget xw, ToSwap * list, int count)
     }
     FreeMarkGCs(xw);
 }
-
-#ifdef NO_ACTIVE_ICON
-#define swapVTwinGCs(x, w) mySwapVTwinGCs(x)
-#endif
 
 static void
 swapVTwinGCs(XtermWidget xw, VTwin *win)
@@ -3527,7 +3099,7 @@ getNormXftFont(XTermDraw * params,
 	       unsigned attr_flags,
 	       Bool *did_ul)
 {
-    const TScreen *screen = TScreenOf(params->xw);
+    TScreen *screen = TScreenOf(params->xw);
     int fontnum = screen->menu_font_number;
     XTermXftFonts *result = NULL;
 
@@ -4090,12 +3662,6 @@ drawClippedXftString(XTermDraw * params,
 				GetNormalFont(screen, name)
 #endif
 
-#if OPT_WIDE_ATTRS
-#define ANY_ATR_UNDERLINE (ATR_STRIKEOUT|ATR_DBL_UNDER|UNDERLINE)
-#else
-#define ANY_ATR_UNDERLINE UNDERLINE
-#endif
-
 static void
 drawUnderline(XtermWidget xw,
 	      GC gc,
@@ -4149,7 +3715,7 @@ drawUnderline(XtermWidget xw,
 static int
 fixupItalics(XTermDraw * params,
 	     GC gc,
-	     const XTermFonts * curFont,
+	     XTermFonts * curFont,
 	     int y, int x,
 	     int font_width,
 	     Cardinal len)
@@ -4161,7 +3727,6 @@ fixupItalics(XTermDraw * params,
     int need_clipping = 0;
     int need_filling = 0;
 
-    (void) cgsWin;
     if (thisFp->ascent > realFp->ascent)
 	need_clipping = 1;
     else if (thisFp->ascent < realFp->ascent)
@@ -4310,9 +3875,9 @@ xtermPartString16(TScreen *screen, unsigned flags, GC gc, int x, int y, int leng
 	int ncells = 0;
 
 	for (n = 0; n < length; ++n) {
+	    IChar ch = mapped[n];
 	    int bump = 1;
 	    if (buffer2[n].byte1 != 0) {
-		IChar ch = mapped[n];
 		bump = CharWidth(screen, ch);
 		bump = Max(1, bump);
 		eightBit = False;
@@ -4369,15 +3934,13 @@ xtermFullString16(XTermDraw * params, unsigned flags, GC gc,
     XtermWidget xw = params->xw;
     TScreen *screen = TScreenOf(xw);
     int src, dst;
-    const IChar *mapped = BfBuf(IChar);
+    IChar *mapped = BfBuf(IChar);
     XChar2b *buffer2 = BfBuf(XChar2b);
     VTwin *currentWin = WhichVWin(screen);
     XTermFonts *xf = getCgsFont(xw, currentWin, gc);
     XTermFonts *fn = getNormalFont(screen, fNorm);
     XTermFonts *fp = xf ? xf : fn;
 
-    (void) screen;
-    (void) currentWin;
     for (src = dst = 0; src < (int) length; src++) {
 	IChar ch = mapped[src];
 	int ch_width = CharWidth(screen, ch);
@@ -4501,20 +4064,6 @@ drawXtermText(const XTermDraw * params,
 	   visibleIChars(text, len)));
 
     assert(size != NULL);
-
-#if OPT_WIDE_CHARS
-    if_OPT_WIDE_CHARS(screen, {
-	if (text[0] == HIDDEN_CHAR) {
-	    int next_x = start_x + FontWidth(screen);
-	    return ((len == 1)
-		    ? next_x
-		    : drawXtermText(params, gc,
-				    next_x, start_y,
-				    text + 1, size + 1, len - 1));
-	}
-    });
-#endif
-
 #if OPT_DEC_CHRSET
     if (CSET_DOUBLE(recur.this_chrset)) {
 	/* We could try drawing double-size characters in the icon, but
@@ -4666,7 +4215,6 @@ drawXtermText(const XTermDraw * params,
 	Boolean forceDbl = False;
 #endif
 
-	(void) currentWin;
 	(void) forceDbl;
 	/*
 	 * Defer creating the drawable until we need it.
@@ -4738,7 +4286,7 @@ drawXtermText(const XTermDraw * params,
 
 		if ((ch != HIDDEN_CHAR)
 		    && IsAllowedCtlChar(ch_width)
-		    && !mk_is_combining((wchar_t) ch)) {
+		    && !mk_is_combining(ch)) {
 		    TRACE(("%s@%d: AllowCtlChar\n", __FILE__, __LINE__));
 		    ch_width = 1;
 		    missing = True;
@@ -4934,15 +4482,14 @@ drawXtermText(const XTermDraw * params,
 	}
 #endif /* OPT_BOX_CHARS */
 
-	if (recur.attr_flags & ANY_ATR_UNDERLINE)
-	    drawUnderline(recur.xw,
-			  gc,
-			  recur.attr_flags,
-			  underline_len,
-			  FontWidth(screen),
-			  x,
-			  y + y_shift,
-			  did_ul);
+	drawUnderline(recur.xw,
+		      gc,
+		      recur.attr_flags,
+		      underline_len,
+		      FontWidth(screen),
+		      x,
+		      y + y_shift,
+		      did_ul);
 
 	x += (int) ncells *FontWidth(screen);
 
@@ -5425,15 +4972,14 @@ drawXtermText(const XTermDraw * params,
 	}
     }
 
-    if (recur.attr_flags & ANY_ATR_UNDERLINE)
-	drawUnderline(recur.xw,
-		      gc,
-		      recur.attr_flags,
-		      underline_len,
-		      font_width,
-		      x,
-		      y + y_shift,
-		      did_ul);
+    drawUnderline(recur.xw,
+		  gc,
+		  recur.attr_flags,
+		  underline_len,
+		  font_width,
+		  x,
+		  y + y_shift,
+		  did_ul);
 
     x += ((int) real_length) * FontWidth(screen);
     TRACE(("DrewText [%4d,%4d] @%d\n", y, x, __LINE__));
@@ -5509,7 +5055,7 @@ getXtermSizeHints(XtermWidget xw)
 CgsEnum
 whichXtermCgs(XtermWidget xw, unsigned attr_flags, Bool hilite)
 {
-    const TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
     CgsEnum cgsId = gcMAX;
 
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
@@ -5676,16 +5222,14 @@ updatedXtermGC(XtermWidget xw, unsigned attr_flags, CellColor fg_bg,
 void
 resetXtermGC(XtermWidget xw, unsigned attr_flags, Bool hilite)
 {
+    TScreen *screen = TScreenOf(xw);
+    VTwin *win = WhichVWin(screen);
     CgsEnum cgsId = whichXtermCgs(xw, attr_flags, hilite);
     Pixel fg_pix = getXtermFG(xw, attr_flags, xw->cur_foreground);
     Pixel bg_pix = getXtermBG(xw, attr_flags, xw->cur_background);
-    const TScreen *screen = TScreenOf(xw);
-#ifndef NO_ACTIVE_ICON
-    VTwin *win = WhichVWin(screen);
-#endif
 
     checkVeryBoldColors(attr_flags, xw->cur_foreground);
-    (void) screen;
+
     if (ReverseOrHilite(screen, attr_flags, hilite)) {
 	setCgsFore(xw, win, cgsId, bg_pix);
 	setCgsBack(xw, win, cgsId, fg_pix);
@@ -5952,7 +5496,7 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
  * Returns a single base character for the given cell.
  */
 unsigned
-getXtermCell(const TScreen *screen, int row, int col)
+getXtermCell(TScreen *screen, int row, int col)
 {
     CLineData *ld = getLineData(screen, row);
 
@@ -5965,7 +5509,7 @@ getXtermCell(const TScreen *screen, int row, int col)
  * Sets a single base character for the given cell.
  */
 void
-putXtermCell(const TScreen *screen, int row, int col, int ch)
+putXtermCell(TScreen *screen, int row, int col, int ch)
 {
     LineData *ld = getLineData(screen, row);
 
@@ -6031,34 +5575,35 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 		}
 
 		if (valid && screen->char_was_written && (expect != actual)) {
-		    TRACE2(("TEXT:%s\n", visibleIChars(ld->charData, ld->lineSize)));
+		    ++col;	/* point to the second half */
 		    if (expect > actual) {
 			TRACE(("...shrink base\n"));
-			Clear1Cell(ld, col);
+			ld->charData[col] = ' ';
 			IAttrClr(ld->attribs[col], CHARDRAWN);
 			/* adjust the next-column value */
 			col = screen->cur_col;
 			set_cur_col(screen, --col);
-		    } else if (screen->cur_col < screen->max_col) {
-			TRACE(("...increase base\n"));
-			++col;
-			ld->attribs[col] = ld->attribs[col - 1];
-			if_OPT_ISO_COLORS(screen, {
-			    ld->color[col] = ld->color[col - 1];
-			});
-			TRACE(("...put filler in column %d\n", col));
-			/* extend the current cell per VS16 */
-			ld->charData[col] = VS16_FILLER;
-			IAttrSet(ld->attribs[col], CHARDRAWN);
-			/* adjust the next-column value */
-			set_cur_col(screen, ++col);
-		    } else {
-			TRACE(("...disallow wrapping of base\n"));
-			/* disallow wrapping via VS16 */
-			Clear1Cell(ld, col);
-			IAttrClr(ld->attribs[col], CHARDRAWN);
+		    } else if (expect < actual) {
+			if (screen->cur_col < screen->max_col) {
+			    TRACE(("...increase base\n"));
+			    ld->attribs[col] = ld->attribs[col - 1];
+			    if_OPT_ISO_COLORS(screen, {
+				ld->color[col] = ld->color[col - 1];
+			    });
+			    TRACE(("...put filler in column %d\n", col));
+			    /* extend the current cell per VS16 */
+			    ld->charData[col] = VS16_FILLER;
+			    IAttrSet(ld->attribs[col], CHARDRAWN);
+			    /* adjust the next-column value */
+			    col = screen->cur_col;
+			    set_cur_col(screen, ++col);
+			} else {
+			    TRACE(("...disallow wrapping of base\n"));
+			    /* disallow wrapping via VS16 */
+			    ld->charData[col] = ' ';
+			    IAttrClr(ld->attribs[col], CHARDRAWN);
+			}
 		    }
-		    TRACE2(("==>>:%s\n", visibleIChars(ld->charData, ld->lineSize)));
 		}
 	    }
 #else
@@ -6076,7 +5621,7 @@ addXtermCombining(TScreen *screen, int row, int col, unsigned ch)
 }
 
 unsigned
-getXtermCombining(const TScreen *screen, int row, int col, int off)
+getXtermCombining(TScreen *screen, int row, int col, int off)
 {
     CLineData *ld = getLineData(screen, row);
     return (ld->combSize ? ld->combData[off][col] : 0U);

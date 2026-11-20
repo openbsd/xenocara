@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.801 2026/10/11 09:53:12 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.798 2026/04/07 23:19:34 tom Exp $ */
 
 /*
  * Copyright 1998-2025,2026 by Thomas E. Dickey
@@ -1495,7 +1495,7 @@ loadBoldFP(XtermWidget xw,
     TRACE(("loadBoldFP (%s)\n", NonNull(*nameOutP)));
 
     if (!check_fontname(*nameOutP)) {
-	const FontNameProperties *fp;
+	FontNameProperties *fp;
 	char *normal = x_strdup(nameRef);
 
 	fp = get_font_name_props(screen->display, infoRef->fs, &normal);
@@ -1695,9 +1695,7 @@ xtermLoadFont(XtermWidget xw,
 	      int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
-#ifndef NO_ACTIVE_ICON
     VTwin *win = WhichVWin(screen);
-#endif
 
     VTFontNames new_fnames;
     XTermFonts new_fonts[fMAX];
@@ -3807,7 +3805,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	if (XftFp(norm) == NULL) {
 	    TRACE(("...no TrueType font found for number %d, disable menu entry\n", fontnum));
 	    xw->work.render_font = False;
-	    update_font_renderfont(xw);
+	    update_font_renderfont();
 	    /* now we will fall through into the bitmap fonts */
 	} else {
 	    setBrokenBoxChars(xw, False);
@@ -5193,7 +5191,7 @@ useFaceSizes(XtermWidget xw)
 int
 lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 {
-    const TScreen *screen = TScreenOf(xw);
+    TScreen *screen = TScreenOf(xw);
     int m = -1;
 
     TRACE(("lookupRelativeFontSize(old=%d, relative=%d)\n", old, relative));

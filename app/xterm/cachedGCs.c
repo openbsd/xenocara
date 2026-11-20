@@ -1,4 +1,4 @@
-/* $XTermId: cachedGCs.c,v 1.94 2026/08/22 10:15:18 tom Exp $ */
+/* $XTermId: cachedGCs.c,v 1.88 2026/04/07 21:16:36 tom Exp $ */
 
 /*
  * Copyright 2007-2025,2026 by Thomas E. Dickey
@@ -34,7 +34,6 @@
 #include <xstrings.h>
 #include <fontutils.h>
 
-#include <assert.h>
 #include <X11/Xmu/Drawing.h>
 
 /*
@@ -79,12 +78,6 @@ typedef struct {
     XtGCMask mask;		/* changes since the last getCgsGC() */
     CgsCacheData next;		/* updated values, apply in getCgsGC() */
 } CgsCache;
-
-#ifdef DEBUG
-static long num_alloc;
-static long num_change;
-static long num_reused;
-#endif
 
 #if OPT_TRACE
 #define CASE(name) case gc##name: result = #name; break
@@ -168,7 +161,7 @@ traceCSet(unsigned cset)
 }
 
 static String
-traceFont(const XTermFonts * font)
+traceFont(XTermFonts * font)
 {
     static char result[80];
 
@@ -246,27 +239,6 @@ allocCache(void **cache_pointer)
 }
 
 #define ALLOC_CACHE(p) ((*(p) == NULL) ? allocCache(p) : *(p))
-#define CHECK_ID(cgsId) assert((int) cgsId >= 0 && cgsId < gcMAX);
-
-#ifdef NO_ACTIVE_ICON
-#define allocCgsCache(x,w) myAllocCgsCache(x)
-#endif
-
-static void
-allocCgsCache(XtermWidget xw, VTwin *cgsWin)
-{
-    CgsCache *result = NULL;
-    CgsEnum cgsId;
-#ifndef NO_ACTIVE_ICON
-    if (cgsWin == &(TScreenOf(xw)->iconVwin))
-	result = ALLOC_CACHE(&(TScreenOf(xw)->icon_cgs_cache));
-    else
-#endif
-	result = ALLOC_CACHE(&(TScreenOf(xw)->main_cgs_cache));
-    for (cgsId = 0; cgsId < gcMAX; ++cgsId) {
-	result[cgsId].data = result[cgsId].list;
-    }
-}
 
 static int
 dataIndex(const CgsCache * me)
@@ -283,22 +255,30 @@ relinkData(CgsCache * me, int item)
 /*
  * Returns the appropriate cache pointer.
  */
-#ifndef NO_ACTIVE_ICON
-#define MyCache(xw, cgsWin, cgsId) \
-	    (cgsId + (CgsCache*)((cgsWin == &(TScreenOf(xw)->iconVwin)) \
-				 ? TScreenOf(xw)->icon_cgs_cache \
-				 : TScreenOf(xw)->main_cgs_cache))
-#else
-#define MyCache(xw, cgsWin, cgsId) \
-	    (cgsId + (CgsCache*)(TScreenOf(xw)->main_cgs_cache))
-#endif
+static CgsCache *
+myCache(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
+{
+    CgsCache *result = NULL;
 
-#define getMyCache(xw, cgsWin, cgsId, result) \
-	do { \
-	    result = MyCache(xw, cgsWin, cgsId); \
-	    if (result->data == NULL) \
-		result->data = result->list; \
-	} while (0)
+    if ((int) cgsId >= 0 && cgsId < gcMAX) {
+#ifdef NO_ACTIVE_ICON
+	(void) xw;
+	(void) cgsWin;
+#else
+	if (cgsWin == &(TScreenOf(xw)->iconVwin))
+	    result = ALLOC_CACHE(&(TScreenOf(xw)->icon_cgs_cache));
+	else
+#endif
+	    result = ALLOC_CACHE(&(TScreenOf(xw)->main_cgs_cache));
+
+	result += cgsId;
+	if (result->data == NULL) {
+	    result->data = result->list;
+	}
+    }
+
+    return result;
+}
 
 static Display *
 myDisplay(XtermWidget xw)
@@ -395,7 +375,6 @@ newCache(XtermWidget xw, const VTwin *cgsWin, CgsEnum cgsId, CgsCache * me)
     THIS(gc) = XCreateGC(myDisplay(xw), myDrawable(xw, cgsWin), mask, &xgcv);
     TRACE(("getCgsGC(%s) created gc %p(%d)\n",
 	   traceCgsEnum(cgsId), (void *) THIS(gc), ITEM()));
-    if_DEBUG(num_alloc++);
 
     THIS(used) = 0;
     return THIS(gc);
@@ -449,7 +428,6 @@ chgCache(XtermWidget xw, CgsEnum cgsId GCC_UNUSED, CgsCache * me, Bool both)
     XChangeGC(myDisplay(xw), THIS(gc), mask, &xgcv);
     TRACE2(("...chgCache(%s) updated gc %p(%d)\n",
 	    traceCgsEnum(cgsId), THIS(gc), ITEM()));
-    if_DEBUG(num_change++);
 
     THIS(used) = 0;
     return THIS(gc);
@@ -463,9 +441,7 @@ setCgsFore(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel fg)
 {
     CgsCache *me;
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	NEXT(fg) = fg;
 	me->mask |= GCForeground;
 	TRACE2(("setCgsFore(%s) %s\n",
@@ -479,9 +455,7 @@ setCgsBack(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, Pixel bg)
 {
     CgsCache *me;
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	NEXT(bg) = bg;
 	me->mask |= GCBackground;
 	TRACE2(("setCgsBack(%s) %s\n",
@@ -496,15 +470,11 @@ setCgsCSet(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, unsigned cset)
 {
     CgsCache *me;
 
-    (void) cgsWin;
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	NEXT(cset) = cset;
 	me->mask |= GC_CSet;
     }
 }
-
 #else
 #define setCgsCSet(xw, cgsWin, dstCgsId, cset)	/* nothing */
 #endif
@@ -514,9 +484,7 @@ setCgsFont2(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId, XTermFonts * font, uns
 {
     CgsCache *me;
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	TScreen *screen = TScreenOf(xw);
 	if (!HaveFont(font)) {
 	    if (cgsId != gcNorm)
@@ -560,8 +528,7 @@ clrCgsFonts(XtermWidget xw, VTwin *cgsWin, const XTermFonts * font)
 	int j;
 	for_each_gc(j) {
 	    CgsCache *me;
-	    getMyCache(xw, cgsWin, (CgsEnum) j, me);
-	    {
+	    if ((me = myCache(xw, cgsWin, (CgsEnum) j)) != NULL) {
 		int k;
 		for (k = 0; k < DEPTH; ++k) {
 		    if (SameFont(LIST(k).font, font)) {
@@ -596,9 +563,7 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
     CgsCache *me;
     GC result = NULL;
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	TRACE2(("getCgsGC(%s, %s)\n",
 		traceVTwin(xw, cgsWin), traceCgsEnum(cgsId)));
 	if (me->mask != 0) {
@@ -635,7 +600,6 @@ getCgsGC(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 		    LINK(j);
 		    result = THIS(gc);
 		    TRACE2(("getCgsGC existing %p(%d)\n", result, ITEM()));
-		    if_DEBUG(num_reused++);
 		    break;
 		}
 	    }
@@ -692,10 +656,9 @@ getCgsId(XtermWidget xw, VTwin *cgsWin, GC gc)
     CgsEnum result = gcNorm;
 
     for_each_gc(n) {
-	CgsCache *me;
+	const CgsCache *me;
 
-	getMyCache(xw, cgsWin, (CgsEnum) n, me);
-	{
+	if ((me = myCache(xw, cgsWin, (CgsEnum) n)) != NULL) {
 	    if (THIS(gc) == gc) {
 		result = (CgsEnum) n;
 		break;
@@ -717,8 +680,7 @@ getCgsFont(XtermWidget xw, VTwin *cgsWin, GC gc)
     for_each_gc(n) {
 	CgsCache *me;
 
-	getMyCache(xw, cgsWin, (CgsEnum) n, me);
-	{
+	if ((me = myCache(xw, cgsWin, (CgsEnum) n)) != NULL) {
 	    if (THIS(gc) == gc) {
 		result = THIS(font);
 		break;
@@ -740,8 +702,7 @@ getCgsFore(XtermWidget xw, VTwin *cgsWin, GC gc)
     for_each_gc(n) {
 	CgsCache *me;
 
-	getMyCache(xw, cgsWin, (CgsEnum) n, me);
-	{
+	if ((me = myCache(xw, cgsWin, (CgsEnum) n)) != NULL) {
 	    if (THIS(gc) == gc) {
 		result = THIS(fg);
 		break;
@@ -763,8 +724,7 @@ getCgsBack(XtermWidget xw, VTwin *cgsWin, GC gc)
     for_each_gc(n) {
 	CgsCache *me;
 
-	getMyCache(xw, cgsWin, (CgsEnum) n, me);
-	{
+	if ((me = myCache(xw, cgsWin, (CgsEnum) n)) != NULL) {
 	    if (THIS(gc) == gc) {
 		result = THIS(bg);
 		break;
@@ -780,13 +740,10 @@ getCgsBack(XtermWidget xw, VTwin *cgsWin, GC gc)
 void
 copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 {
-    CHECK_ID(dstCgsId);
-    CHECK_ID(srcCgsId);
     if (dstCgsId != srcCgsId) {
 	CgsCache *me;
 
-	getMyCache(xw, cgsWin, srcCgsId, me);
-	{
+	if ((me = myCache(xw, cgsWin, srcCgsId)) != NULL) {
 	    TRACE(("copyCgs from %s to %s\n",
 		   traceCgsEnum(srcCgsId),
 		   traceCgsEnum(dstCgsId)));
@@ -813,14 +770,10 @@ copyCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 void
 redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 {
-#ifndef NO_ACTIVE_ICON
     VTwin *cgsWin = WhichVWin(TScreenOf(xw));
-#endif
-    CgsCache *me;
+    CgsCache *me = myCache(xw, cgsWin, cgsId);
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if (me != NULL) {
 	CgsCacheData *save_data = me->data;
 	int n;
 
@@ -853,17 +806,13 @@ redoCgs(XtermWidget xw, Pixel fg, Pixel bg, CgsEnum cgsId)
 void
 swapCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum dstCgsId, CgsEnum srcCgsId)
 {
-    CHECK_ID(dstCgsId);
-    CHECK_ID(srcCgsId);
     if (dstCgsId != srcCgsId) {
 	CgsCache *src;
 
-	getMyCache(xw, cgsWin, srcCgsId, src);
-	{
+	if ((src = myCache(xw, cgsWin, srcCgsId)) != NULL) {
 	    CgsCache *dst;
 
-	    getMyCache(xw, cgsWin, dstCgsId, dst);
-	    {
+	    if ((dst = myCache(xw, cgsWin, dstCgsId)) != NULL) {
 		CgsCache tmp;
 		int srcIndex = dataIndex(src);
 		int dstIndex = dataIndex(dst);
@@ -885,9 +834,7 @@ freeCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
 {
     CgsCache *me;
 
-    CHECK_ID(cgsId);
-    getMyCache(xw, cgsWin, cgsId, me);
-    {
+    if ((me = myCache(xw, cgsWin, cgsId)) != NULL) {
 	int j;
 
 	for (j = 0; j < DEPTH; ++j) {
@@ -910,25 +857,10 @@ freeCgs(XtermWidget xw, VTwin *cgsWin, CgsEnum cgsId)
     return NULL;
 }
 
-void
-init_cachedCgs(XtermWidget xw)
-{
-#ifndef NO_ACTIVE_ICON
-    allocCgsCache(xw, &(TScreenOf(xw)->iconVwin));
-#endif
-    allocCgsCache(xw, &(TScreenOf(xw)->fullVwin));
-}
-
 #ifdef NO_LEAKS
 void
 noleaks_cachedCgs(XtermWidget xw)
 {
-    if_DEBUG({
-	fprintf(stderr, "noleaks_cached\n");
-	fprintf(stderr, " %6ld GC's allocated\n", num_alloc);
-	fprintf(stderr, " %6ld GC's changed\n", num_change);
-	fprintf(stderr, " %6ld GC's reused\n", num_reused);
-    });
 #ifndef NO_ACTIVE_ICON
     free(TScreenOf(xw)->icon_cgs_cache);
 #endif
