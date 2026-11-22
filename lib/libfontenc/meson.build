@@ -25,7 +25,7 @@
 project(
   'libfontenc',
   'c',
-  version: '1.1.9',
+  version: '1.1.10',
   license: 'MIT',
   license_files: 'COPYING',
   meson_version: '>= 1.1.0',
@@ -115,3 +115,35 @@ pkg.generate(
   filebase: 'fontenc',
   url: 'https://gitlab.freedesktop.org/xorg/lib/libfontenc/'
 )
+
+# Test suite
+pytest = find_program('pytest', 'pytest-3', required: false)
+if pytest.found()
+  test_helper = shared_library(
+    'test_helper',
+    'test/test_helper.c',
+    c_args: [
+      '-DFONT_ENCODINGS_DIRECTORY="/dev/null"',
+    ],
+    include_directories: ['include', 'src'],
+    link_with: lib,
+    dependencies: [dep_xproto, dep_zlib],
+    install: false,
+  )
+
+  test_env = environment()
+  test_env.set('TEST_HELPER_LIB', test_helper.full_path())
+  test_env.set('PYTHONDONTWRITEBYTECODE', '1')
+
+  test('pytest',
+    pytest,
+    args: [
+      '-v',
+      '--tb=short',
+      meson.project_source_root() / 'test',
+    ],
+    env: test_env,
+    timeout: 60,
+    depends: [test_helper],
+  )
+endif

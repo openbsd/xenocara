@@ -41,4 +41,7 @@ lint:
 	(cd src && $(MAKE) $(MFLAGS) lint)
 endif LINT
 
-EXTRA_DIST = README.md meson.build meson.options
+EXTRA_DIST = README.md meson.build meson.options \
+	test/test_helper.c \
+	test/conftest.py \
+	test/test_setcode_oob.py

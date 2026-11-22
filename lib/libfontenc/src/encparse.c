@@ -760,7 +760,8 @@ parseEncodingFile(FontFilePtr f, int headerOnly)
         }
         else if (namsize <= value1) {
             namsize = 0x10000;
-            if ((newnam = (char **) realloc(nam, namsize)) == NULL)
+            newnam = Xreallocarray(nam, namsize, sizeof(char *));
+            if (newnam == NULL)
                 goto error;
             nam = newnam;
         }

@@ -1,3 +1,143 @@
+commit eb42c925cab00d235b05e649eb4fb4a1858b67b9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 18 10:29:19 2026 +1000
+
+    libfontenc 1.1.10
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit be6a0eb5e3e0a8bc53a2abf14ee5403d6bd3043c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 3 19:55:35 2026 +1000
+
+    test: add pytest suite for setCode() heap OOB write (CVE-2026-109908)
+    
+    Add a Python pytest-based test suite that exercises the encoding file
+    parser's setCode() function through a C test helper that wraps the
+    static parseEncodingFile() function.
+    
+    The test suite covers:
+    
+      TestSetCodeHeapOOB: Tests for the heap out-of-bounds write caused by
+      row_size > 256.  When index = (from >> 8) * row_size + (from & 0xFF)
+      exceeds 0xFFFF, the mapping must be silently ignored. Tests boundary
+      conditions at, below, and above the 0xFFFF limit.
+    
+      TestSetCodeColumnBoundsCheck: Tests for the column bounds check fix
+      that changed (value1 & 0xFF) to (from & 0xFF).  For CODE_RANGE_LINE
+      and CODE_UNDEFINE_LINE, the loop iterates 'from' while value1 stays
+      fixed, so the per-iteration check must use 'from'.
+    
+      TestSetCodeEdgeCases: Basic sanity tests for linear encodings, empty
+      mappings, and multiple mapping blocks.
+    
+    The key test (test_large_row_size_oob_mapping_ignored) crashes with
+    SIGABRT on the unfixed code due to the heap buffer overflow, confirming
+    the test properly detects the vulnerability.
+    
+    The test helper (test/test_helper.c) is built as a shared library by
+    meson and passed to pytest via the TEST_HELPER_LIB environment variable.
+    When run directly with pytest, conftest.py compiles it on the fly from
+    the build directory.
+    
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/20>
+
+commit 5920c6ee144fffff84b62f5b479171f734f15316
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 16 15:24:17 2026 +1000
+
+    encparse: fix heap out-of-bounds write in setCode()
+    
+    setCode() computes a destination index from two attacker-controlled
+    values taken from the .enc encoding file:
+    
+        index = (from >> 8) * row_size + (from & 0xFF);
+    
+    The "from" parameter is <= 0xFFFF (see the check a few lines above), so
+    from >> 8 can reach 0xFF. row_size comes straight from the SIZE line of
+    the encoding file.
+    
+    The destination buffer is allocated with a size capped at 0x10000
+    entries. At row_size > 256, the index exceeds the allocation, causing a
+    heap out-of-bounds write.
+    
+    For example, SIZE 256 258 and mapping 0xff00 -> 0 gives:
+      index = 255 * 258 + 0 = 65790, allocation = 65536 entries
+    
+    Additionally, the column bounds check incorrectly tested the global
+    variable "value1" instead of the function parameter "from".  For
+    CODE_LINE this happens to be the same value, but for CODE_RANGE_LINE
+    and CODE_UNDEFINE_LINE the loop calls setCode() with different values
+    of "from" while value1 remains unchanged.
+    
+    This vulnerability was discovered by:
+      Adam Bedard working with TrendAI Zero Day Initiative
+    
+    CVE-2026-109908, ZDI-CAN-31888
+    
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/20>
+
+commit 7418fa7a77d1faf795ae40ea92f9ec2828e2a0b9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 16 15:25:17 2026 +1000
+
+    encparse: fix undersized realloc in NAME_LINE handler
+    
+    char **nam keeps pointers to the postscript name mapping.
+    For the normal allocation it allocates an array of pointers
+    (Xmallocarray(namsize, sizeof(char*)). For the realloc case
+    here it allocated a fixed 0x10000 bytes.
+    
+    Fix this to allocate 0x10000 entries instead.
+    
+    Assisted-by: Claude:claude-opus-4-6
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/18>
+
+commit 3f3663296935620589cda6c1c096bd1887306f8c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 4 21:45:23 2026 +1000
+
+    gitlab CI: explicitly add container-prep to the needs
+    
+    Fixes the issue of the `meson from tarball` pulling the container image
+    from the FDO_UPSTREAM_REPO even if it doesn't yet exist there.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/19>
+
+commit 0a823b0e75a9b945730af1f922ea633439e5728d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 4 10:19:45 2026 +1000
+
+    gitlab CI: bump to latest ci-templates
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/19>
+
+commit 8f2a514b06584f3efd303fcb99e9fb25f75d0906
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 6 17:04:12 2026 -0700
+
+    Plug leak in FontMapReverse() error path
+    
+    If we are bailing out and cleaning up, free any allocated entries
+    that were already added to the map by tree_set() as well as the map.
+    
+    Reported by gcc 16.1 with -fanalyzer:
+    
+    fontenc.c: In function ‘FontMapReverse’:
+    fontenc.c:974:5: warning: leak of ‘<unknown>’ [CWE-401] [-Wanalyzer-malloc-leak]
+      974 |     free(map);
+          |     ^~~~~~~~~
+    [...]
+               │  922 |│        map[s] = calloc(FONTENC_SEGMENT_SIZE, sizeof(int));
+               │      |│        ~~~      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+               │      |│        |        |
+               │      |│        |        (26) allocated here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/merge_requests/17>
+
 commit 780d1f6f192a331de7b298a96e23ebc44d2a884b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Feb 7 17:32:14 2026 -0800

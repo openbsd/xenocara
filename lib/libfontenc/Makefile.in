@@ -393,7 +393,11 @@ SUBDIRS = src
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = fontenc.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-EXTRA_DIST = README.md meson.build meson.options
+EXTRA_DIST = README.md meson.build meson.options \
+	test/test_helper.c \
+	test/conftest.py \
+	test/test_setcode_oob.py
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
