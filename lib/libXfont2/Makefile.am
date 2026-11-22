@@ -124,12 +124,6 @@ endif
 if XFONT_PCFFORMAT
 libXfont2_la_SOURCES += src/bitmap/pcfwrite.c
 endif
-
-if XFONT_SNFFORMAT
-libXfont2_la_SOURCES +=			\
-	src/bitmap/snfread.c		\
-	src/bitmap/snfstr.h
-endif
 endif
 
 if XFONT_BUILTINS
@@ -182,12 +176,20 @@ test_fserve_read_glyphs_LDFLAGS = -static
 test_fserve_read_glyphs_LDADD = libXfont2.la $(LTLIBOBJS)
 endif XFONT_FC
 
+if XFONT_FREETYPE
+TESTS += test-freetype-strike-index
+check_PROGRAMS += test-freetype-strike-index
+
+test_freetype_strike_index_SOURCES = test/test-freetype-strike-index.c $(TEST_UTIL_SRCS)
+test_freetype_strike_index_LDADD = libXfont2.la $(LTLIBOBJS)
+endif XFONT_FREETYPE
+
 # PCF parser security regression tests
 if HAVE_PYTHON
 TESTS += test-pcf-repad test-pcf-props test-pcf-bitmapscale \
-	test-pcf-encoding test-pcf-norepad
+	test-pcf-encoding test-pcf-norepad test-pcf-negskip
 check_PROGRAMS += test-pcf-repad test-pcf-props test-pcf-bitmapscale \
-		 test-pcf-encoding test-pcf-norepad
+		 test-pcf-encoding test-pcf-norepad test-pcf-negskip
 
 PCF_TEST_SRCS = test/pcf-test-common.c test/pcf-test-common.h $(TEST_UTIL_SRCS)
 PCF_TEST_LDADD = libXfont2.la $(LTLIBOBJS)
@@ -207,11 +209,14 @@ test_pcf_encoding_LDADD = $(PCF_TEST_LDADD)
 test_pcf_norepad_SOURCES = test/test-pcf-norepad.c $(PCF_TEST_SRCS)
 test_pcf_norepad_LDADD = $(PCF_TEST_LDADD)
 
+test_pcf_negskip_SOURCES = test/test-pcf-negskip.c $(PCF_TEST_SRCS)
+test_pcf_negskip_LDADD = $(PCF_TEST_LDADD)
+
 # Generate malicious PCF test fonts from Python scripts at build time.
 # Each script creates a .pcf and fonts.dir in its output directory.
 TEST_FONT_DIRS = test/data/repad test/data/props test/data/scale \
 		 test/data/encoding \
-		 test/data/norepad
+		 test/data/norepad test/data/negskip
 
 test/data/repad/evil-repad.pcf: $(srcdir)/test/gen_evil_pcf_repad.py
 	$(AM_V_GEN)$(PYTHON) $< test/data/repad
@@ -228,11 +233,15 @@ test/data/encoding/evil-encoding.pcf: $(srcdir)/test/gen_evil_pcf_encoding.py
 test/data/norepad/evil-norepad.pcf: $(srcdir)/test/gen_evil_pcf_norepad.py
 	$(AM_V_GEN)$(PYTHON) $< test/data/norepad
 
+test/data/negskip/evil-negskip.pcf: $(srcdir)/test/gen_evil_pcf_negskip.py
+	$(AM_V_GEN)$(PYTHON) $< test/data/negskip
+
 TEST_FONT_FILES = test/data/repad/evil-repad.pcf	\
 		  test/data/props/evil-props.pcf	\
 		  test/data/scale/evil-scale.pcf	\
 		  test/data/encoding/evil-encoding.pcf	\
-		  test/data/norepad/evil-norepad.pcf
+		  test/data/norepad/evil-norepad.pcf	\
+		  test/data/negskip/evil-negskip.pcf
 
 # Font data must be generated before the tests run
 check_DATA = $(TEST_FONT_FILES)
@@ -243,7 +252,8 @@ CLEANFILES = $(TEST_FONT_FILES)			\
 	     test/data/scale/fonts.dir		\
 	     test/data/scale/fonts.scale	\
 	     test/data/encoding/fonts.dir	\
-	     test/data/norepad/fonts.dir
+	     test/data/norepad/fonts.dir	\
+	     test/data/negskip/fonts.dir
 clean-local:
 	-rmdir $(TEST_FONT_DIRS) test/data 2>/dev/null || true
 endif HAVE_PYTHON
@@ -252,7 +262,12 @@ EXTRA_DIST += test/gen_evil_pcf_repad.py		\
 	      test/gen_evil_pcf_props.py		\
 	      test/gen_evil_pcf_bitmapscale.py	\
 	      test/gen_evil_pcf_encoding.py	\
-	      test/gen_evil_pcf_norepad.py
+	      test/gen_evil_pcf_norepad.py	\
+	      test/gen_evil_pcf_negskip.py
+
+EXTRA_DIST += test/data/ft-strike-index/strike-test.bdf	\
+	      test/data/ft-strike-index/strike-test.pfb	\
+	      test/data/ft-strike-index/fonts.dir
 
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL

@@ -143,11 +143,7 @@ host_triplet = @host@
 
 @XFONT_BITMAP_TRUE@@XFONT_PCF_OR_BUILTIN_TRUE@am__append_8 = src/bitmap/pcfread.c
 @XFONT_BITMAP_TRUE@@XFONT_PCFFORMAT_TRUE@am__append_9 = src/bitmap/pcfwrite.c
-@XFONT_BITMAP_TRUE@@XFONT_SNFFORMAT_TRUE@am__append_10 = \
-@XFONT_BITMAP_TRUE@@XFONT_SNFFORMAT_TRUE@	src/bitmap/snfread.c		\
-@XFONT_BITMAP_TRUE@@XFONT_SNFFORMAT_TRUE@	src/bitmap/snfstr.h
-
-@XFONT_BUILTINS_TRUE@am__append_11 = \
+@XFONT_BUILTINS_TRUE@am__append_10 = \
 @XFONT_BUILTINS_TRUE@	src/builtins/builtin.h		\
 @XFONT_BUILTINS_TRUE@	src/builtins/dir.c		\
 @XFONT_BUILTINS_TRUE@	src/builtins/file.c		\
@@ -155,7 +151,7 @@ host_triplet = @host@
 @XFONT_BUILTINS_TRUE@	src/builtins/fpe.c		\
 @XFONT_BUILTINS_TRUE@	src/builtins/render.c
 
-@XFONT_FC_TRUE@am__append_12 = \
+@XFONT_FC_TRUE@am__append_11 = \
 @XFONT_FC_TRUE@	src/fc/fsconvert.c		\
 @XFONT_FC_TRUE@	src/fc/fserve.c			\
 @XFONT_FC_TRUE@	src/fc/fserve.h			\
@@ -166,26 +162,28 @@ host_triplet = @host@
 @XFONT_FC_TRUE@	src/fc/fstrans.c
 
 noinst_PROGRAMS = lsfontdir$(EXEEXT)
-TESTS = $(am__EXEEXT_1) $(am__EXEEXT_2)
-check_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
+TESTS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3)
+check_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3)
+@XFONT_FC_TRUE@am__append_12 = test-fserve-read-glyphs
 @XFONT_FC_TRUE@am__append_13 = test-fserve-read-glyphs
-@XFONT_FC_TRUE@am__append_14 = test-fserve-read-glyphs
+@XFONT_FREETYPE_TRUE@am__append_14 = test-freetype-strike-index
+@XFONT_FREETYPE_TRUE@am__append_15 = test-freetype-strike-index
 
 # PCF parser security regression tests
-@HAVE_PYTHON_TRUE@am__append_15 = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
-@HAVE_PYTHON_TRUE@	test-pcf-encoding test-pcf-norepad
-
 @HAVE_PYTHON_TRUE@am__append_16 = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
-@HAVE_PYTHON_TRUE@		 test-pcf-encoding test-pcf-norepad
+@HAVE_PYTHON_TRUE@	test-pcf-encoding test-pcf-norepad test-pcf-negskip
+
+@HAVE_PYTHON_TRUE@am__append_17 = test-pcf-repad test-pcf-props test-pcf-bitmapscale \
+@HAVE_PYTHON_TRUE@		 test-pcf-encoding test-pcf-norepad test-pcf-negskip
 
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
 	$(srcdir)/config.h.in $(srcdir)/xfont2.pc.in \
-	$(top_srcdir)/src/util/strlcat.c \
-	$(top_srcdir)/src/util/realpath.c \
 	$(top_srcdir)/src/util/strlcpy.c \
-	$(top_srcdir)/src/util/reallocarray.c depcomp \
+	$(top_srcdir)/src/util/reallocarray.c \
+	$(top_srcdir)/src/util/strlcat.c \
+	$(top_srcdir)/src/util/realpath.c depcomp \
 	$(libXfontinclude_HEADERS) $(noinst_HEADERS) test-driver \
 	AUTHORS COPYING ChangeLog INSTALL compile config.guess \
 	config.sub install-sh missing ltmain.sh
@@ -256,12 +254,11 @@ am__libXfont2_la_SOURCES_DIST = src/stubs/atom.c \
 	src/bitmap/bitmaputil.c src/bitmap/bitscale.c \
 	src/bitmap/fontink.c src/bitmap/bdfread.c \
 	src/bitmap/bdfutils.c src/bitmap/pcfread.c \
-	src/bitmap/pcfwrite.c src/bitmap/snfread.c src/bitmap/snfstr.h \
-	src/builtins/builtin.h src/builtins/dir.c src/builtins/file.c \
-	src/builtins/fonts.c src/builtins/fpe.c src/builtins/render.c \
-	src/fc/fsconvert.c src/fc/fserve.c src/fc/fserve.h \
-	src/fc/fservestr.h src/fc/fsio.c src/fc/fsio.h \
-	src/fc/fslibos.h src/fc/fstrans.c
+	src/bitmap/pcfwrite.c src/builtins/builtin.h \
+	src/builtins/dir.c src/builtins/file.c src/builtins/fonts.c \
+	src/builtins/fpe.c src/builtins/render.c src/fc/fsconvert.c \
+	src/fc/fserve.c src/fc/fserve.h src/fc/fservestr.h \
+	src/fc/fsio.c src/fc/fsio.h src/fc/fslibos.h src/fc/fstrans.c
 am__dirstamp = $(am__leading_dot)dirstamp
 @XFONT_FONTFILE_TRUE@am__objects_1 = src/fontfile/bitsource.lo \
 @XFONT_FONTFILE_TRUE@	src/fontfile/bufio.lo \
@@ -291,12 +288,11 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @XFONT_BDFFORMAT_TRUE@@XFONT_BITMAP_TRUE@	src/bitmap/bdfutils.lo
 @XFONT_BITMAP_TRUE@@XFONT_PCF_OR_BUILTIN_TRUE@am__objects_6 = src/bitmap/pcfread.lo
 @XFONT_BITMAP_TRUE@@XFONT_PCFFORMAT_TRUE@am__objects_7 = src/bitmap/pcfwrite.lo
-@XFONT_BITMAP_TRUE@@XFONT_SNFFORMAT_TRUE@am__objects_8 = src/bitmap/snfread.lo
-@XFONT_BUILTINS_TRUE@am__objects_9 = src/builtins/dir.lo \
+@XFONT_BUILTINS_TRUE@am__objects_8 = src/builtins/dir.lo \
 @XFONT_BUILTINS_TRUE@	src/builtins/file.lo \
 @XFONT_BUILTINS_TRUE@	src/builtins/fonts.lo src/builtins/fpe.lo \
 @XFONT_BUILTINS_TRUE@	src/builtins/render.lo
-@XFONT_FC_TRUE@am__objects_10 = src/fc/fsconvert.lo src/fc/fserve.lo \
+@XFONT_FC_TRUE@am__objects_9 = src/fc/fsconvert.lo src/fc/fserve.lo \
 @XFONT_FC_TRUE@	src/fc/fsio.lo src/fc/fstrans.lo
 am_libXfont2_la_OBJECTS = src/stubs/atom.lo src/stubs/libxfontstubs.lo \
 	src/util/fontaccel.lo src/util/fontnames.lo \
@@ -305,7 +301,7 @@ am_libXfont2_la_OBJECTS = src/stubs/atom.lo src/stubs/libxfontstubs.lo \
 	src/util/utilbitmap.lo $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
-	$(am__objects_9) $(am__objects_10)
+	$(am__objects_9)
 libXfont2_la_OBJECTS = $(am_libXfont2_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -315,24 +311,36 @@ libXfont2_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libXfont2_la_LDFLAGS) $(LDFLAGS) -o $@
 @XFONT_FC_TRUE@am__EXEEXT_1 = test-fserve-read-glyphs$(EXEEXT)
-@HAVE_PYTHON_TRUE@am__EXEEXT_2 = test-pcf-repad$(EXEEXT) \
+@XFONT_FREETYPE_TRUE@am__EXEEXT_2 =  \
+@XFONT_FREETYPE_TRUE@	test-freetype-strike-index$(EXEEXT)
+@HAVE_PYTHON_TRUE@am__EXEEXT_3 = test-pcf-repad$(EXEEXT) \
 @HAVE_PYTHON_TRUE@	test-pcf-props$(EXEEXT) \
 @HAVE_PYTHON_TRUE@	test-pcf-bitmapscale$(EXEEXT) \
 @HAVE_PYTHON_TRUE@	test-pcf-encoding$(EXEEXT) \
-@HAVE_PYTHON_TRUE@	test-pcf-norepad$(EXEEXT)
+@HAVE_PYTHON_TRUE@	test-pcf-norepad$(EXEEXT) \
+@HAVE_PYTHON_TRUE@	test-pcf-negskip$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
-am__objects_11 = test/utils/font-test-utils.$(OBJEXT)
+am__objects_10 = test/utils/font-test-utils.$(OBJEXT)
 am_lsfontdir_OBJECTS = test/utils/lsfontdir.$(OBJEXT) \
-	$(am__objects_11)
+	$(am__objects_10)
 lsfontdir_OBJECTS = $(am_lsfontdir_OBJECTS)
 lsfontdir_DEPENDENCIES = libXfont2.la $(LTLIBOBJS)
+am__test_freetype_strike_index_SOURCES_DIST =  \
+	test/test-freetype-strike-index.c test/utils/font-test-utils.c \
+	test/utils/font-test-utils.h
+@XFONT_FREETYPE_TRUE@am_test_freetype_strike_index_OBJECTS = test/test-freetype-strike-index.$(OBJEXT) \
+@XFONT_FREETYPE_TRUE@	$(am__objects_10)
+test_freetype_strike_index_OBJECTS =  \
+	$(am_test_freetype_strike_index_OBJECTS)
+@XFONT_FREETYPE_TRUE@test_freetype_strike_index_DEPENDENCIES =  \
+@XFONT_FREETYPE_TRUE@	libXfont2.la $(LTLIBOBJS)
 am__test_fserve_read_glyphs_SOURCES_DIST =  \
 	test/test-fserve-read-glyphs.c test/utils/font-test-utils.c \
 	test/utils/font-test-utils.h
-am__objects_12 =  \
+am__objects_11 =  \
 	test/utils/test_fserve_read_glyphs-font-test-utils.$(OBJEXT)
 @XFONT_FC_TRUE@am_test_fserve_read_glyphs_OBJECTS = test/test_fserve_read_glyphs-test-fserve-read-glyphs.$(OBJEXT) \
-@XFONT_FC_TRUE@	$(am__objects_12)
+@XFONT_FC_TRUE@	$(am__objects_11)
 test_fserve_read_glyphs_OBJECTS =  \
 	$(am_test_fserve_read_glyphs_OBJECTS)
 @XFONT_FC_TRUE@test_fserve_read_glyphs_DEPENDENCIES = libXfont2.la \
@@ -344,11 +352,11 @@ test_fserve_read_glyphs_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am__test_pcf_bitmapscale_SOURCES_DIST = test/test-pcf-bitmapscale.c \
 	test/pcf-test-common.c test/pcf-test-common.h \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
-@HAVE_PYTHON_TRUE@am__objects_13 = test/pcf-test-common.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_11)
+@HAVE_PYTHON_TRUE@am__objects_12 = test/pcf-test-common.$(OBJEXT) \
+@HAVE_PYTHON_TRUE@	$(am__objects_10)
 @HAVE_PYTHON_TRUE@am_test_pcf_bitmapscale_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-bitmapscale.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_13)
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
 test_pcf_bitmapscale_OBJECTS = $(am_test_pcf_bitmapscale_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_bitmapscale_DEPENDENCIES =  \
 @HAVE_PYTHON_TRUE@	$(PCF_TEST_LDADD)
@@ -357,15 +365,23 @@ am__test_pcf_encoding_SOURCES_DIST = test/test-pcf-encoding.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_encoding_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-encoding.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_13)
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
 test_pcf_encoding_OBJECTS = $(am_test_pcf_encoding_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_encoding_DEPENDENCIES = $(PCF_TEST_LDADD)
+am__test_pcf_negskip_SOURCES_DIST = test/test-pcf-negskip.c \
+	test/pcf-test-common.c test/pcf-test-common.h \
+	test/utils/font-test-utils.c test/utils/font-test-utils.h
+@HAVE_PYTHON_TRUE@am_test_pcf_negskip_OBJECTS =  \
+@HAVE_PYTHON_TRUE@	test/test-pcf-negskip.$(OBJEXT) \
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
+test_pcf_negskip_OBJECTS = $(am_test_pcf_negskip_OBJECTS)
+@HAVE_PYTHON_TRUE@test_pcf_negskip_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_norepad_SOURCES_DIST = test/test-pcf-norepad.c \
 	test/pcf-test-common.c test/pcf-test-common.h \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_norepad_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-norepad.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_13)
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
 test_pcf_norepad_OBJECTS = $(am_test_pcf_norepad_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_norepad_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_props_SOURCES_DIST = test/test-pcf-props.c \
@@ -373,7 +389,7 @@ am__test_pcf_props_SOURCES_DIST = test/test-pcf-props.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_props_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-props.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_13)
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
 test_pcf_props_OBJECTS = $(am_test_pcf_props_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_props_DEPENDENCIES = $(PCF_TEST_LDADD)
 am__test_pcf_repad_SOURCES_DIST = test/test-pcf-repad.c \
@@ -381,7 +397,7 @@ am__test_pcf_repad_SOURCES_DIST = test/test-pcf-repad.c \
 	test/utils/font-test-utils.c test/utils/font-test-utils.h
 @HAVE_PYTHON_TRUE@am_test_pcf_repad_OBJECTS =  \
 @HAVE_PYTHON_TRUE@	test/test-pcf-repad.$(OBJEXT) \
-@HAVE_PYTHON_TRUE@	$(am__objects_13)
+@HAVE_PYTHON_TRUE@	$(am__objects_12)
 test_pcf_repad_OBJECTS = $(am_test_pcf_repad_OBJECTS)
 @HAVE_PYTHON_TRUE@test_pcf_repad_DEPENDENCIES = $(PCF_TEST_LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -419,14 +435,17 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libXfont2_la_SOURCES) $(lsfontdir_SOURCES) \
+	$(test_freetype_strike_index_SOURCES) \
 	$(test_fserve_read_glyphs_SOURCES) \
 	$(test_pcf_bitmapscale_SOURCES) $(test_pcf_encoding_SOURCES) \
-	$(test_pcf_norepad_SOURCES) $(test_pcf_props_SOURCES) \
-	$(test_pcf_repad_SOURCES)
+	$(test_pcf_negskip_SOURCES) $(test_pcf_norepad_SOURCES) \
+	$(test_pcf_props_SOURCES) $(test_pcf_repad_SOURCES)
 DIST_SOURCES = $(am__libXfont2_la_SOURCES_DIST) $(lsfontdir_SOURCES) \
+	$(am__test_freetype_strike_index_SOURCES_DIST) \
 	$(am__test_fserve_read_glyphs_SOURCES_DIST) \
 	$(am__test_pcf_bitmapscale_SOURCES_DIST) \
 	$(am__test_pcf_encoding_SOURCES_DIST) \
+	$(am__test_pcf_negskip_SOURCES_DIST) \
 	$(am__test_pcf_norepad_SOURCES_DIST) \
 	$(am__test_pcf_props_SOURCES_DIST) \
 	$(am__test_pcf_repad_SOURCES_DIST)
@@ -894,8 +913,7 @@ libXfont2_la_SOURCES = src/stubs/atom.c src/stubs/libxfontstubs.c \
 	src/util/patcache.c src/util/private.c src/util/utilbitmap.c \
 	$(am__append_1) $(am__append_2) $(am__append_5) \
 	$(am__append_6) $(am__append_7) $(am__append_8) \
-	$(am__append_9) $(am__append_10) $(am__append_11) \
-	$(am__append_12)
+	$(am__append_9) $(am__append_10) $(am__append_11)
 libXfont2_la_LDFLAGS = -version-number 2:0:0 -no-undefined
 libXfont2_la_LIBADD = $(ZLIB_LIBS) $(Z_LIBS) $(MATH_LIBS) \
 	$(XFONT_LIBS) $(LTLIBOBJS) $(am__append_4)
@@ -904,7 +922,10 @@ libXfont2_la_LIBADD = $(ZLIB_LIBS) $(Z_LIBS) $(MATH_LIBS) \
 EXTRA_DIST = src/builtins/buildfont README.md test/utils/README \
 	test/gen_evil_pcf_repad.py test/gen_evil_pcf_props.py \
 	test/gen_evil_pcf_bitmapscale.py test/gen_evil_pcf_encoding.py \
-	test/gen_evil_pcf_norepad.py
+	test/gen_evil_pcf_norepad.py test/gen_evil_pcf_negskip.py \
+	test/data/ft-strike-index/strike-test.bdf \
+	test/data/ft-strike-index/strike-test.pfb \
+	test/data/ft-strike-index/fonts.dir
 TEST_UTIL_SRCS = test/utils/font-test-utils.c test/utils/font-test-utils.h
 lsfontdir_SOURCES = test/utils/lsfontdir.c $(TEST_UTIL_SRCS)
 lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
@@ -915,6 +936,8 @@ lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
 @XFONT_FC_TRUE@test_fserve_read_glyphs_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/include -I$(top_srcdir)/src/fc
 @XFONT_FC_TRUE@test_fserve_read_glyphs_LDFLAGS = -static
 @XFONT_FC_TRUE@test_fserve_read_glyphs_LDADD = libXfont2.la $(LTLIBOBJS)
+@XFONT_FREETYPE_TRUE@test_freetype_strike_index_SOURCES = test/test-freetype-strike-index.c $(TEST_UTIL_SRCS)
+@XFONT_FREETYPE_TRUE@test_freetype_strike_index_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@PCF_TEST_SRCS = test/pcf-test-common.c test/pcf-test-common.h $(TEST_UTIL_SRCS)
 @HAVE_PYTHON_TRUE@PCF_TEST_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@test_pcf_repad_SOURCES = test/test-pcf-repad.c $(PCF_TEST_SRCS)
@@ -927,18 +950,21 @@ lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@test_pcf_encoding_LDADD = $(PCF_TEST_LDADD)
 @HAVE_PYTHON_TRUE@test_pcf_norepad_SOURCES = test/test-pcf-norepad.c $(PCF_TEST_SRCS)
 @HAVE_PYTHON_TRUE@test_pcf_norepad_LDADD = $(PCF_TEST_LDADD)
+@HAVE_PYTHON_TRUE@test_pcf_negskip_SOURCES = test/test-pcf-negskip.c $(PCF_TEST_SRCS)
+@HAVE_PYTHON_TRUE@test_pcf_negskip_LDADD = $(PCF_TEST_LDADD)
 
 # Generate malicious PCF test fonts from Python scripts at build time.
 # Each script creates a .pcf and fonts.dir in its output directory.
 @HAVE_PYTHON_TRUE@TEST_FONT_DIRS = test/data/repad test/data/props test/data/scale \
 @HAVE_PYTHON_TRUE@		 test/data/encoding \
-@HAVE_PYTHON_TRUE@		 test/data/norepad
+@HAVE_PYTHON_TRUE@		 test/data/norepad test/data/negskip
 
 @HAVE_PYTHON_TRUE@TEST_FONT_FILES = test/data/repad/evil-repad.pcf	\
 @HAVE_PYTHON_TRUE@		  test/data/props/evil-props.pcf	\
 @HAVE_PYTHON_TRUE@		  test/data/scale/evil-scale.pcf	\
 @HAVE_PYTHON_TRUE@		  test/data/encoding/evil-encoding.pcf	\
-@HAVE_PYTHON_TRUE@		  test/data/norepad/evil-norepad.pcf
+@HAVE_PYTHON_TRUE@		  test/data/norepad/evil-norepad.pcf	\
+@HAVE_PYTHON_TRUE@		  test/data/negskip/evil-negskip.pcf
 
 
 # Font data must be generated before the tests run
@@ -949,7 +975,8 @@ lsfontdir_LDADD = libXfont2.la $(LTLIBOBJS)
 @HAVE_PYTHON_TRUE@	     test/data/scale/fonts.dir		\
 @HAVE_PYTHON_TRUE@	     test/data/scale/fonts.scale	\
 @HAVE_PYTHON_TRUE@	     test/data/encoding/fonts.dir	\
-@HAVE_PYTHON_TRUE@	     test/data/norepad/fonts.dir
+@HAVE_PYTHON_TRUE@	     test/data/norepad/fonts.dir	\
+@HAVE_PYTHON_TRUE@	     test/data/negskip/fonts.dir
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
@@ -1151,8 +1178,6 @@ src/bitmap/pcfread.lo: src/bitmap/$(am__dirstamp) \
 	src/bitmap/$(DEPDIR)/$(am__dirstamp)
 src/bitmap/pcfwrite.lo: src/bitmap/$(am__dirstamp) \
 	src/bitmap/$(DEPDIR)/$(am__dirstamp)
-src/bitmap/snfread.lo: src/bitmap/$(am__dirstamp) \
-	src/bitmap/$(DEPDIR)/$(am__dirstamp)
 src/builtins/$(am__dirstamp):
 	@$(MKDIR_P) src/builtins
 	@: > src/builtins/$(am__dirstamp)
@@ -1224,6 +1249,12 @@ test/$(am__dirstamp):
 test/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) test/$(DEPDIR)
 	@: > test/$(DEPDIR)/$(am__dirstamp)
+test/test-freetype-strike-index.$(OBJEXT): test/$(am__dirstamp) \
+	test/$(DEPDIR)/$(am__dirstamp)
+
+test-freetype-strike-index$(EXEEXT): $(test_freetype_strike_index_OBJECTS) $(test_freetype_strike_index_DEPENDENCIES) $(EXTRA_test_freetype_strike_index_DEPENDENCIES) 
+	@rm -f test-freetype-strike-index$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_freetype_strike_index_OBJECTS) $(test_freetype_strike_index_LDADD) $(LIBS)
 test/test_fserve_read_glyphs-test-fserve-read-glyphs.$(OBJEXT):  \
 	test/$(am__dirstamp) test/$(DEPDIR)/$(am__dirstamp)
 test/utils/test_fserve_read_glyphs-font-test-utils.$(OBJEXT):  \
@@ -1247,6 +1278,12 @@ test/test-pcf-encoding.$(OBJEXT): test/$(am__dirstamp) \
 test-pcf-encoding$(EXEEXT): $(test_pcf_encoding_OBJECTS) $(test_pcf_encoding_DEPENDENCIES) $(EXTRA_test_pcf_encoding_DEPENDENCIES) 
 	@rm -f test-pcf-encoding$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_pcf_encoding_OBJECTS) $(test_pcf_encoding_LDADD) $(LIBS)
+test/test-pcf-negskip.$(OBJEXT): test/$(am__dirstamp) \
+	test/$(DEPDIR)/$(am__dirstamp)
+
+test-pcf-negskip$(EXEEXT): $(test_pcf_negskip_OBJECTS) $(test_pcf_negskip_DEPENDENCIES) $(EXTRA_test_pcf_negskip_DEPENDENCIES) 
+	@rm -f test-pcf-negskip$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_pcf_negskip_OBJECTS) $(test_pcf_negskip_LDADD) $(LIBS)
 test/test-pcf-norepad.$(OBJEXT): test/$(am__dirstamp) \
 	test/$(DEPDIR)/$(am__dirstamp)
 
@@ -1301,7 +1338,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/bitmap/$(DEPDIR)/fontink.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/bitmap/$(DEPDIR)/pcfread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/bitmap/$(DEPDIR)/pcfwrite.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@src/bitmap/$(DEPDIR)/snfread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/builtins/$(DEPDIR)/dir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/builtins/$(DEPDIR)/file.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/builtins/$(DEPDIR)/fonts.Plo@am__quote@
@@ -1342,8 +1378,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/strlcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/util/$(DEPDIR)/utilbitmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/pcf-test-common.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-freetype-strike-index.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-bitmapscale.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-encoding.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-negskip.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-norepad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-props.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@test/$(DEPDIR)/test-pcf-repad.Po@am__quote@
@@ -1716,6 +1754,13 @@ test-fserve-read-glyphs.log: test-fserve-read-glyphs$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-freetype-strike-index.log: test-freetype-strike-index$(EXEEXT)
+	@p='test-freetype-strike-index$(EXEEXT)'; \
+	b='test-freetype-strike-index'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 test-pcf-repad.log: test-pcf-repad$(EXEEXT)
 	@p='test-pcf-repad$(EXEEXT)'; \
 	b='test-pcf-repad'; \
@@ -1747,6 +1792,13 @@ test-pcf-encoding.log: test-pcf-encoding$(EXEEXT)
 test-pcf-norepad.log: test-pcf-norepad$(EXEEXT)
 	@p='test-pcf-norepad$(EXEEXT)'; \
 	b='test-pcf-norepad'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test-pcf-negskip.log: test-pcf-negskip$(EXEEXT)
+	@p='test-pcf-negskip$(EXEEXT)'; \
+	b='test-pcf-negskip'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2131,6 +2183,9 @@ uninstall-am: uninstall-libLTLIBRARIES \
 
 @HAVE_PYTHON_TRUE@test/data/norepad/evil-norepad.pcf: $(srcdir)/test/gen_evil_pcf_norepad.py
 @HAVE_PYTHON_TRUE@	$(AM_V_GEN)$(PYTHON) $< test/data/norepad
+
+@HAVE_PYTHON_TRUE@test/data/negskip/evil-negskip.pcf: $(srcdir)/test/gen_evil_pcf_negskip.py
+@HAVE_PYTHON_TRUE@	$(AM_V_GEN)$(PYTHON) $< test/data/negskip
 @HAVE_PYTHON_TRUE@clean-local:
 @HAVE_PYTHON_TRUE@	-rmdir $(TEST_FONT_DIRS) test/data 2>/dev/null || true
 

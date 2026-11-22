@@ -44,11 +44,10 @@ configure script takes various options to enable or disable them:
     Enabled by default, disable via --disable-pcfformat.
 
   * snf bitmap fonts - standard bitmap font format prior to X11R5 in 1991,
-    remains only for backwards compatibility.  Unlike pcf, snf files
+    remained only for backwards compatibility until 2026.  Unlike pcf, snf files
     are architecture specific, and contain less font information
     than pcf files.  snf fonts are deprecated and support for them
-    may be removed in future libXfont releases.  
-    Disabled by default, enable via --enable-snfformat.
+    has been removed.
 
 - Font services:
 

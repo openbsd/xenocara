@@ -1,3 +1,91 @@
+commit 112d4254f13f2372bdfd1da9ad1eff950cef22b9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 18 10:50:08 2026 +1000
+
+    libXfont2 2.0.10
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 539f716dabe0137097ed6b8492cae1c3321c4d69
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Nov 9 14:37:01 2026 +1000
+
+    FreeType: always initialise strike_index
+    
+    When FreeTypeOpenInstance() allocates FTInstanceRec, the
+    instance->strike_index field is the only one left unset by default.
+    
+    By renaming a BDF file to a FreeType-backed .pfb file we can trick
+    libXfont2 to use the FreeType backend, not its own bitmap backend,
+    resulting in a "non-SFNT face". This leaves the strike_index field
+    unset.
+    
+    Later when we call FT_Do_SBit_Metrics() strike_index is used directly as
+    an array subscript, leaving us with potential OOB reads:
+    
+        FT_Bitmap_Size*  sz = &ft_face->available_sizes[strike_index];
+    
+    This vulnerability was discovered by:
+      Apex Security Research (apex-security-research@proton.me)
+    
+    CVE-2026-109920
+    
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/39>
+
+commit dc6c313071c8b2929b1bc165e40c8ba62737b576
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 3 15:53:12 2026 +1000
+
+    bufio,pcf: reject negative skip count in BufFileRawSkip
+    
+    BufFileRawSkip() takes a signed int count but never validates it for
+    negative values. A crafted PCF font file can have a table offset that,
+    when subtracted from the current file position, wraps to a negative
+    value. This negative count passes the buffer bounds check
+    (curoff + count <= fileoff is trivially true for negative count) and
+    moves the buffer pointer backward past the buffer start. Subsequent
+    FontFileGetc() calls then read from invalid memory, causing an
+    out-of-bounds heap read or a segmentation fault.
+    
+    Add validation in BufFileRawSkip() to reject negative count values,
+    returning BUFFILEEOF. Additionally, add defense-in-depth checks in
+    pcfSeekToType() to validate that the skip distance fits in an int and
+    that the position is non-negative before calling FontFileSkip.
+    
+    This vulnerability was discovered by:
+      Elias Myllymäki working with TrendAI Zero Day Initiative
+    
+    CVE-2026-109909, ZDI-CAN-33183
+    
+    Assisted-by: AI
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/39>
+
+commit bac5f926df6c464d5efad47d4d41781f1aa9e0f9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 10 10:41:28 2026 +1000
+
+    Remove support for SNF
+    
+    SNF pre-dates PCF and has been deprecated for several decades.
+    SNF support was disabled in 2014 in
+    commit 37595cfd4fea ("Change default to disabling SNF support")
+    
+    Remove support for SNF formats, future archaeologist can refer
+    to the git history.
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/38>
+
+commit 1531de719edf74ad76f21f0afcd94db450c65cce
+Author: Kaiyi Li <kaiyili@google.com>
+Date:   Wed Sep 30 21:51:54 2026 +0000
+
+    license: complete the XFree86 License
+    
+    This license of lib/font/fontfile/gunzip.c should follow https://www.xfree86.org/4.3.0/LICENSE2.html#xf10 per https://www.xfree86.org/4.3.0/LICENSE1.html#1
+    
+    Part-of: <https://gitlab.freedesktop.org/xorg/lib/libxfont/-/merge_requests/37>
+
 commit 975cc6526e892c6fad8fa49d0fef58565fbaa003
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Aug 5 10:57:21 2026 +1000

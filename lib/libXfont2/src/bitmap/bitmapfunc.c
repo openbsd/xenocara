@@ -42,11 +42,8 @@ in this Software without prior written authorization from The Open Group.
 #if XFONT_PCFFORMAT
 #include <X11/fonts/pcf.h>
 #endif
-#if XFONT_SNFFORMAT
-#include "snfstr.h"
-#endif
 
-#if XFONT_PCFFORMAT || XFONT_SNFFORMAT || XFONT_BDFFORMAT
+#if XFONT_PCFFORMAT || XFONT_BDFFORMAT
 typedef struct _BitmapFileFunctions {
     int         (*ReadFont) (FontPtr /* pFont */, FontFilePtr /* file */,
 			     int /* bit */, int /* byte */,
@@ -71,16 +68,6 @@ static BitmapFileFunctionsRec readers[] = {
 # endif
 # ifdef X_BZIP2_FONT_COMPRESSION
     { pcfReadFont, pcfReadFontInfo} ,
-# endif
-#endif
-#if XFONT_SNFFORMAT
-    { snfReadFont, snfReadFontInfo},
-    { snfReadFont, snfReadFontInfo},
-# ifdef X_GZIP_FONT_COMPRESSION
-    { snfReadFont, snfReadFontInfo} ,
-# endif
-# ifdef X_BZIP2_FONT_COMPRESSION
-    { snfReadFont, snfReadFontInfo} ,
 # endif
 #endif
 #if XFONT_BDFFORMAT
@@ -185,24 +172,6 @@ static FontRendererRec	renderers[] = {
 	CAPABILITIES },
 # endif
 #endif
-#if XFONT_SNFFORMAT
-    { ".snf", 4, BitmapOpenBitmap, BitmapOpenScalable,
-	BitmapGetInfoBitmap, BitmapGetInfoScalable, 0,
-	CAPABILITIES },
-    { ".snf.Z", 6, BitmapOpenBitmap, BitmapOpenScalable,
-	BitmapGetInfoBitmap, BitmapGetInfoScalable, 0,
-	CAPABILITIES },
-# ifdef X_GZIP_FONT_COMPRESSION
-    { ".snf.gz", 7, BitmapOpenBitmap, BitmapOpenScalable,
-	BitmapGetInfoBitmap, BitmapGetInfoScalable, 0,
-	CAPABILITIES },
-# endif
-# ifdef X_BZIP2_FONT_COMPRESSION
-    { ".snf.bz2", 8, BitmapOpenBitmap, BitmapOpenScalable,
-	BitmapGetInfoBitmap, BitmapGetInfoScalable, 0,
-	CAPABILITIES },
-# endif
-#endif
 #if XFONT_BDFFORMAT
     { ".bdf", 4, BitmapOpenBitmap, BitmapOpenScalable,
 	BitmapGetInfoBitmap, BitmapGetInfoScalable, 0,
@@ -251,4 +220,4 @@ BitmapRegisterFontFileFunctions (void)
 {
     /* nothing to do */
 }
-#endif /* XFONT_PCFFORMAT || XFONT_SNFFORMAT || XFONT_BDFFORMAT */
+#endif /* XFONT_PCFFORMAT || XFONT_BDFFORMAT */
