@@ -459,10 +459,15 @@ void si_begin_new_gfx_cs(struct si_context *ctx, bool first_cs)
     * isn't useful here, because that flush can finish after the following
     * IB starts drawing.
     *
+    * We're doing the same cache invalidation on gfx12 even if it shouldn't be
+    * necessary because it seems to fix issues that look like stale descriptors
+    * being read (see !44189, #15812).
+    *
     * TODO: Do we also need to invalidate CB & DB caches?
+    * TODO: figure out why gfx12 needs this
     */
    ctx->barrier_flags |= SI_BARRIER_INV_L2;
-   if (ctx->gfx_level < GFX10)
+   if (ctx->gfx_level < GFX10 || ctx->gfx_level == GFX12)
       ctx->barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_SMEM | SI_BARRIER_INV_VMEM;
 
    /* Disable pipeline stats if there are no active queries. */
