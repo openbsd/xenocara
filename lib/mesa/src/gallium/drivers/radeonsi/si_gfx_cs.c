@@ -452,23 +452,20 @@ void si_begin_new_gfx_cs(struct si_context *ctx, bool first_cs)
     * users (e.g. BO evictions and SDMA/UVD/VCE IBs) can modify our
     * buffers.
     *
-    * Gfx10+ automatically invalidates I$, SMEM$, VMEM$, and GL1$ at the beginning of IBs,
-    * so we only need to flush the GL2 cache.
+    * Gfx10+ is supposed to invalidate I$, SMEM$, VMEM$, and GL1$ at the beginning of IBs
+    * automatically, but stale descriptors and constants are still read after IB starts on
+    * gfx10.3 and gfx12 (see !44189, !44933, #15812), so invalidate them here on all gfx
+    * levels, along with GL2.
     *
     * Note that the cache flush done by the kernel at the end of GFX IBs
     * isn't useful here, because that flush can finish after the following
     * IB starts drawing.
     *
-    * We're doing the same cache invalidation on gfx12 even if it shouldn't be
-    * necessary because it seems to fix issues that look like stale descriptors
-    * being read (see !44189, #15812).
-    *
     * TODO: Do we also need to invalidate CB & DB caches?
-    * TODO: figure out why gfx12 needs this
+    * TODO: figure out why the automatic invalidation isn't enough on gfx10+
     */
-   ctx->barrier_flags |= SI_BARRIER_INV_L2;
-   if (ctx->gfx_level < GFX10 || ctx->gfx_level == GFX12)
-      ctx->barrier_flags |= SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_SMEM | SI_BARRIER_INV_VMEM;
+   ctx->barrier_flags = SI_BARRIER_INV_L2 | SI_BARRIER_INV_ICACHE | SI_BARRIER_INV_SMEM |
+                       SI_BARRIER_INV_VMEM;
 
    /* Disable pipeline stats if there are no active queries. */
    ctx->barrier_flags &= ~SI_BARRIER_EVENT_PIPELINESTAT_START & ~SI_BARRIER_EVENT_PIPELINESTAT_STOP;
