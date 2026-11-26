@@ -280,7 +280,7 @@ StopAll (int n)
  * sub-daemon started
  */
 
-static volatile int	ChildReady = 0;
+static volatile sig_atomic_t ChildReady = 0;
 
 /* ARGSUSED */
 static void
@@ -288,7 +288,7 @@ ChildNotify (int n)
 {
     int olderrno = errno;
 
-    ChildReady++;
+    ChildReady = 1;
     errno = olderrno;
 }
 
@@ -307,12 +307,11 @@ WaitForChild (void)
     Debug ("signals blocked\n");
     if (!ChildReady && !Rescan)
 	sigsuspend(&omask);
-    sigprocmask(SIG_SETMASK, &omask, (sigset_t *)NULL);
+    ChildReady = 0;
     while ((pid = waitpid (-1, &status, WNOHANG)) > 0)
     {
 	Debug ("Manager wait returns pid: %d sig %d core %d code %d\n",
 	       pid, waitSig(status), waitCore(status), waitCode(status));
-        ChildReady--;
 	if (autoRescan)
 	    RescanIfMod ();
 	/* SUPPRESS 560 */
@@ -467,6 +466,7 @@ WaitForChild (void)
 	    Debug ("Unknown child termination, status %d\n", waitVal (status));
 	}
     }
+    sigprocmask(SIG_SETMASK, &omask, (sigset_t *)NULL);
     StartDisplays ();
 }
 
