@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.578 2026/11/22 10:21:52 matthieu Exp $
+# $OpenBSD: MODULES,v 1.579 2026/11/26 20:04:55 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -54,7 +54,7 @@ app/xlogo		1.0.7
 app/xlsatoms		1.1.5
 app/xlsclients		1.1.6
 app/xlsfonts		1.0.9
-app/xmag		1.0.8
+app/xmag		1.0.9		needs-update
 app/xmessage		1.0.7
 app/xmodmap		1.0.12
 app/xmore		1.0.4
