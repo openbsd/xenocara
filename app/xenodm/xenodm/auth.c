@@ -72,6 +72,7 @@ static struct AuthProtocol AuthProtocols[] = {
 };
 
 #define NUM_AUTHORIZATION (sizeof (AuthProtocols) / sizeof (AuthProtocols[0]))
+#define MAX_USER_AUTH_FILE_SIZE (1024 * 1024)
 
 static struct AuthProtocol *
 findProtocol (unsigned short name_length, char *name)
@@ -451,7 +452,8 @@ static int
 openFiles (char *name, char *new_name, size_t len, FILE **oldp, FILE **newp)
 {
 	mode_t	mask;
-	int newfd;
+	int oldfd, newfd;
+	struct stat statb;
 
         snprintf(new_name, len, "%s-n", name);
 	/*
@@ -481,10 +483,29 @@ openFiles (char *name, char *new_name, size_t len, FILE **oldp, FILE **newp)
 		Debug ("can't open new file %s\n", new_name);
 		return 0;
 	}
-	if (!*oldp)
-	    *oldp = fopen (name, "r");
+	if (!*oldp) {
+	    oldfd = open (name, O_RDONLY | O_NONBLOCK);
+	    if (oldfd >= 0) {
+		if (fstat (oldfd, &statb) == -1 ||
+		    !S_ISREG(statb.st_mode) ||
+		    statb.st_size > MAX_USER_AUTH_FILE_SIZE ||
+		    (*oldp = fdopen (oldfd, "r")) == NULL)
+		    close (oldfd);
+	    }
+	}
 	Debug ("opens succeeded %s %s\n", name, new_name);
 	return 1;
+}
+
+static Xauth *
+readUserAuth (FILE *file)
+{
+	off_t offset;
+
+	offset = ftello(file);
+	if (offset < 0 || offset >= MAX_USER_AUTH_FILE_SIZE)
+		return NULL;
+	return XauReadAuth(file);
 }
 
 static void
@@ -839,7 +860,7 @@ SetUserAuthorization (struct display *d, struct verify_info *verify)
 	    if (fstat (fileno (old), &statb) != -1)
 		chmod (new_name, (int) (statb.st_mode & 0777));
 	    /*SUPPRESS 560*/
-	    while ((entry = XauReadAuth (old))) {
+	    while ((entry = readUserAuth(old))) {
 		if (!checkEntry (entry))
 		{
 		    Debug ("Writing an entry\n");
@@ -917,7 +938,7 @@ RemoveUserAuthorization (struct display *d, struct verify_info *verify)
 	    if (fstat (fileno (old), &statb) != -1)
 		chmod (new_name, (int) (statb.st_mode & 0777));
 	    /*SUPPRESS 560*/
-	    while ((entry = XauReadAuth (old))) {
+	    while ((entry = readUserAuth(old))) {
 		if (!checkEntry (entry))
 		{
 		    Debug ("Writing an entry\n");
